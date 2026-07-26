@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { WebCryptoPasswordHasher } from "@/infrastructure/auth/web-crypto-password-hasher";
 
 let initialization: Promise<void> | null = null;
 
@@ -11,19 +12,24 @@ interface AdminSeed {
   isHidden: boolean;
 }
 
-function getAdminSeeds(): AdminSeed[] {
+async function getAdminSeeds(): Promise<AdminSeed[]> {
   const runtimeEnv = env as unknown as {
     BOOTSTRAP_SKYWALKER_PASSWORD_HASH?: string;
     BOOTSTRAP_DRIGAN21_PASSWORD_HASH?: string;
     BOOTSTRAP_SAKURKA_PASSWORD_HASH?: string;
+    BOOTSTRAP_SKYWALKER_PASSWORD?: string;
+    BOOTSTRAP_DRIGAN21_PASSWORD?: string;
+    BOOTSTRAP_SAKURKA_PASSWORD?: string;
   };
+  const passwords = new WebCryptoPasswordHasher();
 
-  return [
+  const accounts = [
     {
       id: "admin-skywalker",
       username: "skywalker",
       displayName: "SkyWalker",
-      passwordHash: runtimeEnv.BOOTSTRAP_SKYWALKER_PASSWORD_HASH ?? "",
+      password: runtimeEnv.BOOTSTRAP_SKYWALKER_PASSWORD ?? "",
+      existingHash: runtimeEnv.BOOTSTRAP_SKYWALKER_PASSWORD_HASH ?? "",
       role: "owner",
       isHidden: false,
     },
@@ -31,7 +37,8 @@ function getAdminSeeds(): AdminSeed[] {
       id: "admin-drigan21",
       username: "drigan21",
       displayName: "Drigan21",
-      passwordHash: runtimeEnv.BOOTSTRAP_DRIGAN21_PASSWORD_HASH ?? "",
+      password: runtimeEnv.BOOTSTRAP_DRIGAN21_PASSWORD ?? "",
+      existingHash: runtimeEnv.BOOTSTRAP_DRIGAN21_PASSWORD_HASH ?? "",
       role: "superadmin",
       isHidden: true,
     },
@@ -39,11 +46,27 @@ function getAdminSeeds(): AdminSeed[] {
       id: "admin-sakurka",
       username: "sakurka",
       displayName: "Sakurka",
-      passwordHash: runtimeEnv.BOOTSTRAP_SAKURKA_PASSWORD_HASH ?? "",
+      password: runtimeEnv.BOOTSTRAP_SAKURKA_PASSWORD ?? "",
+      existingHash: runtimeEnv.BOOTSTRAP_SAKURKA_PASSWORD_HASH ?? "",
       role: "owner",
       isHidden: false,
     },
-  ].filter((account) =>
+  ] as const;
+
+  const seeds = await Promise.all(
+    accounts.map(async (account): Promise<AdminSeed> => ({
+      id: account.id,
+      username: account.username,
+      displayName: account.displayName,
+      passwordHash: account.password
+        ? await passwords.hash(account.password)
+        : account.existingHash,
+      role: account.role,
+      isHidden: account.isHidden,
+    })),
+  );
+
+  return seeds.filter((account) =>
     account.passwordHash.startsWith("pbkdf2-sha256$"),
   );
 }
@@ -107,7 +130,7 @@ export async function ensureAuthSchema(db: D1Database): Promise<void> {
           )
           .run();
 
-        const adminSeeds = getAdminSeeds();
+        const adminSeeds = await getAdminSeeds();
         if (adminSeeds.length > 0) {
           await db.batch(
             adminSeeds.map((account) =>
