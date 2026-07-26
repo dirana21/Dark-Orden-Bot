@@ -9,6 +9,7 @@ interface SessionUserRow {
   guild_name: string;
   username: string;
   display_name: string;
+  real_name: string | null;
   role: "owner" | "officer" | "member";
   created_at: number;
 }
@@ -46,6 +47,7 @@ export class D1SessionRepository implements SessionRepository {
           guilds.name AS guild_name,
           users.username,
           users.display_name,
+          users.real_name,
           users.role,
           users.created_at
         FROM sessions
@@ -64,6 +66,7 @@ export class D1SessionRepository implements SessionRepository {
           guildName: row.guild_name,
           username: row.username,
           displayName: row.display_name,
+          realName: row.real_name,
           role: row.role,
           createdAt: row.created_at,
         }

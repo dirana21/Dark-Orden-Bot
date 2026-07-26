@@ -38,6 +38,7 @@ export class RegisterUser {
       guildId: DARK_ORDEN_GUILD_ID,
       username,
       displayName,
+      realName: null,
       passwordHash: await this.passwords.hash(password),
       role: "member",
       createdAt: this.clock.now(),

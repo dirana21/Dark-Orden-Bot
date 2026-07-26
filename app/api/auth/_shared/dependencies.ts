@@ -3,6 +3,7 @@ import { GetSession } from "@/application/auth/get-session";
 import { LoginUser } from "@/application/auth/login-user";
 import { LogoutUser } from "@/application/auth/logout-user";
 import { RegisterUser } from "@/application/auth/register-user";
+import { UpdateProfile } from "@/application/profile/update-profile";
 import { D1SessionRepository } from "@/infrastructure/auth/d1-session-repository";
 import { D1UserRepository } from "@/infrastructure/auth/d1-user-repository";
 import { WebCryptoPasswordHasher } from "@/infrastructure/auth/web-crypto-password-hasher";
@@ -25,4 +26,5 @@ export const authUseCases = {
   login: new LoginUser(users, passwords, createSession),
   getSession: new GetSession(sessions, tokens, clock),
   logout: new LogoutUser(sessions, tokens),
+  updateProfile: new UpdateProfile(users),
 };

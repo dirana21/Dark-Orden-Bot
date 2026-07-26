@@ -29,6 +29,7 @@ export class LoginUser {
       guildName: user.guildName,
       username: user.username,
       displayName: user.displayName,
+      realName: user.realName,
       role: user.role,
       createdAt: user.createdAt,
     };

@@ -24,6 +24,9 @@ export function GuildPortal() {
       <GuildDashboard
         user={auth.user}
         isSubmitting={auth.isSubmitting}
+        error={auth.error}
+        onClearError={auth.clearError}
+        onUpdateProfile={auth.updateProfile}
         onLogout={auth.logout}
       />
     );

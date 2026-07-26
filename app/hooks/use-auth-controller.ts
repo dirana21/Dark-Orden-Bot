@@ -66,6 +66,27 @@ export function useAuthController() {
     [gateway, run],
   );
 
+  const updateProfile = useCallback(
+    async (displayName: string, realName: string) => {
+      setError("");
+      setIsSubmitting(true);
+      try {
+        setUser(await gateway.updateProfile(displayName, realName));
+        return true;
+      } catch (caught) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "Не удалось сохранить изменения профиля.",
+        );
+        return false;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [gateway],
+  );
+
   const logout = useCallback(async () => {
     setIsSubmitting(true);
     try {
@@ -89,6 +110,7 @@ export function useAuthController() {
     clearError: () => setError(""),
     login,
     register,
+    updateProfile,
     logout,
   };
 }

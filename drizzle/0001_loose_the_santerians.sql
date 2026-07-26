@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `real_name` text;

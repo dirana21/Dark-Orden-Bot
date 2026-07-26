@@ -41,6 +41,23 @@ export function validateDisplayName(value: string): string {
   return displayName;
 }
 
+export function validateRealName(value?: string | null): string | null {
+  const realName = (value ?? "").normalize("NFKC").trim().replace(/\s+/g, " ");
+
+  if (!realName) {
+    return null;
+  }
+
+  if (realName.length < 2 || realName.length > 60) {
+    throw new AuthError(
+      "INVALID_INPUT",
+      "Реальное имя должно содержать от 2 до 60 символов.",
+    );
+  }
+
+  return realName;
+}
+
 export function validatePassword(value: string): string {
   if (value.length < 10 || value.length > 128) {
     throw new AuthError(

@@ -21,6 +21,10 @@ export interface AuthGateway {
     username: string,
     password: string,
   ): Promise<AuthUser>;
+  updateProfile(
+    displayName: string,
+    realName: string,
+  ): Promise<AuthUser>;
   logout(): Promise<void>;
 }
 
@@ -58,6 +62,23 @@ export class HttpAuthGateway implements AuthGateway {
     );
     if (!result.user) {
       throw new Error("Сессия не была создана.");
+    }
+    return result.user;
+  }
+
+  async updateProfile(
+    displayName: string,
+    realName: string,
+  ): Promise<AuthUser> {
+    const result = await parse(
+      await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayName, realName }),
+      }),
+    );
+    if (!result.user) {
+      throw new Error("Не удалось обновить профиль.");
     }
     return result.user;
   }

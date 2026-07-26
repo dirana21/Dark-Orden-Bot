@@ -16,6 +16,7 @@ export const users = sqliteTable(
       .references(() => guilds.id),
     username: text("username").notNull(),
     displayName: text("display_name").notNull(),
+    realName: text("real_name"),
     passwordHash: text("password_hash").notNull(),
     role: text("role", {
       enum: ["owner", "officer", "member"],

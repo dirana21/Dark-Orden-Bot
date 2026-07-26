@@ -1,11 +1,13 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import {
   Bell,
   CalendarDays,
   ChevronRight,
   LogOut,
   MessageSquareText,
+  PencilLine,
   ShieldCheck,
   Sparkles,
   Swords,
@@ -13,6 +15,7 @@ import {
 } from "lucide-react";
 import type { AuthUser } from "@/domain/auth/model";
 import { BrandMark } from "../brand-mark";
+import { ProfileEditor } from "../profile/profile-editor";
 
 const roleLabels = {
   owner: "Глава гильдии",
@@ -23,14 +26,29 @@ const roleLabels = {
 interface GuildDashboardProps {
   user: AuthUser;
   isSubmitting: boolean;
+  error: string;
+  onClearError: () => void;
+  onUpdateProfile: (
+    displayName: string,
+    realName: string,
+  ) => Promise<boolean>;
   onLogout: () => Promise<void>;
 }
 
 export function GuildDashboard({
   user,
   isSubmitting,
+  error,
+  onClearError,
+  onUpdateProfile,
   onLogout,
 }: GuildDashboardProps) {
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const closeProfile = useCallback(() => {
+    onClearError();
+    setIsProfileOpen(false);
+  }, [onClearError]);
+
   return (
     <div className="dashboard-shell">
       <header className="dashboard-header">
@@ -48,16 +66,29 @@ export function GuildDashboard({
           <button
             className="profile-chip"
             type="button"
-            onClick={onLogout}
+            onClick={() => {
+              onClearError();
+              setIsProfileOpen(true);
+            }}
             disabled={isSubmitting}
-            title="Выйти из аккаунта"
+            title="Редактировать профиль"
           >
             <span>{user.displayName.slice(0, 1).toLocaleUpperCase("ru")}</span>
             <span className="profile-chip__copy">
               <strong>{user.displayName}</strong>
               <small>{roleLabels[user.role]}</small>
             </span>
-            <LogOut size={16} />
+            <PencilLine size={15} />
+          </button>
+          <button
+            className="icon-button logout-button"
+            type="button"
+            aria-label="Выйти из аккаунта"
+            title="Выйти из аккаунта"
+            onClick={onLogout}
+            disabled={isSubmitting}
+          >
+            <LogOut size={17} />
           </button>
         </div>
       </header>
@@ -140,14 +171,43 @@ export function GuildDashboard({
             </div>
             <h2>{user.displayName}</h2>
             <p>@{user.username}</p>
+            <p
+              className={
+                user.realName
+                  ? "member-card__real-name"
+                  : "member-card__real-name is-empty"
+              }
+            >
+              {user.realName ?? "Реальное имя не указано"}
+            </p>
             <span className="role-badge">{roleLabels[user.role]}</span>
             <dl>
               <div><dt>Гильдия</dt><dd>{user.guildName}</dd></div>
               <div><dt>Статус</dt><dd className="online-value">В строю</dd></div>
             </dl>
+            <button
+              className="member-card__edit"
+              type="button"
+              onClick={() => {
+                onClearError();
+                setIsProfileOpen(true);
+              }}
+            >
+              <PencilLine size={14} /> Редактировать профиль
+            </button>
           </aside>
         </div>
       </main>
+      {isProfileOpen ? (
+        <ProfileEditor
+          user={user}
+          disabled={isSubmitting}
+          error={error}
+          onClose={closeProfile}
+          onClearError={onClearError}
+          onSave={onUpdateProfile}
+        />
+      ) : null}
     </div>
   );
 }

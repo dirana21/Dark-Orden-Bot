@@ -1,8 +1,17 @@
-import type { AuthUser, NewUser, StoredUser } from "./model";
+import type {
+  AuthUser,
+  NewUser,
+  StoredUser,
+  UpdateProfileInput,
+} from "./model";
 
 export interface UserRepository {
   findByUsername(username: string): Promise<StoredUser | null>;
   create(user: NewUser): Promise<AuthUser>;
+}
+
+export interface ProfileRepository {
+  updateProfile(userId: string, profile: UpdateProfileInput): Promise<AuthUser>;
 }
 
 export interface SessionRepository {

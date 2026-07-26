@@ -25,6 +25,8 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /DARK ORDEN/i);
   assert.match(contents, /Проверяем доступ к штабу/);
   assert.match(contents, /api\/auth\/register/);
+  assert.match(contents, /api\/profile/);
+  assert.match(contents, /real_name/);
   assert.match(contents, /HttpOnly/);
   assert.match(contents, /Content-Security-Policy/);
   assert.doesNotMatch(contents, /react-loading-skeleton/i);

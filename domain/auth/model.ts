@@ -6,6 +6,7 @@ export interface AuthUser {
   guildName: string;
   username: string;
   displayName: string;
+  realName: string | null;
   role: GuildRole;
   createdAt: number;
 }
@@ -19,6 +20,7 @@ export interface NewUser {
   guildId: string;
   username: string;
   displayName: string;
+  realName: string | null;
   passwordHash: string;
   role: GuildRole;
   createdAt: number;
@@ -33,6 +35,11 @@ export interface RegisterUserInput {
 export interface LoginUserInput {
   username: string;
   password: string;
+}
+
+export interface UpdateProfileInput {
+  displayName: string;
+  realName?: string | null;
 }
 
 export interface AuthResult {
