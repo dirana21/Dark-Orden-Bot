@@ -1,0 +1,475 @@
+"use client";
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from "react";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  LogOut,
+  Medal,
+  Plus,
+  RefreshCw,
+  X,
+} from "lucide-react";
+import type { BlackSunStanding } from "@/domain/black-sun/model";
+import { useAuthController } from "@/app/hooks/use-auth-controller";
+import { HttpBlackSunGateway } from "@/app/lib/black-sun-client";
+import { guildRoleLabels } from "@/app/lib/role-labels";
+import { BrandMark } from "../brand-mark";
+import { BlackSunIcon } from "./black-sun-icon";
+
+const pointsFormatter = new Intl.NumberFormat("ru-RU");
+
+function formatUpdatedAt(value: number | null): string {
+  if (!value) {
+    return "Очки не внесены";
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+interface ScoreDialogProps {
+  initialPoints: number;
+  disabled: boolean;
+  error: string;
+  onClose: () => void;
+  onSubmit: (points: number) => Promise<void>;
+}
+
+function ScoreDialog({
+  initialPoints,
+  disabled,
+  error,
+  onClose,
+  onSubmit,
+}: ScoreDialogProps) {
+  const [points, setPoints] = useState(
+    initialPoints > 0 ? String(initialPoints) : "",
+  );
+  const [localError, setLocalError] = useState("");
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !disabled) {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [disabled, onClose]);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const parsed = Number(points);
+    if (
+      !points.trim() ||
+      !Number.isSafeInteger(parsed) ||
+      parsed < 0 ||
+      parsed > 999_999_999
+    ) {
+      setLocalError("Введите целое число от 0 до 999 999 999.");
+      return;
+    }
+    setLocalError("");
+    await onSubmit(parsed);
+  }
+
+  return (
+    <div
+      className="black-sun-score-modal"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !disabled) {
+          onClose();
+        }
+      }}
+    >
+      <section
+        className="black-sun-score-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="black-sun-score-title"
+      >
+        <div className="black-sun-score-dialog__glow" aria-hidden="true" />
+        <header>
+          <div className="black-sun-score-dialog__mark">
+            <BlackSunIcon size={28} />
+          </div>
+          <div>
+            <span className="section-kicker">Личный результат</span>
+            <h2 id="black-sun-score-title">Внести очки</h2>
+          </div>
+          <button
+            className="profile-editor__close"
+            type="button"
+            aria-label="Закрыть"
+            onClick={onClose}
+            disabled={disabled}
+          >
+            <X size={19} />
+          </button>
+        </header>
+
+        <form onSubmit={submit}>
+          <label className="field">
+            ОЧКИ ЧЁРНОГО СОЛНЦА
+            <span className="field__control black-sun-points-control">
+              <Medal size={18} aria-hidden="true" />
+              <input
+                autoFocus
+                type="number"
+                inputMode="numeric"
+                min="0"
+                max="999999999"
+                step="1"
+                value={points}
+                onChange={(event) => {
+                  setPoints(event.target.value);
+                  setLocalError("");
+                }}
+                placeholder="Например, 125000"
+                required
+              />
+            </span>
+          </label>
+          <p className="black-sun-score-dialog__hint">
+            Новый результат заменит ранее внесённые очки.
+          </p>
+          {localError || error ? (
+            <p className="profile-editor__error" role="alert">
+              {localError || error}
+            </p>
+          ) : null}
+          <div className="profile-editor__actions">
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={onClose}
+              disabled={disabled}
+            >
+              Отмена
+            </button>
+            <button className="primary-button" type="submit" disabled={disabled}>
+              {disabled ? <span className="button-spinner" /> : <Medal size={16} />}
+              {disabled ? "Сохраняем…" : "Сохранить очки"}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+export function BlackSunPortal() {
+  const auth = useAuthController();
+  const gateway = useMemo(() => new HttpBlackSunGateway(), []);
+  const [standings, setStandings] = useState<BlackSunStanding[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isScoreOpen, setIsScoreOpen] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!auth.isBooting && !auth.user) {
+      window.location.replace("/");
+    }
+  }, [auth.isBooting, auth.user]);
+
+  useEffect(() => {
+    if (!auth.user) {
+      return;
+    }
+
+    let active = true;
+    gateway
+      .list()
+      .then((entries) => {
+        if (active) {
+          setStandings(entries);
+        }
+      })
+      .catch((caught) => {
+        if (active) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Не удалось загрузить рейтинг.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [auth.user, gateway]);
+
+  if (auth.isBooting || !auth.user) {
+    return (
+      <main className="boot-screen" aria-live="polite">
+        <BrandMark />
+        <span className="boot-screen__spinner" />
+        <p>
+          {auth.isBooting
+            ? "Проверяем доступ к рейтингу…"
+            : "Возвращаем к авторизации…"}
+        </p>
+      </main>
+    );
+  }
+
+  const user = auth.user;
+  const currentStanding = standings.find((entry) => entry.isCurrentUser);
+  const canSubmitScore = user.role !== "superadmin";
+
+  async function submitScore(points: number) {
+    setIsSaving(true);
+    setError("");
+    try {
+      setStandings(await gateway.submit(points));
+      setIsScoreOpen(false);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось сохранить очки.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function reloadStandings() {
+    setIsLoading(true);
+    setError("");
+    try {
+      setStandings(await gateway.list());
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось обновить рейтинг.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <div className="black-sun-shell">
+      <header className="dashboard-header black-sun-header">
+        <Link
+          className="black-sun-brand-link"
+          href="/"
+          aria-label="Вернуться в штаб"
+        >
+          <BrandMark compact />
+        </Link>
+        <nav aria-label="Основная навигация">
+          <Link href="/">Обзор</Link>
+          <Link className="is-current" href="/black-sun">
+            Чёрное Солнце
+          </Link>
+        </nav>
+        <div className="dashboard-header__actions">
+          <Link
+            className="icon-button"
+            href="/"
+            aria-label="Вернуться в штаб"
+            title="Вернуться в штаб"
+          >
+            <ArrowLeft size={17} />
+          </Link>
+          <span className="profile-chip black-sun-profile-static">
+            <span>{user.displayName.slice(0, 1).toLocaleUpperCase("ru")}</span>
+            <span className="profile-chip__copy">
+              <strong>{user.displayName}</strong>
+              <small>{guildRoleLabels[user.role]}</small>
+            </span>
+          </span>
+          <button
+            className="icon-button logout-button"
+            type="button"
+            aria-label="Выйти из аккаунта"
+            title="Выйти из аккаунта"
+            onClick={auth.logout}
+            disabled={auth.isSubmitting}
+          >
+            <LogOut size={17} />
+          </button>
+        </div>
+      </header>
+
+      <main className="black-sun-main">
+        <section className="black-sun-hero">
+          <div className="black-sun-hero__symbol">
+            <BlackSunIcon size={48} />
+          </div>
+          <div className="black-sun-hero__copy">
+            <span className="section-kicker">Боевой рейтинг гильдии</span>
+            <h1>
+              Чёрное Солнце <span>/ Black Sun</span>
+            </h1>
+            <p>
+              Внесите личный результат события. Таблица автоматически
+              распределит до 50 участников от наибольшего количества очков к
+              наименьшему.
+            </p>
+          </div>
+          <div className="black-sun-hero__action">
+            <button
+              className="primary-button black-sun-score-button"
+              type="button"
+              onClick={() => {
+                setError("");
+                setIsScoreOpen(true);
+              }}
+              disabled={!canSubmitScore}
+            >
+              <Plus size={17} /> Внести очки
+            </button>
+            {!canSubmitScore ? (
+              <small>Скрытая учётная запись не участвует в рейтинге.</small>
+            ) : currentStanding ? (
+              <small>
+                Ваш результат:{" "}
+                <strong>{pointsFormatter.format(currentStanding.points)}</strong>
+              </small>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="black-sun-leaderboard">
+          <header className="black-sun-leaderboard__header">
+            <div>
+              <span className="section-kicker">Таблица участников</span>
+              <h2>Рейтинг Dark Orden</h2>
+            </div>
+            <div className="black-sun-leaderboard__meta">
+              <span>{standings.length} из 50</span>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={reloadStandings}
+                disabled={isLoading}
+                aria-label="Обновить рейтинг"
+                title="Обновить рейтинг"
+              >
+                <RefreshCw
+                  className={isLoading ? "is-spinning" : ""}
+                  size={16}
+                />
+              </button>
+            </div>
+          </header>
+
+          {error && !isScoreOpen ? (
+            <p className="black-sun-page-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="black-sun-table-wrap">
+            <table className="black-sun-table">
+              <thead>
+                <tr>
+                  <th scope="col">Место</th>
+                  <th scope="col">Участник</th>
+                  <th scope="col">Роль</th>
+                  <th scope="col">Обновлено</th>
+                  <th scope="col">Очки</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading && standings.length === 0 ? (
+                  <tr>
+                    <td className="black-sun-table__state" colSpan={5}>
+                      Загружаем рейтинг Чёрного Солнца…
+                    </td>
+                  </tr>
+                ) : standings.length === 0 ? (
+                  <tr>
+                    <td className="black-sun-table__state" colSpan={5}>
+                      В рейтинге пока нет участников.
+                    </td>
+                  </tr>
+                ) : (
+                  standings.map((entry) => (
+                    <tr
+                      className={entry.isCurrentUser ? "is-current-user" : ""}
+                      key={entry.userId}
+                    >
+                      <td>
+                        <span
+                          className={`black-sun-rank black-sun-rank--${Math.min(
+                            entry.rank,
+                            4,
+                          )}`}
+                        >
+                          {entry.rank <= 3 ? <Medal size={16} /> : null}
+                          {entry.rank}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="black-sun-player">
+                          <span className="black-sun-player__avatar">
+                            {entry.displayName
+                              .slice(0, 1)
+                              .toLocaleUpperCase("ru")}
+                          </span>
+                          <span>
+                            <strong>{entry.displayName}</strong>
+                            {entry.isCurrentUser ? <small>Это вы</small> : null}
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span className="black-sun-role">
+                          {guildRoleLabels[entry.role]}
+                        </span>
+                      </td>
+                      <td>
+                        <time>
+                          {formatUpdatedAt(entry.updatedAt)}
+                        </time>
+                      </td>
+                      <td className="black-sun-points">
+                        {pointsFormatter.format(entry.points)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      {isScoreOpen ? (
+        <ScoreDialog
+          initialPoints={currentStanding?.points ?? 0}
+          disabled={isSaving}
+          error={error}
+          onClose={() => {
+            if (!isSaving) {
+              setError("");
+              setIsScoreOpen(false);
+            }
+          }}
+          onSubmit={submitScore}
+        />
+      ) : null}
+    </div>
+  );
+}

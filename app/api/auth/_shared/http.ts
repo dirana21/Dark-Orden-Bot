@@ -55,6 +55,8 @@ export function authErrorResponse(error: unknown): Response {
         ? 409
         : error.code === "INVALID_IDENTIFIER"
           ? 403
+          : error.code === "FORBIDDEN"
+            ? 403
         : error.code === "INVALID_CREDENTIALS" ||
             error.code === "UNAUTHORIZED"
           ? 401

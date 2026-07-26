@@ -4,6 +4,7 @@ export type AuthErrorCode =
   | "USER_EXISTS"
   | "INVALID_CREDENTIALS"
   | "UNAUTHORIZED"
+  | "FORBIDDEN"
   | "SERVICE_UNAVAILABLE";
 
 export class AuthError extends Error {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import {
   Bell,
   CalendarDays,
@@ -14,15 +15,10 @@ import {
   UsersRound,
 } from "lucide-react";
 import type { AuthUser } from "@/domain/auth/model";
+import { guildRoleLabels } from "@/app/lib/role-labels";
+import { BlackSunIcon } from "../black-sun/black-sun-icon";
 import { BrandMark } from "../brand-mark";
 import { ProfileEditor } from "../profile/profile-editor";
-
-const roleLabels = {
-  superadmin: "Глава гильдии",
-  owner: "Глава гильдии",
-  officer: "Офицер",
-  member: "Участник",
-};
 
 interface GuildDashboardProps {
   user: AuthUser;
@@ -60,6 +56,14 @@ export function GuildDashboard({
           <a href="#events">События</a>
         </nav>
         <div className="dashboard-header__actions">
+          <Link
+            className="icon-button black-sun-nav-icon"
+            href="/black-sun"
+            aria-label="Открыть рейтинг Чёрного Солнца"
+            title="Чёрное Солнце / Black Sun"
+          >
+            <BlackSunIcon size={19} />
+          </Link>
           <button className="icon-button" type="button" aria-label="Уведомления">
             <Bell size={18} />
             <span className="notification-dot" />
@@ -77,7 +81,7 @@ export function GuildDashboard({
             <span>{user.displayName.slice(0, 1).toLocaleUpperCase("ru")}</span>
             <span className="profile-chip__copy">
               <strong>{user.displayName}</strong>
-              <small>{roleLabels[user.role]}</small>
+              <small>{guildRoleLabels[user.role]}</small>
             </span>
             <PencilLine size={15} />
           </button>
@@ -181,7 +185,7 @@ export function GuildDashboard({
             >
               {user.realName ?? "Реальное имя не указано"}
             </p>
-            <span className="role-badge">{roleLabels[user.role]}</span>
+            <span className="role-badge">{guildRoleLabels[user.role]}</span>
             <dl>
               <div><dt>Гильдия</dt><dd>{user.guildName}</dd></div>
               <div><dt>Статус</dt><dd className="online-value">В строю</dd></div>
