@@ -1,6 +1,6 @@
 import type { PasswordHasher } from "@/domain/auth/ports";
 
-const ITERATIONS = 210_000;
+const ITERATIONS = 100_000;
 const KEY_LENGTH = 256;
 const encoder = new TextEncoder();
 
