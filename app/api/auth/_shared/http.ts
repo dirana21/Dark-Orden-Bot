@@ -66,6 +66,12 @@ export function authErrorResponse(error: unknown): Response {
     );
   }
 
+  console.error("auth.request.failed", {
+    name: error instanceof Error ? error.name : "UnknownError",
+    message: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+  });
+
   const message = error instanceof Error ? error.message : "";
   if (
     message.includes("D1") ||
