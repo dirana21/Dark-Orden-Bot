@@ -1676,18 +1676,6 @@ input:focus-visible {
   text-transform: uppercase;
 }
 
-.black-sun-role {
-  display: inline-flex;
-  padding: 5px 8px;
-  border: 1px solid rgba(201, 126, 244, 0.17);
-  background: rgba(180, 77, 226, 0.035);
-  color: #b48bc9;
-  font-size: 8px;
-  font-weight: 750;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 .black-sun-table time {
   color: #686b67;
   font-size: 10px;
@@ -1957,12 +1945,6 @@ input:focus-visible {
 
 .vengeful-souls-shell .black-sun-player small {
   color: #72b0df;
-}
-
-.vengeful-souls-shell .black-sun-role {
-  border-color: rgba(126, 193, 244, 0.18);
-  background: rgba(57, 133, 200, 0.04);
-  color: #85aac6;
 }
 
 .vengeful-souls-shell .black-sun-table .black-sun-points {
@@ -2398,18 +2380,12 @@ input:focus-visible {
   }
 
   .black-sun-table td:nth-child(3) {
-    overflow: hidden;
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  .black-sun-table td:nth-child(4) {
     grid-column: 3;
     grid-row: 2;
     text-align: right;
   }
 
-  .black-sun-table td:nth-child(5) {
+  .black-sun-table td:nth-child(4) {
     grid-column: 3;
     grid-row: 1;
     text-align: right;
@@ -2441,13 +2417,6 @@ input:focus-visible {
   }
 
   .black-sun-player strong {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .black-sun-role {
-    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

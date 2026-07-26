@@ -391,7 +391,6 @@ export function VengefulSoulsPortal() {
                 <tr>
                   <th scope="col">Место</th>
                   <th scope="col">Участник</th>
-                  <th scope="col">Роль</th>
                   <th scope="col">Обновлено</th>
                   <th scope="col">Очки</th>
                 </tr>
@@ -399,13 +398,13 @@ export function VengefulSoulsPortal() {
               <tbody>
                 {isLoading && standings.length === 0 ? (
                   <tr>
-                    <td className="black-sun-table__state" colSpan={5}>
+                    <td className="black-sun-table__state" colSpan={4}>
                       Загружаем рейтинг Ночи неупокоеных душ…
                     </td>
                   </tr>
                 ) : standings.length === 0 ? (
                   <tr>
-                    <td className="black-sun-table__state" colSpan={5}>
+                    <td className="black-sun-table__state" colSpan={4}>
                       В рейтинге пока нет участников.
                     </td>
                   </tr>
@@ -437,11 +436,6 @@ export function VengefulSoulsPortal() {
                             <strong>{entry.displayName}</strong>
                             {entry.isCurrentUser ? <small>Это вы</small> : null}
                           </span>
-                        </span>
-                      </td>
-                      <td>
-                        <span className="black-sun-role">
-                          {guildRoleLabels[entry.role]}
                         </span>
                       </td>
                       <td>
