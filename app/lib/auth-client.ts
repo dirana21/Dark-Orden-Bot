@@ -20,6 +20,7 @@ export interface AuthGateway {
     displayName: string,
     username: string,
     password: string,
+    guildIdentifier: string,
   ): Promise<AuthUser>;
   updateProfile(
     displayName: string,
@@ -52,12 +53,18 @@ export class HttpAuthGateway implements AuthGateway {
     displayName: string,
     username: string,
     password: string,
+    guildIdentifier: string,
   ): Promise<AuthUser> {
     const result = await parse(
       await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName, username, password }),
+        body: JSON.stringify({
+          displayName,
+          username,
+          password,
+          guildIdentifier,
+        }),
       }),
     );
     if (!result.user) {

@@ -61,8 +61,15 @@ export function useAuthController() {
   );
 
   const register = useCallback(
-    (displayName: string, username: string, password: string) =>
-      run(() => gateway.register(displayName, username, password)),
+    (
+      displayName: string,
+      username: string,
+      password: string,
+      guildIdentifier: string,
+    ) =>
+      run(() =>
+        gateway.register(displayName, username, password, guildIdentifier),
+      ),
     [gateway, run],
   );
 

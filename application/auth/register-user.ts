@@ -5,10 +5,12 @@ import type {
   Clock,
   IdGenerator,
   PasswordHasher,
+  RegistrationIdentifierVerifier,
   UserRepository,
 } from "@/domain/auth/ports";
 import {
   validateDisplayName,
+  validateGuildIdentifier,
   validatePassword,
   validateUsername,
 } from "@/domain/auth/validation";
@@ -22,12 +24,21 @@ export class RegisterUser {
     private readonly sessions: CreateSession,
     private readonly ids: IdGenerator,
     private readonly clock: Clock,
+    private readonly identifiers: RegistrationIdentifierVerifier,
   ) {}
 
   async execute(input: RegisterUserInput): Promise<AuthResult> {
     const username = validateUsername(input.username);
     const displayName = validateDisplayName(input.displayName);
     const password = validatePassword(input.password);
+    const guildIdentifier = validateGuildIdentifier(input.guildIdentifier);
+
+    if (!(await this.identifiers.matches(guildIdentifier))) {
+      throw new AuthError(
+        "INVALID_IDENTIFIER",
+        "Неверный идентификатор гильдии.",
+      );
+    }
 
     if (await this.users.findByUsername(username)) {
       throw new AuthError("USER_EXISTS", "Этот логин уже занят.");

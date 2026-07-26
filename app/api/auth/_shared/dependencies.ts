@@ -6,6 +6,7 @@ import { RegisterUser } from "@/application/auth/register-user";
 import { UpdateProfile } from "@/application/profile/update-profile";
 import { D1SessionRepository } from "@/infrastructure/auth/d1-session-repository";
 import { D1UserRepository } from "@/infrastructure/auth/d1-user-repository";
+import { RuntimeRegistrationIdentifier } from "@/infrastructure/auth/runtime-registration-identifier";
 import { WebCryptoPasswordHasher } from "@/infrastructure/auth/web-crypto-password-hasher";
 import { WebCryptoSessionToken } from "@/infrastructure/auth/web-crypto-session-token";
 import {
@@ -19,10 +20,18 @@ const passwords = new WebCryptoPasswordHasher();
 const tokens = new WebCryptoSessionToken();
 const clock = new SystemClock();
 const ids = new CryptoIdGenerator();
+const registrationIdentifiers = new RuntimeRegistrationIdentifier();
 const createSession = new CreateSession(sessions, tokens, clock);
 
 export const authUseCases = {
-  register: new RegisterUser(users, passwords, createSession, ids, clock),
+  register: new RegisterUser(
+    users,
+    passwords,
+    createSession,
+    ids,
+    clock,
+    registrationIdentifiers,
+  ),
   login: new LoginUser(users, passwords, createSession),
   getSession: new GetSession(sessions, tokens, clock),
   logout: new LogoutUser(sessions, tokens),

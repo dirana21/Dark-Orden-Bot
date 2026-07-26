@@ -30,6 +30,7 @@ export interface RegisterUserInput {
   username: string;
   displayName: string;
   password: string;
+  guildIdentifier: string;
 }
 
 export interface LoginUserInput {

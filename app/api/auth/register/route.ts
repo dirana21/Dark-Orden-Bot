@@ -16,11 +16,13 @@ export async function POST(request: Request) {
       username?: string;
       displayName?: string;
       password?: string;
+      guildIdentifier?: string;
     };
     const result = await authUseCases.register.execute({
       username: input.username ?? "",
       displayName: input.displayName ?? "",
       password: input.password ?? "",
+      guildIdentifier: input.guildIdentifier ?? "",
     });
 
     return Response.json(

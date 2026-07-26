@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import {
   Eye,
   EyeOff,
+  KeyRound,
   LockKeyhole,
   ShieldCheck,
   UserRound,
@@ -15,6 +16,7 @@ interface RegisterFormProps {
     displayName: string,
     username: string,
     password: string,
+    guildIdentifier: string,
   ) => Promise<void>;
 }
 
@@ -22,6 +24,7 @@ export function RegisterForm({ disabled, onSubmit }: RegisterFormProps) {
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [guildIdentifier, setGuildIdentifier] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
@@ -33,7 +36,7 @@ export function RegisterForm({ disabled, onSubmit }: RegisterFormProps) {
       return;
     }
     setLocalError("");
-    await onSubmit(displayName, username, password);
+    await onSubmit(displayName, username, password, guildIdentifier);
   }
 
   return (
@@ -52,6 +55,26 @@ export function RegisterForm({ disabled, onSubmit }: RegisterFormProps) {
             required
           />
         </span>
+      </label>
+
+      <label className="field">
+        <span>Идентификатор гильдии</span>
+        <span className="field__control field__control--guild-code">
+          <KeyRound size={18} aria-hidden="true" />
+          <input
+            value={guildIdentifier}
+            onChange={(event) => setGuildIdentifier(event.target.value)}
+            type="password"
+            autoComplete="off"
+            placeholder="Получите у главы или офицера"
+            minLength={4}
+            maxLength={64}
+            required
+          />
+        </span>
+        <small className="guild-code-hint">
+          Закрытый код доступа для участников Dark Orden.
+        </small>
       </label>
 
       <label className="field">

@@ -31,6 +31,10 @@ export interface PasswordHasher {
   verify(password: string, encodedHash: string): Promise<boolean>;
 }
 
+export interface RegistrationIdentifierVerifier {
+  matches(candidate: string): Promise<boolean>;
+}
+
 export interface SessionTokenService {
   generate(): string;
   hash(token: string): Promise<string>;

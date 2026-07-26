@@ -16,6 +16,7 @@ interface AuthPanelProps {
     displayName: string,
     username: string,
     password: string,
+    guildIdentifier: string,
   ) => Promise<void>;
 }
 
@@ -45,7 +46,7 @@ export function AuthPanel({
       <p className="auth-panel__subtitle">
         {mode === "login"
           ? "Войдите, чтобы открыть личный кабинет участника Dark Orden."
-          : "Создайте аккаунт — профиль будет сразу привязан к Dark Orden."}
+          : "Создайте аккаунт по закрытому идентификатору Dark Orden."}
       </p>
 
       <div className="auth-tabs" role="tablist" aria-label="Авторизация">

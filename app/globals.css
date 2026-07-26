@@ -447,6 +447,24 @@ input:focus-visible {
   font-size: 10px;
 }
 
+.guild-code-hint {
+  color: #7d725e;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.field__control--guild-code {
+  border-color: rgba(215, 180, 106, 0.18);
+  background:
+    linear-gradient(90deg, rgba(215, 180, 106, 0.045), transparent 42%),
+    rgba(6, 7, 8, 0.68);
+}
+
+.field__control--guild-code > svg {
+  color: #a98b54;
+}
+
 .form-message {
   margin: 0 0 14px;
   padding: 10px 12px;

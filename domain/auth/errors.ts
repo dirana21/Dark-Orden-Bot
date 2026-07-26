@@ -1,5 +1,6 @@
 export type AuthErrorCode =
   | "INVALID_INPUT"
+  | "INVALID_IDENTIFIER"
   | "USER_EXISTS"
   | "INVALID_CREDENTIALS"
   | "UNAUTHORIZED"

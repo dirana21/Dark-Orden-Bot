@@ -75,3 +75,16 @@ export function validatePassword(value: string): string {
 
   return value;
 }
+
+export function validateGuildIdentifier(value: string): string {
+  const identifier = value.normalize("NFKC").trim();
+
+  if (identifier.length < 4 || identifier.length > 64) {
+    throw new AuthError(
+      "INVALID_IDENTIFIER",
+      "Неверный идентификатор гильдии.",
+    );
+  }
+
+  return identifier;
+}
