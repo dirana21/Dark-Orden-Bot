@@ -314,7 +314,7 @@ export function BlackSunPortal() {
       <main className="black-sun-main">
         <section className="black-sun-hero">
           <div className="black-sun-hero__symbol">
-            <BlackSunIcon size={62} />
+            <BlackSunIcon size={104} />
           </div>
           <div className="black-sun-hero__copy">
             <span className="section-kicker">Боевой рейтинг гильдии</span>

@@ -1,4 +1,4 @@
-import { Sun } from "lucide-react";
+import Image from "next/image";
 import type { CSSProperties } from "react";
 
 export function BlackSunIcon({ size = 18 }: { size?: number }) {
@@ -9,8 +9,14 @@ export function BlackSunIcon({ size = 18 }: { size?: number }) {
       aria-hidden="true"
     >
       <span className="black-sun-symbol__aura" />
-      <Sun size={size} strokeWidth={2.1} />
-      <span className="black-sun-symbol__core" />
+      <Image
+        className="black-sun-symbol__image"
+        src="/black-sun-icon.png"
+        width={size}
+        height={size}
+        alt=""
+        unoptimized
+      />
     </span>
   );
 }

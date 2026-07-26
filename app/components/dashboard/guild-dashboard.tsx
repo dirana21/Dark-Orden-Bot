@@ -62,7 +62,7 @@ export function GuildDashboard({
             aria-label="Открыть рейтинг Чёрного Солнца"
             title="Чёрное Солнце / Black Sun"
           >
-            <BlackSunIcon size={28} />
+            <BlackSunIcon size={50} />
           </Link>
           <button className="icon-button" type="button" aria-label="Уведомления">
             <Bell size={18} />
