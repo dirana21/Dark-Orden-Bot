@@ -1,98 +1,134 @@
-# vinext-starter
+# Dark Orden — Guild Command Center
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+## [🚀 ЗАПУСТИТЬ ПРИЛОЖЕНИЕ В БРАУЗЕРЕ](https://dark-orden-guild-hub.rkvvx28vrb.chatgpt.site)
 
-## Prerequisites
+[![Dark Orden Guild Command Center](public/og.png)](https://dark-orden-guild-hub.rkvvx28vrb.chatgpt.site)
 
-- Node.js `>=22.13.0`
+Полноценная первая версия CRM-системы для гильдии **Dark Orden** в Black Desert Mobile. Сейчас приложение закрывает базовый контур аккаунта: регистрация, авторизация, защищённая сессия, выход и личный кабинет участника.
 
-## Quick Start
+> Фанатский проект сообщества. Не связан с Pearl Abyss и не использует официальные игровые материалы.
+
+## Содержание
+
+- [Что уже работает](#что-уже-работает)
+- [Безопасность](#безопасность)
+- [Архитектура и SOLID](#архитектура-и-solid)
+- [Технологии](#технологии)
+- [Локальный запуск](#локальный-запуск)
+- [Полезные команды](#полезные-команды)
+- [Развёртывание](#развёртывание)
+- [Текущие ограничения](#текущие-ограничения)
+- [План развития](#план-развития)
+
+## Что уже работает
+
+- регистрация по имени персонажа, логину и паролю;
+- автоматическое добавление нового аккаунта в гильдию `Dark Orden`;
+- проверка уникальности логина;
+- вход по логину и паролю;
+- сохранение защищённой сессии на семь дней;
+- автоматическая проверка сессии после перезагрузки страницы;
+- безопасный выход с удалением серверной сессии;
+- личный кабинет участника;
+- базовые роли `owner`, `officer` и `member`;
+- адаптивный интерфейс для компьютеров, планшетов и телефонов;
+- русскоязычные проверки форм и понятные сообщения об ошибках;
+- оригинальный фирменный арт и Open Graph-превью.
+
+## Безопасность
+
+- пароли никогда не сохраняются в открытом виде;
+- используется `PBKDF2-SHA-256` с 210 000 итераций и индивидуальной 128-битной солью;
+- токен сессии генерируется из 256 бит криптографически стойкой случайности;
+- в базе хранится только SHA-256-хеш токена сессии;
+- браузер получает сессию через `HttpOnly`, `SameSite=Lax` и `Secure` cookie;
+- изменяющие запросы проходят проверку источника;
+- ответы авторизации не кешируются;
+- настроены CSP, защита от встраивания страницы и ограничение разрешений браузера;
+- сервер и клиент независимо проверяют регистрационные данные;
+- производственные зависимости проходят `npm audit --omit=dev` без известных уязвимостей.
+
+## Архитектура и SOLID
+
+Проект разделён на четыре независимых слоя:
+
+```text
+app/              интерфейс, формы, кабинет и HTTP-маршруты
+application/      сценарии регистрации, входа, сессии и выхода
+domain/           модели, правила проверки и контракты
+infrastructure/   D1-репозитории, криптография и системные сервисы
+```
+
+Принципы SOLID применены следующим образом:
+
+- **Single Responsibility:** формы, сценарии, репозитории и криптография отвечают каждый за одну задачу;
+- **Open/Closed:** Discord, другая база или внешний провайдер входа подключаются через новые реализации контрактов;
+- **Liskov Substitution:** реализации репозиториев и сервисов можно заменять без изменения сценариев;
+- **Interface Segregation:** хранение пользователей, сессий, хеширование и генерация токенов разделены;
+- **Dependency Inversion:** бизнес-сценарии зависят от интерфейсов домена, а не от Cloudflare D1.
+
+Такая структура позволяет будущему Discord-боту использовать те же серверные сценарии и базу без прямой зависимости от интерфейса сайта.
+
+## Технологии
+
+- TypeScript;
+- React;
+- Next.js и Vinext;
+- Cloudflare Workers;
+- Cloudflare D1;
+- Drizzle ORM и SQL-миграции;
+- Lucide Icons;
+- CSS с адаптивной вёрсткой;
+- Node.js Test Runner и ESLint.
+
+## Локальный запуск
+
+Требуется Node.js `22.13.0` или новее.
 
 ```bash
-npm install
+git clone https://github.com/dirana21/Dark-Orden-Bot.git
+cd Dark-Orden-Bot
+npm ci
 npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+После запуска откройте `http://localhost:3000`. Локальная база создаётся автоматически внутри каталога разработки; внешние ключи и `.env` для текущей версии не требуются.
 
-## Included Shape
+## Полезные команды
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
-
-## Workspace Auth Headers
-
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
-
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
+```bash
+npm run dev          # локальный сервер
+npm run build        # производственная сборка
+npm test             # сборка и автоматические проверки
+npm run lint         # проверка качества кода
+npm run db:generate  # генерация SQL-миграций
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+## Развёртывание
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+Приложение содержит серверную авторизацию и базу данных, поэтому оно не является обычной статической страницей GitHub Pages. Исходный код хранится на GitHub, а рабочая версия развёрнута как серверное браузерное приложение с Cloudflare D1.
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+Рабочий адрес: [dark-orden-guild-hub.rkvvx28vrb.chatgpt.site](https://dark-orden-guild-hub.rkvvx28vrb.chatgpt.site)
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
+Логины, пароли и токены не записываются в репозиторий.
 
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
+## Текущие ограничения
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
+- поддерживается одна гильдия — `Dark Orden`;
+- новый пользователь получает роль `member`;
+- восстановление пароля по email пока отсутствует;
+- управление составом, события и Discord-интеграция показаны как следующие модули;
+- публичную регистрацию позднее желательно заменить приглашениями или одобрением офицера.
 
-## Useful Commands
+## План развития
 
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+1. Панель управления составом и ролями.
+2. Приглашения и подтверждение новых участников.
+3. Журнал активности и события гильдии.
+4. Привязка аккаунта Discord.
+5. Защищённый API для Discord-бота.
+6. Автоматический импорт сообщений и отчётов из Discord.
+7. Создание собственных гильдий и вступление по приглашению.
+8. Разделение данных нескольких гильдий.
+9. Восстановление пароля и подтверждение email.
+10. Аудит действий офицеров и владельцев.
