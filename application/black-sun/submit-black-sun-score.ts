@@ -2,6 +2,7 @@ import { AuthError } from "@/domain/auth/errors";
 import type { BlackSunRepository } from "@/domain/black-sun/ports";
 import { validateBlackSunPoints } from "@/domain/black-sun/validation";
 import type { Clock } from "@/domain/auth/ports";
+import type { EventSessionNumber } from "@/domain/events/model";
 
 export class SubmitBlackSunScore {
   constructor(
@@ -12,11 +13,13 @@ export class SubmitBlackSunScore {
   async execute(
     userId: string,
     guildId: string,
+    sessionNumber: EventSessionNumber,
     points: unknown,
   ): Promise<void> {
     const saved = await this.scores.savePlayerScore(
       userId,
       guildId,
+      sessionNumber,
       validateBlackSunPoints(points),
       this.clock.now(),
     );

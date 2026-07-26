@@ -1,4 +1,5 @@
 import { ListBlackSunStandings } from "@/application/black-sun/list-black-sun-standings";
+import { SelectBlackSunRole } from "@/application/black-sun/select-black-sun-role";
 import { SubmitBlackSunScore } from "@/application/black-sun/submit-black-sun-score";
 import { D1BlackSunRepository } from "@/infrastructure/black-sun/d1-black-sun-repository";
 import { SystemClock } from "@/infrastructure/system/system-services";
@@ -8,5 +9,6 @@ const clock = new SystemClock();
 
 export const blackSunUseCases = {
   list: new ListBlackSunStandings(scores),
+  selectRole: new SelectBlackSunRole(scores),
   submit: new SubmitBlackSunScore(scores, clock),
 };

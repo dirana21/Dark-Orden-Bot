@@ -35,6 +35,9 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /Night of Vengeful Souls/);
   assert.match(contents, /event-nav-mobile/);
   assert.match(contents, /black-sun-event-card/);
+  assert.match(contents, /event-session-card/);
+  assert.match(contents, /event-role-option/);
+  assert.match(contents, /Выберите роль/);
   assert.match(contents, /guildMemberCount/);
   assert.match(contents, /visible_members\.is_hidden = 0/);
   assert.match(contents, /Чёрное Солнце/);

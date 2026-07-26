@@ -1,4 +1,8 @@
 import type { BlackSunStanding } from "@/domain/black-sun/model";
+import type {
+  EventRole,
+  EventSessionNumber,
+} from "@/domain/events/model";
 
 interface BlackSunResponse {
   standings?: BlackSunStanding[];
@@ -14,16 +18,36 @@ async function parse(response: Response): Promise<BlackSunStanding[]> {
 }
 
 export class HttpBlackSunGateway {
-  async list(): Promise<BlackSunStanding[]> {
-    return parse(await fetch("/api/black-sun", { cache: "no-store" }));
+  async list(sessionNumber: EventSessionNumber): Promise<BlackSunStanding[]> {
+    return parse(
+      await fetch(`/api/black-sun?session=${sessionNumber}`, {
+        cache: "no-store",
+      }),
+    );
   }
 
-  async submit(points: number): Promise<BlackSunStanding[]> {
+  async submit(
+    sessionNumber: EventSessionNumber,
+    points: number,
+  ): Promise<BlackSunStanding[]> {
     return parse(
-      await fetch("/api/black-sun", {
+      await fetch(`/api/black-sun?session=${sessionNumber}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ points }),
+      }),
+    );
+  }
+
+  async selectRole(
+    sessionNumber: EventSessionNumber,
+    role: EventRole,
+  ): Promise<BlackSunStanding[]> {
+    return parse(
+      await fetch(`/api/black-sun?session=${sessionNumber}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
       }),
     );
   }

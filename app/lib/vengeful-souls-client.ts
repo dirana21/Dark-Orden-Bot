@@ -1,4 +1,8 @@
 import type { VengefulSoulsStanding } from "@/domain/vengeful-souls/model";
+import type {
+  EventRole,
+  EventSessionNumber,
+} from "@/domain/events/model";
 
 interface VengefulSoulsResponse {
   standings?: VengefulSoulsStanding[];
@@ -14,18 +18,38 @@ async function parse(response: Response): Promise<VengefulSoulsStanding[]> {
 }
 
 export class HttpVengefulSoulsGateway {
-  async list(): Promise<VengefulSoulsStanding[]> {
+  async list(
+    sessionNumber: EventSessionNumber,
+  ): Promise<VengefulSoulsStanding[]> {
     return parse(
-      await fetch("/api/vengeful-souls", { cache: "no-store" }),
+      await fetch(`/api/vengeful-souls?session=${sessionNumber}`, {
+        cache: "no-store",
+      }),
     );
   }
 
-  async submit(points: number): Promise<VengefulSoulsStanding[]> {
+  async submit(
+    sessionNumber: EventSessionNumber,
+    points: number,
+  ): Promise<VengefulSoulsStanding[]> {
     return parse(
-      await fetch("/api/vengeful-souls", {
+      await fetch(`/api/vengeful-souls?session=${sessionNumber}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ points }),
+      }),
+    );
+  }
+
+  async selectRole(
+    sessionNumber: EventSessionNumber,
+    role: EventRole,
+  ): Promise<VengefulSoulsStanding[]> {
+    return parse(
+      await fetch(`/api/vengeful-souls?session=${sessionNumber}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
       }),
     );
   }

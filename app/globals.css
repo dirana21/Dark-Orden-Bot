@@ -1377,6 +1377,215 @@ input:focus-visible {
   padding: 42px 0 70px;
 }
 
+.event-session-main {
+  display: grid;
+  min-height: calc(100svh - 72px);
+  align-items: center;
+}
+
+.event-session-selector {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(26px, 5vw, 54px);
+  border: 1px solid rgba(204, 125, 255, 0.24);
+  background:
+    radial-gradient(circle at 10% 16%, rgba(186, 90, 242, 0.16), transparent 20rem),
+    linear-gradient(135deg, rgba(25, 15, 35, 0.98), rgba(8, 7, 12, 0.99));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.36);
+}
+
+.event-session-selector::after {
+  position: absolute;
+  top: -210px;
+  right: -120px;
+  width: 440px;
+  height: 440px;
+  border: 1px solid rgba(209, 139, 255, 0.09);
+  border-radius: 50%;
+  content: "";
+  box-shadow:
+    0 0 0 58px rgba(196, 105, 246, 0.022),
+    0 0 0 116px rgba(196, 105, 246, 0.012);
+  pointer-events: none;
+}
+
+.event-session-selector__header {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  max-width: 820px;
+  align-items: center;
+  gap: 24px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.event-session-selector__icon {
+  display: grid;
+  width: 136px;
+  height: 136px;
+  place-items: center;
+  border: 1px solid rgba(211, 137, 255, 0.34);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle, rgba(158, 67, 222, 0.26), transparent 64%),
+    rgba(10, 7, 15, 0.92);
+  box-shadow:
+    inset 0 0 32px rgba(79, 28, 116, 0.3),
+    0 0 38px rgba(178, 75, 239, 0.2);
+}
+
+.event-session-selector h1 {
+  margin: 11px 0 10px;
+  color: #f5effa;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 5vw, 56px);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+.event-session-selector p {
+  max-width: 650px;
+  margin: 0;
+  color: #9f96a5;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.event-session-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  margin-top: 36px;
+  gap: 13px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.event-session-card {
+  display: grid;
+  min-height: 96px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  border: 1px solid rgba(205, 133, 250, 0.17);
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 8% 50%, rgba(180, 77, 226, 0.09), transparent 34%),
+    rgba(10, 8, 14, 0.74);
+  color: #d9cee0;
+  text-decoration: none;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.event-session-card:hover {
+  border-color: rgba(219, 161, 255, 0.42);
+  background:
+    radial-gradient(circle at 8% 50%, rgba(180, 77, 226, 0.17), transparent 38%),
+    rgba(18, 11, 25, 0.9);
+  box-shadow: 0 14px 34px rgba(126, 42, 173, 0.16);
+  transform: translateY(-2px);
+}
+
+.event-session-card__number {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(210, 139, 250, 0.24);
+  border-radius: 12px;
+  background: rgba(182, 82, 230, 0.07);
+  color: #d99eff;
+  font-family: Georgia, serif;
+  font-size: 20px;
+}
+
+.event-session-card__copy {
+  display: grid;
+  gap: 7px;
+}
+
+.event-session-card__copy strong {
+  color: #eee5f3;
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.event-session-card__copy small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #7e7483;
+  font-size: 9px;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.vengeful-souls-shell .event-session-selector {
+  border-color: rgba(128, 195, 255, 0.24);
+  background:
+    radial-gradient(circle at 10% 16%, rgba(74, 157, 232, 0.17), transparent 20rem),
+    linear-gradient(135deg, rgba(9, 24, 39, 0.99), rgba(4, 8, 13, 0.99));
+}
+
+.vengeful-souls-shell .event-session-selector::after {
+  border-color: rgba(137, 204, 255, 0.1);
+  box-shadow:
+    0 0 0 58px rgba(92, 169, 245, 0.025),
+    0 0 0 116px rgba(92, 169, 245, 0.013);
+}
+
+.vengeful-souls-shell .event-session-selector__icon {
+  border-color: rgba(151, 211, 255, 0.38);
+  background:
+    radial-gradient(circle, rgba(62, 139, 220, 0.26), transparent 64%),
+    rgba(4, 12, 20, 0.94);
+  box-shadow:
+    inset 0 0 32px rgba(27, 87, 153, 0.3),
+    0 0 38px rgba(67, 154, 240, 0.2);
+}
+
+.vengeful-souls-shell .event-session-selector h1 {
+  color: #f3f9fd;
+}
+
+.vengeful-souls-shell .event-session-selector p {
+  color: #93a6b6;
+}
+
+.vengeful-souls-shell .event-session-card {
+  border-color: rgba(132, 198, 250, 0.18);
+  background:
+    radial-gradient(circle at 8% 50%, rgba(69, 145, 215, 0.1), transparent 34%),
+    rgba(5, 15, 25, 0.78);
+}
+
+.vengeful-souls-shell .event-session-card:hover {
+  border-color: rgba(176, 222, 255, 0.46);
+  background:
+    radial-gradient(circle at 8% 50%, rgba(69, 145, 215, 0.18), transparent 38%),
+    rgba(8, 23, 37, 0.92);
+  box-shadow: 0 14px 34px rgba(34, 106, 172, 0.17);
+}
+
+.vengeful-souls-shell .event-session-card__number {
+  border-color: rgba(137, 204, 255, 0.26);
+  background: rgba(57, 133, 200, 0.08);
+  color: #a9d9ff;
+}
+
+.vengeful-souls-shell .event-session-card__copy strong {
+  color: #e7f4fd;
+}
+
+.vengeful-souls-shell .event-session-card__copy small {
+  color: #72899c;
+}
+
 .black-sun-hero {
   position: relative;
   display: grid;
@@ -1481,6 +1690,39 @@ input:focus-visible {
   margin: 0;
   padding: 0 18px;
   white-space: nowrap;
+}
+
+.event-session-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.event-role-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.event-role-confirmation {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.event-session-switch {
+  color: #9274a5;
+  font-size: 9px;
+  text-align: center;
+  text-decoration: underline;
+  text-decoration-color: rgba(190, 129, 226, 0.35);
+  text-underline-offset: 3px;
+}
+
+.event-session-switch:hover {
+  color: #d9b7ee;
 }
 
 .black-sun-hero__action small {
@@ -1676,6 +1918,44 @@ input:focus-visible {
   text-transform: uppercase;
 }
 
+.event-role-badge {
+  display: inline-flex;
+  padding: 6px 9px;
+  border: 1px solid rgba(205, 133, 250, 0.18);
+  border-radius: 999px;
+  background: rgba(177, 87, 229, 0.055);
+  color: #c298d8;
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.event-role-badge--hunter {
+  border-color: rgba(221, 116, 126, 0.25);
+  background: rgba(145, 44, 56, 0.09);
+  color: #e5a1a8;
+}
+
+.event-role-badge--solo {
+  border-color: rgba(191, 140, 247, 0.28);
+  color: #d2a9f5;
+}
+
+.event-role-badge--farmer {
+  border-color: rgba(120, 191, 137, 0.24);
+  background: rgba(49, 125, 67, 0.08);
+  color: #9dcea8;
+}
+
+.event-role-badge--absent,
+.event-role-badge--empty {
+  border-color: rgba(150, 150, 150, 0.14);
+  background: rgba(120, 120, 120, 0.035);
+  color: #757278;
+}
+
 .black-sun-table time {
   color: #686b67;
   font-size: 10px;
@@ -1789,6 +2069,111 @@ input:focus-visible {
   font-size: 9px;
 }
 
+.event-role-dialog {
+  width: min(100%, 520px);
+}
+
+.event-role-dialog > header {
+  grid-template-columns: 1fr auto;
+}
+
+.event-role-options {
+  position: relative;
+  display: grid;
+  padding: 22px 30px 28px;
+  gap: 9px;
+}
+
+.event-role-option {
+  display: grid;
+  min-height: 66px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  border: 1px solid rgba(207, 126, 252, 0.14);
+  border-radius: 10px;
+  background: rgba(177, 87, 229, 0.035);
+  color: #d9cbe1;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.event-role-option:hover:not(:disabled),
+.event-role-option.is-selected {
+  border-color: rgba(219, 161, 255, 0.4);
+  background: rgba(177, 87, 229, 0.09);
+  transform: translateX(2px);
+}
+
+.event-role-option:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.event-role-option__mark {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(213, 155, 247, 0.5);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(180, 77, 226, 0.18);
+}
+
+.event-role-option.is-selected .event-role-option__mark {
+  border-color: #e1adff;
+  background: #a353d1;
+  box-shadow:
+    inset 0 0 0 2px #170d1e,
+    0 0 12px rgba(203, 105, 249, 0.5);
+}
+
+.event-role-option > span:last-child {
+  display: grid;
+  gap: 5px;
+}
+
+.event-role-option strong {
+  font-size: 12px;
+}
+
+.event-role-option small {
+  color: #776d7c;
+  font-size: 9px;
+}
+
+.vengeful-souls-shell .event-role-option {
+  border-color: rgba(127, 194, 246, 0.15);
+  background: rgba(57, 133, 200, 0.04);
+  color: #dcebf5;
+}
+
+.vengeful-souls-shell .event-role-option:hover:not(:disabled),
+.vengeful-souls-shell .event-role-option.is-selected {
+  border-color: rgba(176, 222, 255, 0.42);
+  background: rgba(57, 133, 200, 0.1);
+}
+
+.vengeful-souls-shell .event-role-option__mark {
+  border-color: rgba(137, 204, 255, 0.5);
+  box-shadow: 0 0 10px rgba(57, 133, 200, 0.2);
+}
+
+.vengeful-souls-shell .event-role-option.is-selected .event-role-option__mark {
+  border-color: #c9eaff;
+  background: #4b9ad6;
+  box-shadow:
+    inset 0 0 0 2px #07131e,
+    0 0 12px rgba(101, 185, 246, 0.5);
+}
+
+.vengeful-souls-shell .event-role-option small {
+  color: #70879a;
+}
+
 .vengeful-souls-shell {
   --vengeful-blue: #5ca9f5;
   --vengeful-blue-soft: #d8eeff;
@@ -1874,6 +2259,15 @@ input:focus-visible {
   color: #b9e1ff;
 }
 
+.vengeful-souls-shell .event-session-switch {
+  color: #7097b5;
+  text-decoration-color: rgba(113, 178, 226, 0.38);
+}
+
+.vengeful-souls-shell .event-session-switch:hover {
+  color: #caeaff;
+}
+
 .vengeful-souls-shell .primary-button {
   border-color: #78bdf4;
   background: linear-gradient(135deg, #2c6da9, #b9e2ff 54%, #4f9bd8);
@@ -1945,6 +2339,12 @@ input:focus-visible {
 
 .vengeful-souls-shell .black-sun-player small {
   color: #72b0df;
+}
+
+.vengeful-souls-shell .event-role-badge {
+  border-color: rgba(126, 193, 244, 0.2);
+  background: rgba(57, 133, 200, 0.05);
+  color: #9fc9e7;
 }
 
 .vengeful-souls-shell .black-sun-table .black-sun-points {
@@ -2205,8 +2605,13 @@ input:focus-visible {
 
   .black-sun-hero__action {
     grid-column: 1 / -1;
-    grid-template-columns: minmax(180px, 260px) 1fr;
+    grid-template-columns: 1fr;
     align-items: center;
+  }
+
+  .event-session-actions {
+    max-width: 540px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .black-sun-hero__action small {
@@ -2297,6 +2702,32 @@ input:focus-visible {
 }
 
 @media (max-width: 680px) {
+  .event-session-main {
+    align-items: start;
+  }
+
+  .event-session-selector {
+    padding: 26px 20px;
+  }
+
+  .event-session-selector__header {
+    grid-template-columns: 1fr;
+  }
+
+  .event-session-selector__icon {
+    width: 112px;
+    height: 112px;
+  }
+
+  .event-session-selector h1 {
+    font-size: 36px;
+  }
+
+  .event-session-grid {
+    margin-top: 26px;
+    grid-template-columns: 1fr;
+  }
+
   .black-sun-leaderboard__header {
     align-items: flex-start;
     flex-direction: column;
@@ -2380,12 +2811,18 @@ input:focus-visible {
   }
 
   .black-sun-table td:nth-child(3) {
+    overflow: hidden;
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .black-sun-table td:nth-child(4) {
     grid-column: 3;
     grid-row: 2;
     text-align: right;
   }
 
-  .black-sun-table td:nth-child(4) {
+  .black-sun-table td:nth-child(5) {
     grid-column: 3;
     grid-row: 1;
     text-align: right;
@@ -2420,6 +2857,12 @@ input:focus-visible {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .event-role-badge {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .black-sun-table time {
@@ -2539,6 +2982,11 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .event-session-actions {
+    max-width: none;
+    grid-template-columns: 1fr;
+  }
+
   .black-sun-hero__action small {
     text-align: center;
   }
@@ -2562,7 +3010,8 @@ input:focus-visible {
   }
 
   .black-sun-score-dialog > header,
-  .black-sun-score-dialog form {
+  .black-sun-score-dialog form,
+  .event-role-options {
     padding-right: 21px;
     padding-left: 21px;
   }

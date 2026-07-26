@@ -1,4 +1,4 @@
-import type { GuildRole } from "@/domain/auth/model";
+import type { EventRole, EventSessionNumber } from "@/domain/events/model";
 import type { VengefulSoulsPlayerScore } from "@/domain/vengeful-souls/model";
 import type { VengefulSoulsRepository } from "@/domain/vengeful-souls/ports";
 import { getD1 } from "@/infrastructure/db/d1";
@@ -7,7 +7,7 @@ import { ensureVengefulSoulsSchema } from "@/infrastructure/db/ensure-vengeful-s
 interface VengefulSoulsRow {
   user_id: string;
   display_name: string;
-  role: GuildRole;
+  event_role: EventRole | null;
   points: number;
   updated_at: number | null;
 }
@@ -17,6 +17,7 @@ export class D1VengefulSoulsRepository
 {
   async listGuildScores(
     guildId: string,
+    sessionNumber: EventSessionNumber,
   ): Promise<VengefulSoulsPlayerScore[]> {
     const db = getD1();
     await ensureVengefulSoulsSchema(db);
@@ -26,12 +27,13 @@ export class D1VengefulSoulsRepository
         `SELECT
           users.id AS user_id,
           users.display_name,
-          users.role,
+          vengeful_souls_scores.event_role,
           COALESCE(vengeful_souls_scores.points, 0) AS points,
           vengeful_souls_scores.updated_at
         FROM users
         LEFT JOIN vengeful_souls_scores
           ON vengeful_souls_scores.user_id = users.id
+          AND vengeful_souls_scores.session_number = ?
         WHERE users.guild_id = ? AND users.is_hidden = 0
         ORDER BY
           COALESCE(vengeful_souls_scores.points, 0) DESC,
@@ -40,13 +42,13 @@ export class D1VengefulSoulsRepository
           users.display_name COLLATE NOCASE ASC
         LIMIT 50`,
       )
-      .bind(guildId)
+      .bind(sessionNumber, guildId)
       .all<VengefulSoulsRow>();
 
     return rows.results.map((row) => ({
       userId: row.user_id,
       displayName: row.display_name,
-      role: row.role,
+      eventRole: row.event_role,
       points: row.points,
       updatedAt: row.updated_at,
     }));
@@ -55,6 +57,7 @@ export class D1VengefulSoulsRepository
   async savePlayerScore(
     userId: string,
     guildId: string,
+    sessionNumber: EventSessionNumber,
     points: number,
     updatedAt: number,
   ): Promise<boolean> {
@@ -64,16 +67,42 @@ export class D1VengefulSoulsRepository
     const result = await db
       .prepare(
         `INSERT INTO vengeful_souls_scores
-          (user_id, guild_id, points, updated_at)
-         SELECT id, guild_id, ?, ?
+          (user_id, guild_id, session_number, event_role, points, updated_at)
+         SELECT id, guild_id, ?, NULL, ?, ?
          FROM users
          WHERE id = ? AND guild_id = ? AND is_hidden = 0
-         ON CONFLICT(user_id) DO UPDATE SET
+         ON CONFLICT(user_id, session_number) DO UPDATE SET
            guild_id = excluded.guild_id,
            points = excluded.points,
            updated_at = excluded.updated_at`,
       )
-      .bind(points, updatedAt, userId, guildId)
+      .bind(sessionNumber, points, updatedAt, userId, guildId)
+      .run();
+
+    return result.meta.changes > 0;
+  }
+
+  async savePlayerRole(
+    userId: string,
+    guildId: string,
+    sessionNumber: EventSessionNumber,
+    role: EventRole,
+  ): Promise<boolean> {
+    const db = getD1();
+    await ensureVengefulSoulsSchema(db);
+
+    const result = await db
+      .prepare(
+        `INSERT INTO vengeful_souls_scores
+          (user_id, guild_id, session_number, event_role, points, updated_at)
+         SELECT id, guild_id, ?, ?, 0, NULL
+         FROM users
+         WHERE id = ? AND guild_id = ? AND is_hidden = 0
+         ON CONFLICT(user_id, session_number) DO UPDATE SET
+           guild_id = excluded.guild_id,
+           event_role = excluded.event_role`,
+      )
+      .bind(sessionNumber, role, userId, guildId)
       .run();
 
     return result.meta.changes > 0;

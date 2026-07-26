@@ -9,20 +9,37 @@ import {
 import Link from "next/link";
 import {
   ArrowLeft,
+  CheckCircle2,
   LogOut,
   Medal,
   Plus,
   RefreshCw,
   X,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import type { VengefulSoulsStanding } from "@/domain/vengeful-souls/model";
+import {
+  eventSessionNumbers,
+  type EventRole,
+  type EventSessionNumber,
+} from "@/domain/events/model";
 import { useAuthController } from "@/app/hooks/use-auth-controller";
+import { eventRoleLabels } from "@/app/lib/event-role-labels";
 import { HttpVengefulSoulsGateway } from "@/app/lib/vengeful-souls-client";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import { BrandMark } from "../brand-mark";
+import { EventRoleDialog } from "../events/event-role-dialog";
+import { EventSessionSelector } from "../events/event-session-selector";
 import { VengefulSoulsIcon } from "./vengeful-souls-icon";
 
 const pointsFormatter = new Intl.NumberFormat("ru-RU");
+
+function parseSessionNumber(value: string | null): EventSessionNumber | null {
+  const parsed = Number(value);
+  return eventSessionNumbers.includes(parsed as EventSessionNumber)
+    ? (parsed as EventSessionNumber)
+    : null;
+}
 
 function formatUpdatedAt(value: number | null): string {
   if (!value) {
@@ -140,8 +157,7 @@ function ScoreDialog({
             </span>
           </label>
           <p className="black-sun-score-dialog__hint">
-            Новый результат заменит ранее внесённые очки только для этого
-            события.
+            Новый результат заменит ранее внесённые очки только в этой сессии.
           </p>
           {localError || error ? (
             <p className="profile-editor__error" role="alert">
@@ -170,11 +186,17 @@ function ScoreDialog({
 
 export function VengefulSoulsPortal() {
   const auth = useAuthController();
+  const searchParams = useSearchParams();
+  const sessionNumber = parseSessionNumber(searchParams.get("session"));
   const gateway = useMemo(() => new HttpVengefulSoulsGateway(), []);
   const [standings, setStandings] = useState<VengefulSoulsStanding[]>([]);
+  const [loadedSession, setLoadedSession] =
+    useState<EventSessionNumber | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingRole, setIsSavingRole] = useState(false);
   const [isScoreOpen, setIsScoreOpen] = useState(false);
+  const [isRoleOpen, setIsRoleOpen] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -184,16 +206,17 @@ export function VengefulSoulsPortal() {
   }, [auth.isBooting, auth.user]);
 
   useEffect(() => {
-    if (!auth.user) {
+    if (!auth.user || !sessionNumber) {
       return;
     }
 
     let active = true;
     gateway
-      .list()
+      .list(sessionNumber)
       .then((entries) => {
         if (active) {
           setStandings(entries);
+          setError("");
         }
       })
       .catch((caught) => {
@@ -207,6 +230,7 @@ export function VengefulSoulsPortal() {
       })
       .finally(() => {
         if (active) {
+          setLoadedSession(sessionNumber);
           setIsLoading(false);
         }
       });
@@ -214,7 +238,7 @@ export function VengefulSoulsPortal() {
     return () => {
       active = false;
     };
-  }, [auth.user, gateway]);
+  }, [auth.user, gateway, sessionNumber]);
 
   if (auth.isBooting || !auth.user) {
     return (
@@ -231,14 +255,80 @@ export function VengefulSoulsPortal() {
   }
 
   const user = auth.user;
-  const currentStanding = standings.find((entry) => entry.isCurrentUser);
-  const canSubmitScore = user.role !== "superadmin";
+  const visibleStandings =
+    loadedSession === sessionNumber ? standings : [];
+  const isSessionLoading = isLoading || loadedSession !== sessionNumber;
+  const currentStanding = visibleStandings.find(
+    (entry) => entry.isCurrentUser,
+  );
+  const canParticipate = user.role !== "superadmin";
+
+  const pageHeader = (
+    <header className="dashboard-header black-sun-header">
+      <Link
+        className="black-sun-brand-link"
+        href="/"
+        aria-label="Вернуться в штаб"
+      >
+        <BrandMark compact />
+      </Link>
+      <nav aria-label="Основная навигация">
+        <Link href="/">Обзор</Link>
+        <Link className="is-current" href="/vengeful-souls">
+          Ночью неупокоеных душ
+        </Link>
+        <Link href="/black-sun">Чёрное Солнце</Link>
+      </nav>
+      <div className="dashboard-header__actions">
+        <Link
+          className="icon-button"
+          href="/"
+          aria-label="Вернуться в штаб"
+          title="Вернуться в штаб"
+        >
+          <ArrowLeft size={17} />
+        </Link>
+        <span className="profile-chip black-sun-profile-static">
+          <span>{user.displayName.slice(0, 1).toLocaleUpperCase("ru")}</span>
+          <span className="profile-chip__copy">
+            <strong>{user.displayName}</strong>
+            <small>{guildRoleLabels[user.role]}</small>
+          </span>
+        </span>
+        <button
+          className="icon-button logout-button"
+          type="button"
+          aria-label="Выйти из аккаунта"
+          title="Выйти из аккаунта"
+          onClick={auth.logout}
+          disabled={auth.isSubmitting}
+        >
+          <LogOut size={17} />
+        </button>
+      </div>
+    </header>
+  );
+
+  if (!sessionNumber) {
+    return (
+      <div className="black-sun-shell vengeful-souls-shell">
+        {pageHeader}
+        <EventSessionSelector
+          basePath="/vengeful-souls"
+          icon={<VengefulSoulsIcon size={120} />}
+          kicker="Выберите боевой этап"
+          title="Сессии Ночи неупокоеных душ"
+          subtitle="У события четыре отдельные сессии. Расписание появится здесь, когда будет утверждено."
+        />
+      </div>
+    );
+  }
 
   async function submitScore(points: number) {
     setIsSaving(true);
     setError("");
     try {
-      setStandings(await gateway.submit(points));
+      setStandings(await gateway.submit(sessionNumber, points));
       setIsScoreOpen(false);
     } catch (caught) {
       setError(
@@ -251,11 +341,28 @@ export function VengefulSoulsPortal() {
     }
   }
 
+  async function selectRole(role: EventRole) {
+    setIsSavingRole(true);
+    setError("");
+    try {
+      setStandings(await gateway.selectRole(sessionNumber, role));
+      setIsRoleOpen(false);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось сохранить роль.",
+      );
+    } finally {
+      setIsSavingRole(false);
+    }
+  }
+
   async function reloadStandings() {
     setIsLoading(true);
     setError("");
     try {
-      setStandings(await gateway.list());
+      setStandings(await gateway.list(sessionNumber));
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -269,49 +376,7 @@ export function VengefulSoulsPortal() {
 
   return (
     <div className="black-sun-shell vengeful-souls-shell">
-      <header className="dashboard-header black-sun-header">
-        <Link
-          className="black-sun-brand-link"
-          href="/"
-          aria-label="Вернуться в штаб"
-        >
-          <BrandMark compact />
-        </Link>
-        <nav aria-label="Основная навигация">
-          <Link href="/">Обзор</Link>
-          <Link className="is-current" href="/vengeful-souls">
-            Ночью неупокоеных душ
-          </Link>
-          <Link href="/black-sun">Чёрное Солнце</Link>
-        </nav>
-        <div className="dashboard-header__actions">
-          <Link
-            className="icon-button"
-            href="/"
-            aria-label="Вернуться в штаб"
-            title="Вернуться в штаб"
-          >
-            <ArrowLeft size={17} />
-          </Link>
-          <span className="profile-chip black-sun-profile-static">
-            <span>{user.displayName.slice(0, 1).toLocaleUpperCase("ru")}</span>
-            <span className="profile-chip__copy">
-              <strong>{user.displayName}</strong>
-              <small>{guildRoleLabels[user.role]}</small>
-            </span>
-          </span>
-          <button
-            className="icon-button logout-button"
-            type="button"
-            aria-label="Выйти из аккаунта"
-            title="Выйти из аккаунта"
-            onClick={auth.logout}
-            disabled={auth.isSubmitting}
-          >
-            <LogOut size={17} />
-          </button>
-        </div>
-      </header>
+      {pageHeader}
 
       <main className="black-sun-main">
         <section className="black-sun-hero">
@@ -319,39 +384,66 @@ export function VengefulSoulsPortal() {
             <VengefulSoulsIcon size={112} />
           </div>
           <div className="black-sun-hero__copy">
-            <span className="section-kicker">Отдельный боевой рейтинг</span>
+            <span className="section-kicker">
+              Отдельный боевой рейтинг · Сессия {sessionNumber}
+            </span>
             <h1>
               Ночью неупокоеных душ{" "}
               <span>/ Night of Vengeful Souls</span>
             </h1>
             <p>
-              Внесите личный результат события. Этот рейтинг хранится отдельно
+              Выберите роль и внесите результат этой сессии. Рейтинг хранится отдельно
               от «Чёрного Солнца» и распределяет до 50 участников от
               наибольшего количества очков к наименьшему.
             </p>
           </div>
           <div className="black-sun-hero__action">
-            <button
-              className="primary-button black-sun-score-button"
-              type="button"
-              onClick={() => {
-                setError("");
-                setIsScoreOpen(true);
-              }}
-              disabled={!canSubmitScore}
-            >
-              <Plus size={17} /> Внести очки
-            </button>
-            {!canSubmitScore ? (
+            <div className="event-session-actions">
+              <button
+                className="secondary-button event-role-button"
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setIsRoleOpen(true);
+                }}
+                disabled={!canParticipate}
+              >
+                <CheckCircle2 size={17} />
+                {currentStanding?.eventRole ? "Изменить роль" : "Выбрать роль"}
+              </button>
+              <button
+                className="primary-button black-sun-score-button"
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setIsScoreOpen(true);
+                }}
+                disabled={!canParticipate}
+              >
+                <Plus size={17} /> Внести очки
+              </button>
+            </div>
+            {!canParticipate ? (
               <small>
                 Скрытая учётная запись не участвует в рейтинге.
               </small>
-            ) : currentStanding ? (
+            ) : currentStanding?.eventRole ? (
+              <small className="event-role-confirmation">
+                <CheckCircle2 size={14} /> Вы выбрали роль:{" "}
+                <strong>{eventRoleLabels[currentStanding.eventRole]}</strong>
+              </small>
+            ) : (
+              <small>Роль для этой сессии пока не выбрана.</small>
+            )}
+            {currentStanding?.updatedAt ? (
               <small>
                 Ваш результат:{" "}
                 <strong>{pointsFormatter.format(currentStanding.points)}</strong>
               </small>
             ) : null}
+            <Link className="event-session-switch" href="/vengeful-souls">
+              Выбрать другую сессию
+            </Link>
           </div>
         </section>
 
@@ -359,27 +451,27 @@ export function VengefulSoulsPortal() {
           <header className="black-sun-leaderboard__header">
             <div>
               <span className="section-kicker">Таблица участников</span>
-              <h2>Night of Vengeful Souls · Dark Orden</h2>
+              <h2>Сессия {sessionNumber} · Night of Vengeful Souls</h2>
             </div>
             <div className="black-sun-leaderboard__meta">
-              <span>{standings.length} из 50</span>
+              <span>{visibleStandings.length} из 50</span>
               <button
                 className="icon-button"
                 type="button"
                 onClick={reloadStandings}
-                disabled={isLoading}
+                disabled={isSessionLoading}
                 aria-label="Обновить рейтинг"
                 title="Обновить рейтинг"
               >
                 <RefreshCw
-                  className={isLoading ? "is-spinning" : ""}
+                  className={isSessionLoading ? "is-spinning" : ""}
                   size={16}
                 />
               </button>
             </div>
           </header>
 
-          {error && !isScoreOpen ? (
+          {error && !isScoreOpen && !isSessionLoading ? (
             <p className="black-sun-page-error" role="alert">
               {error}
             </p>
@@ -391,25 +483,26 @@ export function VengefulSoulsPortal() {
                 <tr>
                   <th scope="col">Место</th>
                   <th scope="col">Участник</th>
+                  <th scope="col">Роль</th>
                   <th scope="col">Обновлено</th>
                   <th scope="col">Очки</th>
                 </tr>
               </thead>
               <tbody>
-                {isLoading && standings.length === 0 ? (
+                {isSessionLoading && visibleStandings.length === 0 ? (
                   <tr>
-                    <td className="black-sun-table__state" colSpan={4}>
+                    <td className="black-sun-table__state" colSpan={5}>
                       Загружаем рейтинг Ночи неупокоеных душ…
                     </td>
                   </tr>
-                ) : standings.length === 0 ? (
+                ) : visibleStandings.length === 0 ? (
                   <tr>
-                    <td className="black-sun-table__state" colSpan={4}>
+                    <td className="black-sun-table__state" colSpan={5}>
                       В рейтинге пока нет участников.
                     </td>
                   </tr>
                 ) : (
-                  standings.map((entry) => (
+                  visibleStandings.map((entry) => (
                     <tr
                       className={entry.isCurrentUser ? "is-current-user" : ""}
                       key={entry.userId}
@@ -423,6 +516,17 @@ export function VengefulSoulsPortal() {
                         >
                           {entry.rank <= 3 ? <Medal size={16} /> : null}
                           {entry.rank}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`event-role-badge event-role-badge--${
+                            entry.eventRole ?? "empty"
+                          }`}
+                        >
+                          {entry.eventRole
+                            ? eventRoleLabels[entry.eventRole]
+                            : "Не выбрана"}
                         </span>
                       </td>
                       <td>
@@ -465,6 +569,21 @@ export function VengefulSoulsPortal() {
             }
           }}
           onSubmit={submitScore}
+        />
+      ) : null}
+      {isRoleOpen ? (
+        <EventRoleDialog
+          currentRole={currentStanding?.eventRole ?? null}
+          disabled={isSavingRole}
+          error={error}
+          sessionNumber={sessionNumber}
+          onClose={() => {
+            if (!isSavingRole) {
+              setError("");
+              setIsRoleOpen(false);
+            }
+          }}
+          onSelect={selectRole}
         />
       ) : null}
     </div>

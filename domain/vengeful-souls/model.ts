@@ -1,9 +1,9 @@
-import type { GuildRole } from "@/domain/auth/model";
+import type { EventRole } from "@/domain/events/model";
 
 export interface VengefulSoulsPlayerScore {
   userId: string;
   displayName: string;
-  role: GuildRole;
+  eventRole: EventRole | null;
   points: number;
   updatedAt: number | null;
 }

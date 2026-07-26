@@ -1,4 +1,11 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 export const guilds = sqliteTable("guilds", {
   id: text("id").primaryKey(),
@@ -54,17 +61,23 @@ export const blackSunScores = sqliteTable(
   "black_sun_scores",
   {
     userId: text("user_id")
-      .primaryKey()
+      .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     guildId: text("guild_id")
       .notNull()
       .references(() => guilds.id),
+    sessionNumber: integer("session_number").notNull(),
+    eventRole: text("event_role", {
+      enum: ["hunter", "solo", "farmer", "absent"],
+    }),
     points: integer("points").notNull().default(0),
-    updatedAt: integer("updated_at").notNull(),
+    updatedAt: integer("updated_at"),
   },
   (table) => [
+    primaryKey({ columns: [table.userId, table.sessionNumber] }),
     index("black_sun_scores_guild_points_idx").on(
       table.guildId,
+      table.sessionNumber,
       table.points,
     ),
   ],
@@ -74,17 +87,23 @@ export const vengefulSoulsScores = sqliteTable(
   "vengeful_souls_scores",
   {
     userId: text("user_id")
-      .primaryKey()
+      .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     guildId: text("guild_id")
       .notNull()
       .references(() => guilds.id),
+    sessionNumber: integer("session_number").notNull(),
+    eventRole: text("event_role", {
+      enum: ["hunter", "solo", "farmer", "absent"],
+    }),
     points: integer("points").notNull().default(0),
-    updatedAt: integer("updated_at").notNull(),
+    updatedAt: integer("updated_at"),
   },
   (table) => [
+    primaryKey({ columns: [table.userId, table.sessionNumber] }),
     index("vengeful_souls_scores_guild_points_idx").on(
       table.guildId,
+      table.sessionNumber,
       table.points,
     ),
   ],
