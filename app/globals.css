@@ -609,28 +609,115 @@ input:focus-visible {
 }
 
 .black-sun-nav-icon {
-  border-color: rgba(215, 180, 106, 0.2);
-  color: var(--gold);
+  width: 46px;
+  height: 46px;
+  border-color: rgba(176, 91, 255, 0.28);
+  background:
+    radial-gradient(circle, rgba(117, 51, 177, 0.14), transparent 66%),
+    #111015;
+  color: #c579ff;
   text-decoration: none;
+  box-shadow:
+    inset 0 0 12px rgba(103, 47, 156, 0.13),
+    0 0 14px rgba(143, 62, 214, 0.1);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .black-sun-nav-icon:hover {
-  border-color: rgba(215, 180, 106, 0.46);
-  background: rgba(215, 180, 106, 0.07);
-  color: var(--gold-soft);
+  border-color: rgba(204, 126, 255, 0.6);
+  background:
+    radial-gradient(circle, rgba(151, 66, 217, 0.23), transparent 68%),
+    #15111a;
+  color: #e3adff;
+  box-shadow:
+    inset 0 0 14px rgba(139, 60, 201, 0.2),
+    0 0 19px rgba(171, 75, 235, 0.24);
+  transform: translateY(-1px);
 }
 
 .black-sun-symbol {
+  --black-sun-size: 18px;
+
   position: relative;
   display: inline-grid;
+  width: var(--black-sun-size);
+  height: var(--black-sun-size);
   place-items: center;
-  color: #c7a45d;
-  filter: drop-shadow(0 0 7px rgba(136, 61, 24, 0.42));
+  color: #cf78ff;
+  filter:
+    drop-shadow(0 0 3px rgba(225, 148, 255, 0.9))
+    drop-shadow(0 0 7px rgba(142, 57, 217, 0.72));
+  isolation: isolate;
+}
+
+.black-sun-symbol svg {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  animation: black-sun-rays 3.2s ease-in-out infinite;
 }
 
 .black-sun-symbol svg circle {
-  fill: #030405;
-  stroke: #d0ad65;
+  fill: #050408;
+  stroke: #db8cff;
+}
+
+.black-sun-symbol__aura {
+  position: absolute;
+  z-index: 0;
+  width: 68%;
+  height: 68%;
+  border: 1px solid rgba(206, 112, 255, 0.72);
+  border-radius: 50%;
+  box-shadow:
+    0 0 6px 2px rgba(176, 77, 242, 0.46),
+    inset 0 0 6px rgba(224, 158, 255, 0.25);
+  animation: black-sun-aura 2.6s ease-out infinite;
+}
+
+.black-sun-symbol__core {
+  position: absolute;
+  z-index: 3;
+  width: 43%;
+  height: 43%;
+  border: max(1px, calc(var(--black-sun-size) * 0.055)) solid #a367df;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 42% 38%, #263449 0 16%, #101522 45%, #050408 76%);
+  box-shadow:
+    inset 0 0 5px rgba(106, 146, 193, 0.52),
+    0 0 0 max(1px, calc(var(--black-sun-size) * 0.035)) rgba(33, 20, 48, 0.95),
+    0 0 8px rgba(190, 91, 255, 0.7);
+}
+
+@keyframes black-sun-aura {
+  0% {
+    opacity: 0.72;
+    transform: scale(0.78);
+  }
+
+  72%,
+  100% {
+    opacity: 0;
+    transform: scale(1.42);
+  }
+}
+
+@keyframes black-sun-rays {
+  0%,
+  100% {
+    filter: brightness(0.9);
+    transform: scale(0.96) rotate(-2deg);
+  }
+
+  50% {
+    filter: brightness(1.22);
+    transform: scale(1.04) rotate(2deg);
+  }
 }
 
 .profile-chip {
@@ -1101,16 +1188,23 @@ input:focus-visible {
   position: relative;
   z-index: 1;
   display: grid;
-  width: 96px;
-  height: 96px;
+  width: 112px;
+  height: 112px;
   place-items: center;
-  border: 1px solid rgba(215, 180, 106, 0.28);
+  border: 1px solid rgba(183, 92, 245, 0.34);
   border-radius: 50%;
   background:
-    radial-gradient(circle, #030405 0 37%, rgba(91, 43, 21, 0.35) 39%, #111315 62%);
+    radial-gradient(circle, #030305 0 34%, rgba(80, 35, 117, 0.42) 36%, #111016 65%);
   box-shadow:
     inset 0 0 28px rgba(0, 0, 0, 0.9),
-    0 0 40px rgba(151, 74, 27, 0.12);
+    0 0 32px rgba(166, 71, 229, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .black-sun-symbol svg,
+  .black-sun-symbol__aura {
+    animation: none;
+  }
 }
 
 .black-sun-hero__copy {
