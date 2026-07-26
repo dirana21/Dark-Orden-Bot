@@ -130,7 +130,7 @@ input:focus-visible {
   overflow: hidden;
   padding: 42px 54px 34px;
   background-image: url("/og.png");
-  background-position: 38% center;
+  background-position: 88% center;
   background-size: cover;
   isolation: isolate;
 }
@@ -1193,7 +1193,7 @@ input:focus-visible {
 
   .brand-panel {
     padding: 34px;
-    background-position: 30% center;
+    background-position: 88% center;
   }
 
   .brand-panel__content h2 {
