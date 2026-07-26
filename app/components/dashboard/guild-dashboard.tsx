@@ -57,26 +57,67 @@ export function GuildDashboard({
           <a href="#events">События</a>
         </nav>
         <div className="dashboard-header__actions">
-          <Link
-            className="event-nav-card vengeful-souls-nav-card"
-            href="/vengeful-souls"
-            aria-label="Открыть рейтинг Ночи неупокоеных душ"
-            title="Ночью неупокоеных душ / Night of Vengeful Souls"
+          <div
+            className="event-nav-desktop"
+            role="navigation"
+            aria-label="События гильдии"
           >
-            <VengefulSoulsIcon size={44} />
-            <span className="event-nav-card__copy">
-              <strong>Ночью неупокоеных душ</strong>
-              <small>Night of Vengeful Souls</small>
-            </span>
-          </Link>
-          <Link
-            className="icon-button black-sun-nav-icon"
-            href="/black-sun"
-            aria-label="Открыть рейтинг Чёрного Солнца"
-            title="Чёрное Солнце / Black Sun"
-          >
-            <BlackSunIcon size={50} />
-          </Link>
+            <Link
+              className="event-nav-card vengeful-souls-nav-card"
+              href="/vengeful-souls"
+              aria-label="Открыть рейтинг Ночи неупокоеных душ"
+              title="Ночью неупокоеных душ / Night of Vengeful Souls"
+            >
+              <VengefulSoulsIcon size={44} />
+              <span className="event-nav-card__copy">
+                <strong>Ночью неупокоеных душ</strong>
+                <small>Night of Vengeful Souls</small>
+              </span>
+            </Link>
+            <Link
+              className="event-nav-card black-sun-event-card"
+              href="/black-sun"
+              aria-label="Открыть рейтинг Чёрного Солнца"
+              title="Чёрное Солнце / Black Sun"
+            >
+              <BlackSunIcon size={44} />
+              <span className="event-nav-card__copy">
+                <strong>Чёрное Солнце</strong>
+                <small>Black Sun</small>
+              </span>
+            </Link>
+          </div>
+          <details className="event-nav-mobile">
+            <summary
+              aria-label="Открыть список событий"
+              title="События"
+            >
+              <Sparkles size={19} />
+              <span className="event-nav-mobile__dot" />
+            </summary>
+            <nav className="event-nav-mobile__menu" aria-label="События гильдии">
+              <Link
+                className="event-nav-mobile__item event-nav-mobile__item--vengeful"
+                href="/vengeful-souls"
+              >
+                <VengefulSoulsIcon size={42} />
+                <span className="event-nav-card__copy">
+                  <strong>Ночью неупокоеных душ</strong>
+                  <small>Night of Vengeful Souls</small>
+                </span>
+              </Link>
+              <Link
+                className="event-nav-mobile__item event-nav-mobile__item--black-sun"
+                href="/black-sun"
+              >
+                <BlackSunIcon size={42} />
+                <span className="event-nav-card__copy">
+                  <strong>Чёрное Солнце</strong>
+                  <small>Black Sun</small>
+                </span>
+              </Link>
+            </nav>
+          </details>
           <button
             className="icon-button notification-button"
             type="button"
