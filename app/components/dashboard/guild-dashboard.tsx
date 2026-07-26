@@ -118,7 +118,10 @@ export function GuildDashboard({
         <section className="stats-grid" aria-label="Сводка гильдии">
           <article className="stat-card">
             <span className="stat-card__icon"><UsersRound size={20} /></span>
-            <div><small>Участники</small><strong>1</strong></div>
+            <div>
+              <small>Участники</small>
+              <strong>{user.guildMemberCount}</strong>
+            </div>
             <span className="stat-card__tag">MVP</span>
           </article>
           <article className="stat-card">

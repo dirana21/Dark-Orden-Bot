@@ -31,6 +31,7 @@ export class LoginUser {
       displayName: user.displayName,
       realName: user.realName,
       role: user.role,
+      guildMemberCount: user.guildMemberCount,
       createdAt: user.createdAt,
     };
 

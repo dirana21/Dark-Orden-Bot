@@ -8,6 +8,7 @@ export interface AuthUser {
   displayName: string;
   realName: string | null;
   role: GuildRole;
+  guildMemberCount: number;
   createdAt: number;
 }
 

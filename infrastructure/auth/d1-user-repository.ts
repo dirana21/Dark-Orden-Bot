@@ -22,6 +22,7 @@ interface UserRow {
   real_name: string | null;
   password_hash: string;
   role: GuildRole;
+  guild_member_count: number;
   created_at: number;
 }
 
@@ -34,6 +35,7 @@ function mapPublicUser(row: UserRow): AuthUser {
     displayName: row.display_name,
     realName: row.real_name,
     role: row.role,
+    guildMemberCount: Number(row.guild_member_count),
     createdAt: row.created_at,
   };
 }
@@ -61,6 +63,12 @@ export class D1UserRepository implements UserRepository, ProfileRepository {
           users.real_name,
           users.password_hash,
           users.role,
+          (
+            SELECT COUNT(*)
+            FROM users AS visible_members
+            WHERE visible_members.guild_id = users.guild_id
+              AND visible_members.is_hidden = 0
+          ) AS guild_member_count,
           users.created_at
         FROM users
         INNER JOIN guilds ON guilds.id = users.guild_id
@@ -95,6 +103,15 @@ export class D1UserRepository implements UserRepository, ProfileRepository {
       )
       .run();
 
+    const memberCount = await db
+      .prepare(
+        `SELECT COUNT(*) AS guild_member_count
+         FROM users
+         WHERE guild_id = ? AND is_hidden = 0`,
+      )
+      .bind(user.guildId)
+      .first<{ guild_member_count: number }>();
+
     return {
       id: user.id,
       guildId: user.guildId,
@@ -103,6 +120,7 @@ export class D1UserRepository implements UserRepository, ProfileRepository {
       displayName: user.displayName,
       realName: user.realName,
       role: user.role,
+      guildMemberCount: Number(memberCount?.guild_member_count ?? 1),
       createdAt: user.createdAt,
     };
   }
@@ -134,6 +152,12 @@ export class D1UserRepository implements UserRepository, ProfileRepository {
           users.real_name,
           users.password_hash,
           users.role,
+          (
+            SELECT COUNT(*)
+            FROM users AS visible_members
+            WHERE visible_members.guild_id = users.guild_id
+              AND visible_members.is_hidden = 0
+          ) AS guild_member_count,
           users.created_at
         FROM users
         INNER JOIN guilds ON guilds.id = users.guild_id

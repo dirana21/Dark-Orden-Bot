@@ -11,6 +11,7 @@ interface SessionUserRow {
   display_name: string;
   real_name: string | null;
   role: GuildRole;
+  guild_member_count: number;
   created_at: number;
 }
 
@@ -49,6 +50,12 @@ export class D1SessionRepository implements SessionRepository {
           users.display_name,
           users.real_name,
           users.role,
+          (
+            SELECT COUNT(*)
+            FROM users AS visible_members
+            WHERE visible_members.guild_id = users.guild_id
+              AND visible_members.is_hidden = 0
+          ) AS guild_member_count,
           users.created_at
         FROM sessions
         INNER JOIN users ON users.id = sessions.user_id
@@ -68,6 +75,7 @@ export class D1SessionRepository implements SessionRepository {
           displayName: row.display_name,
           realName: row.real_name,
           role: row.role,
+          guildMemberCount: Number(row.guild_member_count),
           createdAt: row.created_at,
         }
       : null;

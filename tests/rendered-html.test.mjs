@@ -29,6 +29,8 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /REGISTRATION_IDENTIFIER/);
   assert.match(contents, /api\/profile/);
   assert.match(contents, /api\/black-sun/);
+  assert.match(contents, /guildMemberCount/);
+  assert.match(contents, /visible_members\.is_hidden = 0/);
   assert.match(contents, /Чёрное Солнце/);
   assert.match(contents, /real_name/);
   assert.match(contents, /HttpOnly/);
