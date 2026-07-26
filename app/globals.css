@@ -2668,6 +2668,16 @@ input:focus-visible {
 
   .event-nav-mobile {
     display: block;
+    position: static;
+  }
+
+  .event-nav-mobile__menu {
+    top: calc(100% + 8px);
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: calc(100svh - 92px);
+    overflow-y: auto;
   }
 
   .stats-grid,
