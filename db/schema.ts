@@ -19,10 +19,13 @@ export const users = sqliteTable(
     realName: text("real_name"),
     passwordHash: text("password_hash").notNull(),
     role: text("role", {
-      enum: ["owner", "officer", "member"],
+      enum: ["superadmin", "owner", "officer", "member"],
     })
       .notNull()
       .default("member"),
+    isHidden: integer("is_hidden", { mode: "boolean" })
+      .notNull()
+      .default(false),
     createdAt: integer("created_at").notNull(),
   },
   (table) => [

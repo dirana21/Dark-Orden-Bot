@@ -15,6 +15,13 @@
       "when": 1785072434335,
       "tag": "0001_loose_the_santerians",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785088938918,
+      "tag": "0002_brown_sunfire",
+      "breakpoints": true
     }
   ]
 }

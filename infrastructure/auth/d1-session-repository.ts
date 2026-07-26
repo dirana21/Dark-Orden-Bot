@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/domain/auth/model";
+import type { AuthUser, GuildRole } from "@/domain/auth/model";
 import type { SessionRepository } from "@/domain/auth/ports";
 import { getD1 } from "@/infrastructure/db/d1";
 import { ensureAuthSchema } from "@/infrastructure/db/ensure-auth-schema";
@@ -10,7 +10,7 @@ interface SessionUserRow {
   username: string;
   display_name: string;
   real_name: string | null;
-  role: "owner" | "officer" | "member";
+  role: GuildRole;
   created_at: number;
 }
 

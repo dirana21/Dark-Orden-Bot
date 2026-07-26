@@ -1,4 +1,9 @@
-import type { AuthUser, NewUser, StoredUser } from "@/domain/auth/model";
+import type {
+  AuthUser,
+  GuildRole,
+  NewUser,
+  StoredUser,
+} from "@/domain/auth/model";
 import { AuthError } from "@/domain/auth/errors";
 import type { UpdateProfileInput } from "@/domain/auth/model";
 import type {
@@ -16,7 +21,7 @@ interface UserRow {
   display_name: string;
   real_name: string | null;
   password_hash: string;
-  role: "owner" | "officer" | "member";
+  role: GuildRole;
   created_at: number;
 }
 

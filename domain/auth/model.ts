@@ -1,4 +1,4 @@
-export type GuildRole = "owner" | "officer" | "member";
+export type GuildRole = "superadmin" | "owner" | "officer" | "member";
 
 export interface AuthUser {
   id: string;

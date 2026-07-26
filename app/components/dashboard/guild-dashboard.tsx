@@ -18,6 +18,7 @@ import { BrandMark } from "../brand-mark";
 import { ProfileEditor } from "../profile/profile-editor";
 
 const roleLabels = {
+  superadmin: "Глава гильдии",
   owner: "Глава гильдии",
   officer: "Офицер",
   member: "Участник",

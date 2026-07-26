@@ -1,4 +1,52 @@
+import { env } from "cloudflare:workers";
+
 let initialization: Promise<void> | null = null;
+
+interface AdminSeed {
+  id: string;
+  username: string;
+  displayName: string;
+  passwordHash: string;
+  role: "superadmin" | "owner";
+  isHidden: boolean;
+}
+
+function getAdminSeeds(): AdminSeed[] {
+  const runtimeEnv = env as unknown as {
+    BOOTSTRAP_SKYWALKER_PASSWORD_HASH?: string;
+    BOOTSTRAP_DRIGAN21_PASSWORD_HASH?: string;
+    BOOTSTRAP_SAKURKA_PASSWORD_HASH?: string;
+  };
+
+  return [
+    {
+      id: "admin-skywalker",
+      username: "skywalker",
+      displayName: "SkyWalker",
+      passwordHash: runtimeEnv.BOOTSTRAP_SKYWALKER_PASSWORD_HASH ?? "",
+      role: "owner",
+      isHidden: false,
+    },
+    {
+      id: "admin-drigan21",
+      username: "drigan21",
+      displayName: "Drigan21",
+      passwordHash: runtimeEnv.BOOTSTRAP_DRIGAN21_PASSWORD_HASH ?? "",
+      role: "superadmin",
+      isHidden: true,
+    },
+    {
+      id: "admin-sakurka",
+      username: "sakurka",
+      displayName: "Sakurka",
+      passwordHash: runtimeEnv.BOOTSTRAP_SAKURKA_PASSWORD_HASH ?? "",
+      role: "owner",
+      isHidden: false,
+    },
+  ].filter((account) =>
+    account.passwordHash.startsWith("pbkdf2-sha256$"),
+  );
+}
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS guilds (
@@ -15,6 +63,7 @@ const statements = [
     real_name TEXT,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'member',
+    is_hidden INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL
   )`,
   "CREATE INDEX IF NOT EXISTS users_guild_id_idx ON users(guild_id)",
@@ -43,12 +92,49 @@ export async function ensureAuthSchema(db: D1Database): Promise<void> {
             .run();
         }
 
+        if (!columns.results.some((column) => column.name === "is_hidden")) {
+          await db
+            .prepare(
+              "ALTER TABLE users ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0",
+            )
+            .run();
+        }
+
         await db
           .prepare(
             `INSERT OR IGNORE INTO guilds (id, name, slug, created_at)
              VALUES ('dark-orden', 'Dark Orden', 'dark-orden', 0)`,
           )
           .run();
+
+        const adminSeeds = getAdminSeeds();
+        if (adminSeeds.length > 0) {
+          await db.batch(
+            adminSeeds.map((account) =>
+              db
+                .prepare(
+                  `INSERT INTO users
+                    (id, guild_id, username, display_name, real_name, password_hash, role, is_hidden, created_at)
+                   VALUES (?, 'dark-orden', ?, ?, NULL, ?, ?, ?, ?)
+                   ON CONFLICT(username) DO UPDATE SET
+                     guild_id = excluded.guild_id,
+                     display_name = excluded.display_name,
+                     password_hash = excluded.password_hash,
+                     role = excluded.role,
+                     is_hidden = excluded.is_hidden`,
+                )
+                .bind(
+                  account.id,
+                  account.username,
+                  account.displayName,
+                  account.passwordHash,
+                  account.role,
+                  account.isHidden ? 1 : 0,
+                  Date.now(),
+                ),
+            ),
+          );
+        }
       })
       .catch((error: unknown) => {
         initialization = null;
