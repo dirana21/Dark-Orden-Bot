@@ -11,6 +11,11 @@ interface SessionUserRow {
   display_name: string;
   real_name: string | null;
   role: GuildRole;
+  discord_user_id: string | null;
+  discord_username: string | null;
+  discord_display_name: string | null;
+  discord_avatar_hash: string | null;
+  discord_connected_at: number | null;
   guild_member_count: number;
   created_at: number;
 }
@@ -50,6 +55,11 @@ export class D1SessionRepository implements SessionRepository {
           users.display_name,
           users.real_name,
           users.role,
+          users.discord_user_id,
+          users.discord_username,
+          users.discord_display_name,
+          users.discord_avatar_hash,
+          users.discord_connected_at,
           (
             SELECT COUNT(*)
             FROM users AS visible_members
@@ -75,6 +85,21 @@ export class D1SessionRepository implements SessionRepository {
           displayName: row.display_name,
           realName: row.real_name,
           role: row.role,
+          discord:
+            row.discord_user_id &&
+            row.discord_username &&
+            row.discord_display_name &&
+            row.discord_connected_at
+              ? {
+                  userId: row.discord_user_id,
+                  username: row.discord_username,
+                  displayName: row.discord_display_name,
+                  avatarUrl: row.discord_avatar_hash
+                    ? `https://cdn.discordapp.com/avatars/${encodeURIComponent(row.discord_user_id)}/${encodeURIComponent(row.discord_avatar_hash)}.webp?size=128`
+                    : null,
+                  connectedAt: row.discord_connected_at,
+                }
+              : null,
           guildMemberCount: Number(row.guild_member_count),
           createdAt: row.created_at,
         }

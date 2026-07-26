@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Image from "next/image";
 import {
   BadgeCheck,
   Gamepad2,
   LockKeyhole,
+  MessageCircle,
+  RefreshCw,
   Save,
+  Unlink,
   UserRound,
   X,
 } from "lucide-react";
@@ -15,18 +19,22 @@ interface ProfileEditorProps {
   user: AuthUser;
   disabled: boolean;
   error: string;
+  discordStatus: string;
   onClose: () => void;
   onClearError: () => void;
   onSave: (displayName: string, realName: string) => Promise<boolean>;
+  onDisconnectDiscord: () => Promise<boolean>;
 }
 
 export function ProfileEditor({
   user,
   disabled,
   error,
+  discordStatus,
   onClose,
   onClearError,
   onSave,
+  onDisconnectDiscord,
 }: ProfileEditorProps) {
   const [displayName, setDisplayName] = useState(user.displayName);
   const [realName, setRealName] = useState(user.realName ?? "");
@@ -86,6 +94,105 @@ export function ProfileEditor({
         </header>
 
         <form className="profile-editor__form" onSubmit={submit}>
+          <section className="discord-connect-card" aria-label="Подключение Discord">
+            <div className="discord-connect-card__heading">
+              <span className="discord-connect-card__logo" aria-hidden="true">
+                <MessageCircle size={21} />
+              </span>
+              <div>
+                <strong>Discord</strong>
+                <small>
+                  {user.discord
+                    ? "Аккаунт подключён"
+                    : "Перенесите ник и фотографию в профиль"}
+                </small>
+              </div>
+              <span
+                className={
+                  user.discord
+                    ? "discord-connect-card__state is-connected"
+                    : "discord-connect-card__state"
+                }
+              >
+                {user.discord ? "Подключён" : "Не подключён"}
+              </span>
+            </div>
+
+            {user.discord ? (
+              <div className="discord-connect-card__profile">
+                <span className="discord-connect-card__avatar">
+                  {user.discord.avatarUrl ? (
+                    <Image
+                      src={user.discord.avatarUrl}
+                      alt=""
+                      width={38}
+                      height={38}
+                      unoptimized
+                    />
+                  ) : (
+                    user.discord.displayName.slice(0, 1).toLocaleUpperCase("ru")
+                  )}
+                </span>
+                <span>
+                  <strong>{user.discord.displayName}</strong>
+                  <small>@{user.discord.username}</small>
+                </span>
+                <a
+                  className="discord-connect-card__refresh"
+                  href="/api/profile/discord/start"
+                  aria-label="Обновить ник и фотографию из Discord"
+                  title="Обновить из Discord"
+                >
+                  <RefreshCw size={16} />
+                </a>
+                <button
+                  className="discord-connect-card__unlink"
+                  type="button"
+                  onClick={onDisconnectDiscord}
+                  disabled={disabled}
+                  aria-label="Отключить Discord"
+                  title="Отключить Discord"
+                >
+                  <Unlink size={16} />
+                </button>
+              </div>
+            ) : (
+              <a
+                className="discord-connect-button"
+                href="/api/profile/discord/start"
+              >
+                <MessageCircle size={17} />
+                Подключить Discord
+              </a>
+            )}
+
+            {discordStatus ? (
+              <p
+                className={
+                  discordStatus === "connected" ||
+                  discordStatus === "disconnected"
+                    ? "discord-connect-card__message is-success"
+                    : "discord-connect-card__message"
+                }
+                role="status"
+              >
+                {discordStatus === "connected"
+                  ? "Ник и фотография успешно перенесены из Discord."
+                  : discordStatus === "disconnected"
+                    ? "Discord отключён от профиля."
+                    : discordStatus === "cancelled"
+                      ? "Подключение Discord отменено."
+                      : discordStatus === "already_linked"
+                        ? "Этот Discord уже подключён к другому участнику."
+                        : discordStatus === "unavailable"
+                          ? "Подключение Discord пока не настроено."
+                          : discordStatus === "login_required"
+                            ? "Сначала войдите в аккаунт заново."
+                            : "Не удалось подключить Discord. Попробуйте ещё раз."}
+              </p>
+            ) : null}
+          </section>
+
           <label className="field">
             ИГРОВОЙ НИК
             <span className="field__control">

@@ -109,6 +109,24 @@ export function useAuthController() {
     }
   }, [gateway]);
 
+  const disconnectDiscord = useCallback(async () => {
+    setError("");
+    setIsSubmitting(true);
+    try {
+      setUser(await gateway.disconnectDiscord());
+      return true;
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось отключить Discord.",
+      );
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [gateway]);
+
   return {
     user,
     isBooting,
@@ -118,6 +136,7 @@ export function useAuthController() {
     login,
     register,
     updateProfile,
+    disconnectDiscord,
     logout,
   };
 }

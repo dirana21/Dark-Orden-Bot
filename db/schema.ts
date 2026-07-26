@@ -33,10 +33,16 @@ export const users = sqliteTable(
     isHidden: integer("is_hidden", { mode: "boolean" })
       .notNull()
       .default(false),
+    discordUserId: text("discord_user_id"),
+    discordUsername: text("discord_username"),
+    discordDisplayName: text("discord_display_name"),
+    discordAvatarHash: text("discord_avatar_hash"),
+    discordConnectedAt: integer("discord_connected_at"),
     createdAt: integer("created_at").notNull(),
   },
   (table) => [
     uniqueIndex("users_username_unique").on(table.username),
+    uniqueIndex("users_discord_user_id_unique").on(table.discordUserId),
     index("users_guild_id_idx").on(table.guildId),
   ],
 );

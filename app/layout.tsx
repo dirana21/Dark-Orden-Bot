@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(origin),
     title: "Dark Orden — Guild Command Center",
     description:
-      "Защищённый цифровой штаб гильдии Dark Orden: аккаунты участников, состав и будущая интеграция с Discord.",
+      "Защищённый цифровой штаб гильдии Dark Orden: аккаунты участников, события и подключение профиля Discord.",
     icons: { icon: "/og.png" },
     openGraph: {
       title: "Dark Orden — Guild Command Center",

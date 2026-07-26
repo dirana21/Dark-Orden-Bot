@@ -943,6 +943,16 @@ input:focus-visible {
   color: #fff5e4;
   font-family: Georgia, serif;
   font-size: 12px;
+  overflow: hidden;
+}
+
+.profile-chip .profile-avatar img,
+.member-card__avatar img,
+.discord-connect-card__avatar img,
+.black-sun-player__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .profile-chip__copy {
@@ -1227,6 +1237,7 @@ input:focus-visible {
   color: #fff1d8;
   font-family: Georgia, serif;
   font-size: 25px;
+  overflow: hidden;
 }
 
 .member-card > p {
@@ -1892,6 +1903,7 @@ input:focus-visible {
   display: grid;
   width: 36px;
   height: 36px;
+  overflow: hidden;
   place-items: center;
   border: 1px solid rgba(204, 128, 247, 0.28);
   border-radius: 50%;
@@ -2488,6 +2500,162 @@ input:focus-visible {
   padding: 28px 34px 32px;
 }
 
+.discord-connect-card {
+  display: grid;
+  gap: 13px;
+  padding: 15px;
+  border: 1px solid rgba(88, 101, 242, 0.25);
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 0 0, rgba(88, 101, 242, 0.15), transparent 45%),
+    rgba(88, 101, 242, 0.045);
+}
+
+.discord-connect-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.discord-connect-card__logo {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(130, 142, 255, 0.27);
+  border-radius: 50%;
+  background: rgba(88, 101, 242, 0.16);
+  color: #aeb5ff;
+}
+
+.discord-connect-card__heading > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.discord-connect-card__heading strong,
+.discord-connect-card__profile strong {
+  color: #e7e8f2;
+  font-size: 11px;
+}
+
+.discord-connect-card__heading small,
+.discord-connect-card__profile small {
+  color: #777b91;
+  font-size: 9px;
+}
+
+.discord-connect-card__state {
+  margin-left: auto;
+  padding: 5px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #74777e;
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.discord-connect-card__state.is-connected {
+  border-color: rgba(111, 191, 143, 0.25);
+  color: #83c99f;
+}
+
+.discord-connect-button {
+  display: inline-flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(130, 142, 255, 0.38);
+  border-radius: 3px;
+  background: linear-gradient(135deg, #5865f2, #4853c7);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.discord-connect-button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.discord-connect-card__profile {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  grid-template-columns: 38px minmax(0, 1fr) 34px 34px;
+}
+
+.discord-connect-card__profile > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.discord-connect-card__profile > span:nth-child(2) strong,
+.discord-connect-card__profile > span:nth-child(2) small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.discord-connect-card__avatar {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgba(130, 142, 255, 0.38);
+  border-radius: 50%;
+  background: #20233a;
+  color: #d9dcff;
+  font-family: Georgia, serif;
+}
+
+.discord-connect-card__refresh,
+.discord-connect-card__unlink {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.025);
+  color: #8a8fae;
+  cursor: pointer;
+}
+
+.discord-connect-card__refresh:hover,
+.discord-connect-card__unlink:hover:not(:disabled) {
+  border-color: rgba(130, 142, 255, 0.35);
+  color: #c6cbff;
+}
+
+.discord-connect-card__unlink:hover:not(:disabled) {
+  border-color: rgba(233, 145, 145, 0.3);
+  color: #efaaaa;
+}
+
+.discord-connect-card__message {
+  margin: 0;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  color: #e4a5a5;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.discord-connect-card__message.is-success {
+  color: #83c99f;
+}
+
 .field__optional {
   margin-left: 5px;
   color: #555856;
@@ -2955,6 +3123,15 @@ input:focus-visible {
 
   .profile-editor__actions {
     grid-template-columns: 1fr;
+  }
+
+  .discord-connect-card__heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .discord-connect-card__state {
+    margin-left: 46px;
   }
 
   .black-sun-main {

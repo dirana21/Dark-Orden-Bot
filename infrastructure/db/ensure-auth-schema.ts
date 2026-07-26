@@ -87,9 +87,15 @@ const statements = [
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'member',
     is_hidden INTEGER NOT NULL DEFAULT 0,
+    discord_user_id TEXT,
+    discord_username TEXT,
+    discord_display_name TEXT,
+    discord_avatar_hash TEXT,
+    discord_connected_at INTEGER,
     created_at INTEGER NOT NULL
   )`,
   "CREATE INDEX IF NOT EXISTS users_guild_id_idx ON users(guild_id)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS users_discord_user_id_unique ON users(discord_user_id)",
   `CREATE TABLE IF NOT EXISTS sessions (
     token_hash TEXT PRIMARY KEY NOT NULL,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -122,6 +128,28 @@ export async function ensureAuthSchema(db: D1Database): Promise<void> {
             )
             .run();
         }
+
+        const discordColumns = [
+          ["discord_user_id", "TEXT"],
+          ["discord_username", "TEXT"],
+          ["discord_display_name", "TEXT"],
+          ["discord_avatar_hash", "TEXT"],
+          ["discord_connected_at", "INTEGER"],
+        ] as const;
+
+        for (const [name, type] of discordColumns) {
+          if (!columns.results.some((column) => column.name === name)) {
+            await db
+              .prepare(`ALTER TABLE users ADD COLUMN ${name} ${type}`)
+              .run();
+          }
+        }
+
+        await db
+          .prepare(
+            "CREATE UNIQUE INDEX IF NOT EXISTS users_discord_user_id_unique ON users(discord_user_id)",
+          )
+          .run();
 
         await db
           .prepare(

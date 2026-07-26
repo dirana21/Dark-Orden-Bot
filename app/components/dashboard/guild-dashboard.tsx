@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Bell,
   CalendarDays,
@@ -30,6 +31,7 @@ interface GuildDashboardProps {
     displayName: string,
     realName: string,
   ) => Promise<boolean>;
+  onDisconnectDiscord: () => Promise<boolean>;
   onLogout: () => Promise<void>;
 }
 
@@ -39,11 +41,36 @@ export function GuildDashboard({
   error,
   onClearError,
   onUpdateProfile,
+  onDisconnectDiscord,
   onLogout,
 }: GuildDashboardProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [discordStatus, setDiscordStatus] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get("discord");
+    if (!result) {
+      return;
+    }
+
+    params.delete("discord");
+    const query = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+    );
+    const timer = window.setTimeout(() => {
+      setDiscordStatus(result);
+      setIsProfileOpen(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const closeProfile = useCallback(() => {
     onClearError();
+    setDiscordStatus("");
     setIsProfileOpen(false);
   }, [onClearError]);
 
@@ -136,7 +163,19 @@ export function GuildDashboard({
             disabled={isSubmitting}
             title="Редактировать профиль"
           >
-            <span>{user.displayName.slice(0, 1).toLocaleUpperCase("ru")}</span>
+            <span className="profile-avatar">
+              {user.discord?.avatarUrl ? (
+                <Image
+                  src={user.discord.avatarUrl}
+                  alt=""
+                  width={28}
+                  height={28}
+                  unoptimized
+                />
+              ) : (
+                user.displayName.slice(0, 1).toLocaleUpperCase("ru")
+              )}
+            </span>
             <span className="profile-chip__copy">
               <strong>{user.displayName}</strong>
               <small>{guildRoleLabels[user.role]}</small>
@@ -233,7 +272,17 @@ export function GuildDashboard({
           <aside className="dashboard-card member-card" id="members">
             <span className="section-kicker">Ваш профиль</span>
             <div className="member-card__avatar">
-              {user.displayName.slice(0, 1).toLocaleUpperCase("ru")}
+              {user.discord?.avatarUrl ? (
+                <Image
+                  src={user.discord.avatarUrl}
+                  alt=""
+                  width={72}
+                  height={72}
+                  unoptimized
+                />
+              ) : (
+                user.displayName.slice(0, 1).toLocaleUpperCase("ru")
+              )}
             </div>
             <h2>{user.displayName}</h2>
             <p>@{user.username}</p>
@@ -269,9 +318,17 @@ export function GuildDashboard({
           user={user}
           disabled={isSubmitting}
           error={error}
+          discordStatus={discordStatus}
           onClose={closeProfile}
           onClearError={onClearError}
           onSave={onUpdateProfile}
+          onDisconnectDiscord={async () => {
+            const disconnected = await onDisconnectDiscord();
+            if (disconnected) {
+              setDiscordStatus("disconnected");
+            }
+            return disconnected;
+          }}
         />
       ) : null}
     </div>

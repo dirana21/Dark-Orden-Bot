@@ -26,6 +26,7 @@ export interface AuthGateway {
     displayName: string,
     realName: string,
   ): Promise<AuthUser>;
+  disconnectDiscord(): Promise<AuthUser>;
   logout(): Promise<void>;
 }
 
@@ -86,6 +87,19 @@ export class HttpAuthGateway implements AuthGateway {
     );
     if (!result.user) {
       throw new Error("Не удалось обновить профиль.");
+    }
+    return result.user;
+  }
+
+  async disconnectDiscord(): Promise<AuthUser> {
+    const result = await parse(
+      await fetch("/api/profile/discord", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    if (!result.user) {
+      throw new Error("Не удалось отключить Discord.");
     }
     return result.user;
   }

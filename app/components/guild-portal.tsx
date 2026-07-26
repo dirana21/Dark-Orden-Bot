@@ -27,6 +27,7 @@ export function GuildPortal() {
         error={auth.error}
         onClearError={auth.clearError}
         onUpdateProfile={auth.updateProfile}
+        onDisconnectDiscord={auth.disconnectDiscord}
         onLogout={auth.logout}
       />
     );

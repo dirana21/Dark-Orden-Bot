@@ -7,6 +7,8 @@ import { ensureBlackSunSchema } from "@/infrastructure/db/ensure-black-sun-schem
 interface BlackSunRow {
   user_id: string;
   display_name: string;
+  discord_user_id: string | null;
+  discord_avatar_hash: string | null;
   event_role: EventRole | null;
   points: number;
   updated_at: number | null;
@@ -25,6 +27,8 @@ export class D1BlackSunRepository implements BlackSunRepository {
         `SELECT
           users.id AS user_id,
           users.display_name,
+          users.discord_user_id,
+          users.discord_avatar_hash,
           black_sun_scores.event_role,
           COALESCE(black_sun_scores.points, 0) AS points,
           black_sun_scores.updated_at
@@ -46,6 +50,10 @@ export class D1BlackSunRepository implements BlackSunRepository {
     return rows.results.map((row) => ({
       userId: row.user_id,
       displayName: row.display_name,
+      avatarUrl:
+        row.discord_user_id && row.discord_avatar_hash
+          ? `https://cdn.discordapp.com/avatars/${encodeURIComponent(row.discord_user_id)}/${encodeURIComponent(row.discord_avatar_hash)}.webp?size=128`
+          : null,
       eventRole: row.event_role,
       points: row.points,
       updatedAt: row.updated_at,

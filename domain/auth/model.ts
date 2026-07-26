@@ -1,5 +1,13 @@
 export type GuildRole = "superadmin" | "owner" | "officer" | "member";
 
+export interface DiscordProfile {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  connectedAt: number;
+}
+
 export interface AuthUser {
   id: string;
   guildId: string;
@@ -8,6 +16,7 @@ export interface AuthUser {
   displayName: string;
   realName: string | null;
   role: GuildRole;
+  discord: DiscordProfile | null;
   guildMemberCount: number;
   createdAt: number;
 }
@@ -42,6 +51,14 @@ export interface LoginUserInput {
 export interface UpdateProfileInput {
   displayName: string;
   realName?: string | null;
+}
+
+export interface LinkDiscordProfileInput {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarHash: string | null;
+  connectedAt: number;
 }
 
 export interface AuthResult {

@@ -7,6 +7,8 @@ import { ensureVengefulSoulsSchema } from "@/infrastructure/db/ensure-vengeful-s
 interface VengefulSoulsRow {
   user_id: string;
   display_name: string;
+  discord_user_id: string | null;
+  discord_avatar_hash: string | null;
   event_role: EventRole | null;
   points: number;
   updated_at: number | null;
@@ -27,6 +29,8 @@ export class D1VengefulSoulsRepository
         `SELECT
           users.id AS user_id,
           users.display_name,
+          users.discord_user_id,
+          users.discord_avatar_hash,
           vengeful_souls_scores.event_role,
           COALESCE(vengeful_souls_scores.points, 0) AS points,
           vengeful_souls_scores.updated_at
@@ -48,6 +52,10 @@ export class D1VengefulSoulsRepository
     return rows.results.map((row) => ({
       userId: row.user_id,
       displayName: row.display_name,
+      avatarUrl:
+        row.discord_user_id && row.discord_avatar_hash
+          ? `https://cdn.discordapp.com/avatars/${encodeURIComponent(row.discord_user_id)}/${encodeURIComponent(row.discord_avatar_hash)}.webp?size=128`
+          : null,
       eventRole: row.event_role,
       points: row.points,
       updatedAt: row.updated_at,

@@ -1,5 +1,6 @@
 import type {
   AuthUser,
+  LinkDiscordProfileInput,
   NewUser,
   StoredUser,
   UpdateProfileInput,
@@ -12,6 +13,11 @@ export interface UserRepository {
 
 export interface ProfileRepository {
   updateProfile(userId: string, profile: UpdateProfileInput): Promise<AuthUser>;
+  linkDiscord(
+    userId: string,
+    profile: LinkDiscordProfileInput,
+  ): Promise<AuthUser>;
+  disconnectDiscord(userId: string): Promise<AuthUser>;
 }
 
 export interface SessionRepository {

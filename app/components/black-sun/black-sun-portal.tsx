@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -289,7 +290,19 @@ export function BlackSunPortal() {
           <ArrowLeft size={17} />
         </Link>
         <span className="profile-chip black-sun-profile-static">
-          <span>{user.displayName.slice(0, 1).toLocaleUpperCase("ru")}</span>
+          <span className="profile-avatar">
+            {user.discord?.avatarUrl ? (
+              <Image
+                src={user.discord.avatarUrl}
+                alt=""
+                width={28}
+                height={28}
+                unoptimized
+              />
+            ) : (
+              user.displayName.slice(0, 1).toLocaleUpperCase("ru")
+            )}
+          </span>
           <span className="profile-chip__copy">
             <strong>{user.displayName}</strong>
             <small>{guildRoleLabels[user.role]}</small>
@@ -529,9 +542,19 @@ export function BlackSunPortal() {
                       <td>
                         <span className="black-sun-player">
                           <span className="black-sun-player__avatar">
-                            {entry.displayName
-                              .slice(0, 1)
-                              .toLocaleUpperCase("ru")}
+                            {entry.avatarUrl ? (
+                              <Image
+                                src={entry.avatarUrl}
+                                alt=""
+                                width={36}
+                                height={36}
+                                unoptimized
+                              />
+                            ) : (
+                              entry.displayName
+                                .slice(0, 1)
+                                .toLocaleUpperCase("ru")
+                            )}
                           </span>
                           <span>
                             <strong>{entry.displayName}</strong>

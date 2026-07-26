@@ -4,6 +4,8 @@ import { LoginUser } from "@/application/auth/login-user";
 import { LogoutUser } from "@/application/auth/logout-user";
 import { RegisterUser } from "@/application/auth/register-user";
 import { UpdateProfile } from "@/application/profile/update-profile";
+import { LinkDiscordProfile } from "@/application/profile/link-discord-profile";
+import { DisconnectDiscordProfile } from "@/application/profile/disconnect-discord-profile";
 import { D1SessionRepository } from "@/infrastructure/auth/d1-session-repository";
 import { D1UserRepository } from "@/infrastructure/auth/d1-user-repository";
 import { RuntimeRegistrationIdentifier } from "@/infrastructure/auth/runtime-registration-identifier";
@@ -36,4 +38,6 @@ export const authUseCases = {
   getSession: new GetSession(sessions, tokens, clock),
   logout: new LogoutUser(sessions, tokens),
   updateProfile: new UpdateProfile(users),
+  linkDiscordProfile: new LinkDiscordProfile(users),
+  disconnectDiscordProfile: new DisconnectDiscordProfile(users),
 };
