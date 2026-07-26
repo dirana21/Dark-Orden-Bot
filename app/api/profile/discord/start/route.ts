@@ -25,7 +25,10 @@ export async function GET(request: Request) {
   authorizationUrl.searchParams.set("scope", "identify");
   authorizationUrl.searchParams.set("state", state);
 
-  const response = Response.redirect(authorizationUrl, 302);
+  const response = new Response(null, {
+    status: 302,
+    headers: { Location: authorizationUrl.toString() },
+  });
   response.headers.append("Set-Cookie", stateCookie(request, state));
   response.headers.set("Cache-Control", "no-store");
   return response;

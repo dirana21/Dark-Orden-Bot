@@ -79,7 +79,13 @@ export function safeStateEquals(left: string, right: string): boolean {
 export function homeRedirect(request: Request, result: string): Response {
   const target = new URL("/", request.url);
   target.searchParams.set("discord", result);
-  return Response.redirect(target, 303);
+  return new Response(null, {
+    status: 303,
+    headers: {
+      Location: target.toString(),
+      "Cache-Control": "no-store",
+    },
+  });
 }
 
 export async function exchangeDiscordCode(
