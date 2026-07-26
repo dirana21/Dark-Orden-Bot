@@ -30,6 +30,9 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /api\/profile/);
   assert.match(contents, /api\/black-sun/);
   assert.match(contents, /black-sun-icon\.png/);
+  assert.match(contents, /api\/vengeful-souls/);
+  assert.match(contents, /vengeful-souls-icon\.png/);
+  assert.match(contents, /Night of Vengeful Souls/);
   assert.match(contents, /guildMemberCount/);
   assert.match(contents, /visible_members\.is_hidden = 0/);
   assert.match(contents, /Чёрное Солнце/);

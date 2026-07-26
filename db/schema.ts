@@ -69,3 +69,23 @@ export const blackSunScores = sqliteTable(
     ),
   ],
 );
+
+export const vengefulSoulsScores = sqliteTable(
+  "vengeful_souls_scores",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    guildId: text("guild_id")
+      .notNull()
+      .references(() => guilds.id),
+    points: integer("points").notNull().default(0),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("vengeful_souls_scores_guild_points_idx").on(
+      table.guildId,
+      table.points,
+    ),
+  ],
+);

@@ -704,6 +704,128 @@ input:focus-visible {
   }
 }
 
+.event-nav-card {
+  display: flex;
+  width: 218px;
+  height: 50px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 13px 3px 5px;
+  border: 1px solid rgba(138, 194, 255, 0.3);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 15% 50%, rgba(73, 142, 224, 0.25), transparent 35%),
+    linear-gradient(145deg, #0e1b2b, #080e17);
+  color: #dbeeff;
+  text-decoration: none;
+  box-shadow:
+    inset 0 0 18px rgba(45, 100, 166, 0.18),
+    0 0 16px rgba(65, 143, 229, 0.12);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.event-nav-card:hover {
+  border-color: rgba(178, 220, 255, 0.66);
+  box-shadow:
+    inset 0 0 22px rgba(65, 132, 210, 0.26),
+    0 0 22px rgba(88, 166, 248, 0.25);
+  transform: translateY(-1px);
+}
+
+.event-nav-card__copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.event-nav-card__copy strong,
+.event-nav-card__copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-nav-card__copy strong {
+  color: #eef8ff;
+  font-size: 9px;
+  font-weight: 760;
+  letter-spacing: 0.02em;
+}
+
+.event-nav-card__copy small {
+  color: #7193b5;
+  font-size: 7px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.vengeful-souls-symbol {
+  --vengeful-souls-size: 18px;
+
+  position: relative;
+  display: inline-grid;
+  width: var(--vengeful-souls-size);
+  height: var(--vengeful-souls-size);
+  flex: 0 0 auto;
+  place-items: center;
+  filter:
+    drop-shadow(0 0 3px rgba(226, 246, 255, 0.92))
+    drop-shadow(0 0 9px rgba(42, 132, 235, 0.72));
+  isolation: isolate;
+}
+
+.vengeful-souls-symbol__image {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: vengeful-souls-icon 3.4s ease-in-out infinite;
+}
+
+.vengeful-souls-symbol__aura {
+  position: absolute;
+  z-index: 0;
+  width: 58%;
+  height: 58%;
+  border: 1px solid rgba(171, 222, 255, 0.78);
+  border-radius: 50%;
+  box-shadow:
+    0 0 8px 3px rgba(72, 155, 244, 0.46),
+    inset 0 0 8px rgba(225, 246, 255, 0.34);
+  animation: vengeful-souls-aura 2.8s ease-out infinite;
+}
+
+@keyframes vengeful-souls-aura {
+  0% {
+    opacity: 0.74;
+    transform: scale(0.76);
+  }
+
+  74%,
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes vengeful-souls-icon {
+  0%,
+  100% {
+    filter: brightness(0.92) saturate(0.95);
+    transform: translateY(1px) scale(0.97);
+  }
+
+  50% {
+    filter: brightness(1.18) saturate(1.08);
+    transform: translateY(-1px) scale(1.035);
+  }
+}
+
 .profile-chip {
   display: flex;
   align-items: center;
@@ -1213,7 +1335,9 @@ input:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .black-sun-symbol__image,
-  .black-sun-symbol__aura {
+  .black-sun-symbol__aura,
+  .vengeful-souls-symbol__image,
+  .vengeful-souls-symbol__aura {
     animation: none;
   }
 }
@@ -1582,6 +1706,211 @@ input:focus-visible {
   font-size: 9px;
 }
 
+.vengeful-souls-shell {
+  --vengeful-blue: #5ca9f5;
+  --vengeful-blue-soft: #d8eeff;
+
+  background:
+    radial-gradient(circle at 50% -8%, rgba(104, 183, 255, 0.22), transparent 35rem),
+    radial-gradient(circle at 90% 18%, rgba(39, 99, 178, 0.2), transparent 31rem),
+    radial-gradient(circle at 8% 72%, rgba(31, 78, 139, 0.13), transparent 29rem),
+    #050a11;
+}
+
+.vengeful-souls-shell .black-sun-header {
+  border-bottom-color: rgba(130, 199, 255, 0.2);
+  background:
+    linear-gradient(90deg, rgba(5, 11, 18, 0.98), rgba(10, 24, 40, 0.96), rgba(5, 9, 15, 0.98));
+  box-shadow: 0 12px 38px rgba(3, 25, 52, 0.28);
+}
+
+.vengeful-souls-shell .dashboard-header nav {
+  gap: 24px;
+}
+
+.vengeful-souls-shell .dashboard-header nav a.is-current {
+  color: #eef8ff;
+}
+
+.vengeful-souls-shell .dashboard-header nav a.is-current::after {
+  background: linear-gradient(90deg, #347fd0, #c8ebff);
+  box-shadow: 0 0 9px rgba(86, 170, 249, 0.7);
+}
+
+.vengeful-souls-shell .section-kicker {
+  color: #79bdf7;
+}
+
+.vengeful-souls-shell .black-sun-hero {
+  border-color: rgba(128, 195, 255, 0.26);
+  background:
+    radial-gradient(circle at 7% 50%, rgba(171, 221, 255, 0.17), transparent 16rem),
+    radial-gradient(circle at 83% 10%, rgba(48, 108, 183, 0.18), transparent 20rem),
+    linear-gradient(112deg, rgba(11, 27, 44, 0.98), rgba(5, 9, 15, 0.98));
+  box-shadow:
+    0 26px 70px rgba(0, 0, 0, 0.38),
+    inset 0 1px rgba(226, 244, 255, 0.05);
+}
+
+.vengeful-souls-shell .black-sun-hero::after {
+  border-color: rgba(137, 204, 255, 0.11);
+  box-shadow:
+    0 0 0 48px rgba(92, 169, 245, 0.027),
+    0 0 0 96px rgba(92, 169, 245, 0.015);
+}
+
+.vengeful-souls-shell .black-sun-hero__symbol {
+  border-color: rgba(151, 211, 255, 0.42);
+  background:
+    radial-gradient(circle, rgba(62, 139, 220, 0.27), transparent 64%),
+    linear-gradient(145deg, rgba(13, 34, 55, 0.96), rgba(4, 8, 13, 0.99));
+  box-shadow:
+    inset 0 0 30px rgba(27, 87, 153, 0.31),
+    0 0 34px rgba(67, 154, 240, 0.23);
+}
+
+.vengeful-souls-shell .black-sun-hero h1 {
+  color: #f3f9fd;
+  font-size: clamp(30px, 3.8vw, 49px);
+  line-height: 1.03;
+}
+
+.vengeful-souls-shell .black-sun-hero h1 span {
+  color: #79b9ea;
+}
+
+.vengeful-souls-shell .black-sun-hero p {
+  color: #98a9b8;
+}
+
+.vengeful-souls-shell .black-sun-hero__action small {
+  color: #72879a;
+}
+
+.vengeful-souls-shell .black-sun-hero__action small strong {
+  color: #b9e1ff;
+}
+
+.vengeful-souls-shell .primary-button {
+  border-color: #78bdf4;
+  background: linear-gradient(135deg, #2c6da9, #b9e2ff 54%, #4f9bd8);
+  box-shadow:
+    0 12px 30px rgba(38, 111, 179, 0.25),
+    inset 0 1px rgba(255, 255, 255, 0.36);
+  color: #06121d;
+}
+
+.vengeful-souls-shell .secondary-button {
+  border-color: rgba(132, 198, 250, 0.21);
+  background: rgba(79, 151, 218, 0.06);
+  color: #91aec7;
+}
+
+.vengeful-souls-shell .secondary-button:hover:not(:disabled) {
+  border-color: rgba(176, 222, 255, 0.46);
+  color: #e2f3ff;
+}
+
+.vengeful-souls-shell .black-sun-leaderboard {
+  border-color: rgba(116, 185, 244, 0.18);
+  background:
+    linear-gradient(165deg, rgba(10, 25, 41, 0.99), rgba(5, 10, 16, 0.99));
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+}
+
+.vengeful-souls-shell .black-sun-leaderboard__header {
+  border-bottom-color: rgba(151, 207, 250, 0.12);
+  background: rgba(47, 116, 180, 0.06);
+}
+
+.vengeful-souls-shell .black-sun-leaderboard__header h2 {
+  color: #e8f3fb;
+}
+
+.vengeful-souls-shell .black-sun-leaderboard__meta > span {
+  color: #728697;
+}
+
+.vengeful-souls-shell .black-sun-table th {
+  background: rgba(88, 161, 226, 0.027);
+  color: #697d8f;
+}
+
+.vengeful-souls-shell .black-sun-table td {
+  border-top-color: rgba(181, 220, 249, 0.06);
+  color: #91a3b2;
+}
+
+.vengeful-souls-shell .black-sun-table tbody tr:hover {
+  background: rgba(74, 151, 223, 0.05);
+}
+
+.vengeful-souls-shell .black-sun-table tbody tr.is-current-user {
+  background:
+    linear-gradient(90deg, rgba(57, 139, 215, 0.15), transparent 68%);
+}
+
+.vengeful-souls-shell .black-sun-player__avatar {
+  border-color: rgba(134, 199, 250, 0.3);
+  background: radial-gradient(circle at 35% 25%, #5799cc, #10263b);
+  color: #f0f9ff;
+}
+
+.vengeful-souls-shell .black-sun-player strong {
+  color: #dfeaf2;
+}
+
+.vengeful-souls-shell .black-sun-player small {
+  color: #72b0df;
+}
+
+.vengeful-souls-shell .black-sun-role {
+  border-color: rgba(126, 193, 244, 0.18);
+  background: rgba(57, 133, 200, 0.04);
+  color: #85aac6;
+}
+
+.vengeful-souls-shell .black-sun-table .black-sun-points {
+  color: #d9edfb;
+}
+
+.vengeful-souls-shell .black-sun-score-modal {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(45, 121, 194, 0.23), transparent 30rem),
+    rgba(2, 6, 10, 0.88);
+}
+
+.vengeful-souls-shell .black-sun-score-dialog {
+  border-color: rgba(127, 194, 246, 0.3);
+  background: linear-gradient(145deg, #0c2033, #050a10);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.7),
+    0 0 42px rgba(34, 106, 172, 0.15);
+}
+
+.vengeful-souls-shell .black-sun-score-dialog::before {
+  background: linear-gradient(90deg, transparent, #2e79bd, #d6f1ff, transparent);
+}
+
+.vengeful-souls-shell .black-sun-score-dialog__glow {
+  background: rgba(48, 128, 202, 0.22);
+}
+
+.vengeful-souls-shell .black-sun-score-dialog__mark {
+  border-color: rgba(137, 204, 255, 0.3);
+  background:
+    radial-gradient(circle, rgba(61, 146, 221, 0.2), transparent 66%),
+    #050c13;
+}
+
+.vengeful-souls-shell .black-sun-score-dialog h2 {
+  color: #edf7fd;
+}
+
+.vengeful-souls-shell .black-sun-score-dialog__hint {
+  color: #6e8293;
+}
+
 .is-spinning {
   animation: spin 700ms linear infinite;
 }
@@ -1759,6 +2088,18 @@ input:focus-visible {
   to { transform: rotate(360deg); }
 }
 
+@media (max-width: 1220px) {
+  .event-nav-card {
+    width: 58px;
+    padding: 3px 5px;
+    justify-content: center;
+  }
+
+  .event-nav-card__copy {
+    display: none;
+  }
+}
+
 @media (max-width: 1040px) {
   .auth-shell {
     grid-template-columns: minmax(0, 0.9fr) minmax(410px, 1fr);
@@ -1872,6 +2213,20 @@ input:focus-visible {
 }
 
 @media (max-width: 520px) {
+  .dashboard-header__actions {
+    gap: 6px;
+  }
+
+  .event-nav-card,
+  .black-sun-nav-icon {
+    width: 48px;
+    height: 44px;
+  }
+
+  .notification-button {
+    display: none;
+  }
+
   .auth-panel {
     padding: 28px 22px;
   }

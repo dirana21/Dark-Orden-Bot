@@ -19,6 +19,7 @@ import { guildRoleLabels } from "@/app/lib/role-labels";
 import { BlackSunIcon } from "../black-sun/black-sun-icon";
 import { BrandMark } from "../brand-mark";
 import { ProfileEditor } from "../profile/profile-editor";
+import { VengefulSoulsIcon } from "../vengeful-souls/vengeful-souls-icon";
 
 interface GuildDashboardProps {
   user: AuthUser;
@@ -57,6 +58,18 @@ export function GuildDashboard({
         </nav>
         <div className="dashboard-header__actions">
           <Link
+            className="event-nav-card vengeful-souls-nav-card"
+            href="/vengeful-souls"
+            aria-label="Открыть рейтинг Ночи неупокоеных душ"
+            title="Ночью неупокоеных душ / Night of Vengeful Souls"
+          >
+            <VengefulSoulsIcon size={44} />
+            <span className="event-nav-card__copy">
+              <strong>Ночью неупокоеных душ</strong>
+              <small>Night of Vengeful Souls</small>
+            </span>
+          </Link>
+          <Link
             className="icon-button black-sun-nav-icon"
             href="/black-sun"
             aria-label="Открыть рейтинг Чёрного Солнца"
@@ -64,7 +77,11 @@ export function GuildDashboard({
           >
             <BlackSunIcon size={50} />
           </Link>
-          <button className="icon-button" type="button" aria-label="Уведомления">
+          <button
+            className="icon-button notification-button"
+            type="button"
+            aria-label="Уведомления"
+          >
             <Bell size={18} />
             <span className="notification-dot" />
           </button>

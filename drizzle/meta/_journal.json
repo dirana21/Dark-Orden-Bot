@@ -36,6 +36,13 @@
       "when": 1785101153864,
       "tag": "0004_remove_smoke_test_members",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1785102291762,
+      "tag": "0005_vengeful_souls_scores",
+      "breakpoints": true
     }
   ]
 }

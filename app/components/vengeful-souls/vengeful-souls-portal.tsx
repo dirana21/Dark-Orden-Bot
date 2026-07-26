@@ -15,12 +15,12 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
-import type { BlackSunStanding } from "@/domain/black-sun/model";
+import type { VengefulSoulsStanding } from "@/domain/vengeful-souls/model";
 import { useAuthController } from "@/app/hooks/use-auth-controller";
-import { HttpBlackSunGateway } from "@/app/lib/black-sun-client";
+import { HttpVengefulSoulsGateway } from "@/app/lib/vengeful-souls-client";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import { BrandMark } from "../brand-mark";
-import { BlackSunIcon } from "./black-sun-icon";
+import { VengefulSoulsIcon } from "./vengeful-souls-icon";
 
 const pointsFormatter = new Intl.NumberFormat("ru-RU");
 
@@ -95,16 +95,16 @@ function ScoreDialog({
         className="black-sun-score-dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="black-sun-score-title"
+        aria-labelledby="vengeful-souls-score-title"
       >
         <div className="black-sun-score-dialog__glow" aria-hidden="true" />
         <header>
           <div className="black-sun-score-dialog__mark">
-            <BlackSunIcon size={28} />
+            <VengefulSoulsIcon size={38} />
           </div>
           <div>
             <span className="section-kicker">Личный результат</span>
-            <h2 id="black-sun-score-title">Внести очки</h2>
+            <h2 id="vengeful-souls-score-title">Внести очки</h2>
           </div>
           <button
             className="profile-editor__close"
@@ -119,7 +119,7 @@ function ScoreDialog({
 
         <form onSubmit={submit}>
           <label className="field">
-            ОЧКИ ЧЁРНОГО СОЛНЦА
+            ОЧКИ НОЧИ НЕУПОКОЕНЫХ ДУШ
             <span className="field__control black-sun-points-control">
               <Medal size={18} aria-hidden="true" />
               <input
@@ -140,7 +140,8 @@ function ScoreDialog({
             </span>
           </label>
           <p className="black-sun-score-dialog__hint">
-            Новый результат заменит ранее внесённые очки.
+            Новый результат заменит ранее внесённые очки только для этого
+            события.
           </p>
           {localError || error ? (
             <p className="profile-editor__error" role="alert">
@@ -167,10 +168,10 @@ function ScoreDialog({
   );
 }
 
-export function BlackSunPortal() {
+export function VengefulSoulsPortal() {
   const auth = useAuthController();
-  const gateway = useMemo(() => new HttpBlackSunGateway(), []);
-  const [standings, setStandings] = useState<BlackSunStanding[]>([]);
+  const gateway = useMemo(() => new HttpVengefulSoulsGateway(), []);
+  const [standings, setStandings] = useState<VengefulSoulsStanding[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isScoreOpen, setIsScoreOpen] = useState(false);
@@ -267,7 +268,7 @@ export function BlackSunPortal() {
   }
 
   return (
-    <div className="black-sun-shell">
+    <div className="black-sun-shell vengeful-souls-shell">
       <header className="dashboard-header black-sun-header">
         <Link
           className="black-sun-brand-link"
@@ -278,10 +279,10 @@ export function BlackSunPortal() {
         </Link>
         <nav aria-label="Основная навигация">
           <Link href="/">Обзор</Link>
-          <Link href="/vengeful-souls">Ночью неупокоеных душ</Link>
-          <Link className="is-current" href="/black-sun">
-            Чёрное Солнце
+          <Link className="is-current" href="/vengeful-souls">
+            Ночью неупокоеных душ
           </Link>
+          <Link href="/black-sun">Чёрное Солнце</Link>
         </nav>
         <div className="dashboard-header__actions">
           <Link
@@ -315,17 +316,18 @@ export function BlackSunPortal() {
       <main className="black-sun-main">
         <section className="black-sun-hero">
           <div className="black-sun-hero__symbol">
-            <BlackSunIcon size={104} />
+            <VengefulSoulsIcon size={112} />
           </div>
           <div className="black-sun-hero__copy">
-            <span className="section-kicker">Боевой рейтинг гильдии</span>
+            <span className="section-kicker">Отдельный боевой рейтинг</span>
             <h1>
-              Чёрное Солнце <span>/ Black Sun</span>
+              Ночью неупокоеных душ{" "}
+              <span>/ Night of Vengeful Souls</span>
             </h1>
             <p>
-              Внесите личный результат события. Таблица автоматически
-              распределит до 50 участников от наибольшего количества очков к
-              наименьшему.
+              Внесите личный результат события. Этот рейтинг хранится отдельно
+              от «Чёрного Солнца» и распределяет до 50 участников от
+              наибольшего количества очков к наименьшему.
             </p>
           </div>
           <div className="black-sun-hero__action">
@@ -341,7 +343,9 @@ export function BlackSunPortal() {
               <Plus size={17} /> Внести очки
             </button>
             {!canSubmitScore ? (
-              <small>Скрытая учётная запись не участвует в рейтинге.</small>
+              <small>
+                Скрытая учётная запись не участвует в рейтинге.
+              </small>
             ) : currentStanding ? (
               <small>
                 Ваш результат:{" "}
@@ -355,7 +359,7 @@ export function BlackSunPortal() {
           <header className="black-sun-leaderboard__header">
             <div>
               <span className="section-kicker">Таблица участников</span>
-              <h2>Рейтинг Dark Orden</h2>
+              <h2>Night of Vengeful Souls · Dark Orden</h2>
             </div>
             <div className="black-sun-leaderboard__meta">
               <span>{standings.length} из 50</span>
@@ -396,7 +400,7 @@ export function BlackSunPortal() {
                 {isLoading && standings.length === 0 ? (
                   <tr>
                     <td className="black-sun-table__state" colSpan={5}>
-                      Загружаем рейтинг Чёрного Солнца…
+                      Загружаем рейтинг Ночи неупокоеных душ…
                     </td>
                   </tr>
                 ) : standings.length === 0 ? (
@@ -441,9 +445,7 @@ export function BlackSunPortal() {
                         </span>
                       </td>
                       <td>
-                        <time>
-                          {formatUpdatedAt(entry.updatedAt)}
-                        </time>
+                        <time>{formatUpdatedAt(entry.updatedAt)}</time>
                       </td>
                       <td className="black-sun-points">
                         {pointsFormatter.format(entry.points)}
