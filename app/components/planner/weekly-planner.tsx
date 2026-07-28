@@ -11,32 +11,13 @@ import {
 } from "lucide-react";
 import type { PlannerTask, PlannerTaskKind } from "@/domain/planner/model";
 import { HttpPlannerGateway } from "@/app/lib/planner-client";
+import { announcePlannerTasks } from "@/app/lib/planner-events";
+import {
+  getCurrentPlannerPeriods,
+  type PlannerPeriods,
+} from "@/app/lib/planner-periods";
 
 const gateway = new HttpPlannerGateway();
-
-interface PlannerPeriods {
-  daily: string;
-  weekly: string;
-}
-
-function toIsoDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getWeekStart(value: string): string {
-  const date = new Date(`${value}T12:00:00`);
-  const weekday = date.getDay() || 7;
-  date.setDate(date.getDate() - weekday + 1);
-  return toIsoDate(date);
-}
-
-function getCurrentPeriods(): PlannerPeriods {
-  const daily = toIsoDate(new Date());
-  return { daily, weekly: getWeekStart(daily) };
-}
 
 function sortTasks(tasks: PlannerTask[]): PlannerTask[] {
   return [...tasks].sort(
@@ -121,7 +102,7 @@ export function WeeklyPlanner() {
 
   useEffect(() => {
     function syncPeriods() {
-      const next = getCurrentPeriods();
+      const next = getCurrentPlannerPeriods();
       setPeriods((current) =>
         current?.daily === next.daily && current.weekly === next.weekly
           ? current
@@ -137,6 +118,12 @@ export function WeeklyPlanner() {
       document.removeEventListener("visibilitychange", syncPeriods);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      announcePlannerTasks(tasks);
+    }
+  }, [isLoading, tasks]);
 
   useEffect(() => {
     if (!periods) {

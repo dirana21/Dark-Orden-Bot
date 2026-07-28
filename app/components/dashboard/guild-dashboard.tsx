@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Bell,
   CalendarDays,
   ChevronRight,
   LogOut,
@@ -19,6 +18,7 @@ import type { AuthUser } from "@/domain/auth/model";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import { BlackSunIcon } from "../black-sun/black-sun-icon";
 import { BrandMark } from "../brand-mark";
+import { PlannerNotifications } from "../notifications/planner-notifications";
 import { ProfileEditor } from "../profile/profile-editor";
 import { WeeklyPlanner } from "../planner/weekly-planner";
 import { VengefulSoulsIcon } from "../vengeful-souls/vengeful-souls-icon";
@@ -147,14 +147,7 @@ export function GuildDashboard({
               </Link>
             </nav>
           </details>
-          <button
-            className="icon-button notification-button"
-            type="button"
-            aria-label="Уведомления"
-          >
-            <Bell size={18} />
-            <span className="notification-dot" />
-          </button>
+          <PlannerNotifications />
           <button
             className="profile-chip"
             type="button"
