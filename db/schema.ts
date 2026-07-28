@@ -141,3 +141,49 @@ export const plannerTasks = sqliteTable(
     ),
   ],
 );
+
+export const guildPlannerTasks = sqliteTable(
+  "guild_planner_tasks",
+  {
+    id: text("id").primaryKey(),
+    guildId: text("guild_id")
+      .notNull()
+      .references(() => guilds.id, { onDelete: "cascade" }),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["monthly", "weekly", "daily"] }).notNull(),
+    title: text("title").notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("guild_planner_tasks_guild_kind_idx").on(
+      table.guildId,
+      table.kind,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const guildPlannerTaskCompletions = sqliteTable(
+  "guild_planner_task_completions",
+  {
+    taskId: text("task_id")
+      .notNull()
+      .references(() => guildPlannerTasks.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    completionPeriod: text("completion_period").notNull(),
+    completedAt: integer("completed_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.taskId, table.userId] }),
+    index("guild_planner_task_completions_user_idx").on(
+      table.userId,
+      table.completionPeriod,
+    ),
+  ],
+);

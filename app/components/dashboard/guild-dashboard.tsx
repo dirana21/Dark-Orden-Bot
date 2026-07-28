@@ -231,7 +231,7 @@ export function GuildDashboard({
           </article>
         </section>
 
-        <WeeklyPlanner />
+        <WeeklyPlanner userRole={user.role} />
 
         <div className="dashboard-grid">
           <section className="dashboard-card" id="events">

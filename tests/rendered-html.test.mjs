@@ -33,14 +33,17 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /api\/vengeful-souls/);
   assert.match(contents, /vengeful-souls-icon\.png/);
   assert.match(contents, /api\/planner/);
-  assert.match(contents, /Повторяющиеся задачи/);
+  assert.match(contents, /План гильдии и мои заметки/);
   assert.match(contents, /Галочки снимутся завтра/);
   assert.match(contents, /Незакрытые задачи/);
   assert.match(contents, /notification-counter--daily/);
   assert.match(contents, /notification-counter--weekly/);
   assert.match(contents, /notification-counter--monthly/);
+  assert.match(contents, /Общие задачи гильдии/);
+  assert.match(contents, /Мои заметки/);
   assert.doesNotMatch(contents, /Предыдущая неделя/);
   assert.match(contents, /planner_tasks/);
+  assert.match(contents, /guild_planner_tasks/);
   assert.match(contents, /Night of Vengeful Souls/);
   assert.match(contents, /event-nav-mobile/);
   assert.match(contents, /black-sun-event-card/);

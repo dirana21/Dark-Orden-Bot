@@ -1577,6 +1577,57 @@ input:focus-visible {
   background: rgba(5, 6, 7, 0.52);
 }
 
+.planner-scope-switch,
+.planner-personal-form-label {
+  grid-column: 1 / -1;
+}
+
+.planner-scope-switch {
+  display: grid;
+  width: fit-content;
+  padding: 3px;
+  grid-template-columns: repeat(2, auto);
+  border: 1px solid rgba(215, 180, 106, 0.09);
+  background: #0d0f10;
+}
+
+.planner-scope-switch button {
+  display: inline-flex;
+  min-height: 35px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: #666a66;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.planner-scope-switch button.is-active {
+  background: rgba(215, 180, 106, 0.11);
+  color: var(--gold-soft);
+}
+
+.planner-personal-form-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #777b76;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.planner-personal-form-label svg {
+  color: var(--gold);
+}
+
 .planner-kind-switch {
   display: grid;
   padding: 3px;
@@ -1661,6 +1712,86 @@ input:focus-visible {
   font-size: 12px;
 }
 
+.planner-scope-section {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: rgba(5, 6, 7, 0.2);
+}
+
+.planner-scope-section--guild {
+  border-color: rgba(103, 141, 178, 0.16);
+  background:
+    linear-gradient(135deg, rgba(73, 112, 151, 0.055), transparent 42%),
+    rgba(5, 6, 7, 0.24);
+}
+
+.planner-scope-section--personal {
+  margin-top: 12px;
+}
+
+.planner-scope-heading {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.planner-scope-heading__icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(215, 180, 106, 0.16);
+  border-radius: 50%;
+  color: var(--gold);
+}
+
+.planner-scope-section--guild .planner-scope-heading__icon {
+  border-color: rgba(103, 141, 178, 0.25);
+  color: #79a8d4;
+}
+
+.planner-scope-heading small {
+  color: #777b76;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.planner-scope-heading h3 {
+  margin: 4px 0 0;
+  color: #e1d9cd;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.planner-scope-heading p {
+  margin: 5px 0 0;
+  color: #6e726d;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.planner-scope-heading > strong {
+  display: grid;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 7px;
+  place-items: center;
+  border: 1px solid rgba(215, 180, 106, 0.15);
+  border-radius: 50%;
+  color: #aa9877;
+  font-size: 11px;
+}
+
+.planner-scope-section--guild .planner-scope-heading > strong {
+  border-color: rgba(103, 141, 178, 0.22);
+  color: #79a8d4;
+}
+
 .planner-lists {
   display: grid;
   gap: 12px;
@@ -1693,7 +1824,8 @@ input:focus-visible {
   text-transform: uppercase;
 }
 
-.planner-list-heading h3 {
+.planner-list-heading h3,
+.planner-list-heading h4 {
   margin: 4px 0 0;
   color: #dcd6cb;
   font-family: Georgia, "Times New Roman", serif;
@@ -1755,6 +1887,10 @@ input:focus-visible {
   border-color: rgba(215, 180, 106, 0.14);
 }
 
+.planner-task.is-guild-task {
+  border-color: rgba(103, 141, 178, 0.1);
+}
+
 .planner-task.is-complete {
   opacity: 0.55;
 }
@@ -1802,6 +1938,14 @@ input:focus-visible {
 
 .planner-task__delete:hover:not(:disabled) {
   color: #c67676;
+}
+
+.planner-task__locked {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #55718a;
 }
 
 .planner-empty,

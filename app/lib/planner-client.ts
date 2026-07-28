@@ -1,4 +1,8 @@
-import type { PlannerTask, PlannerTaskKind } from "@/domain/planner/model";
+import type {
+  PlannerTask,
+  PlannerTaskKind,
+  PlannerTaskScope,
+} from "@/domain/planner/model";
 
 interface PlannerResponse {
   tasks?: PlannerTask[];
@@ -36,6 +40,7 @@ export class HttpPlannerGateway {
 
   async create(input: {
     kind: PlannerTaskKind;
+    scope: PlannerTaskScope;
     title: string;
   }): Promise<PlannerTask> {
     const payload = await parse(

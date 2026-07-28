@@ -71,6 +71,13 @@
       "when": 1785264079232,
       "tag": "0009_lumpy_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1785270896395,
+      "tag": "0010_slim_cargill",
+      "breakpoints": true
     }
   ]
 }

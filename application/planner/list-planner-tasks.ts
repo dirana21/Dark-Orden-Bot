@@ -10,6 +10,7 @@ export class ListPlannerTasks {
 
   async execute(
     userId: string,
+    guildId: string,
     dailyPeriodInput: unknown,
     weeklyPeriodInput: unknown,
     monthlyPeriodInput: unknown,
@@ -19,6 +20,7 @@ export class ListPlannerTasks {
     const monthlyPeriod = validatePlannerMonthStart(monthlyPeriodInput);
     return this.tasks.list(
       userId,
+      guildId,
       dailyPeriod,
       weeklyPeriod,
       monthlyPeriod,

@@ -17,6 +17,7 @@ export class SetPlannerTaskCompleted {
 
   async execute(
     userId: string,
+    guildId: string,
     taskIdInput: unknown,
     completedInput: unknown,
     dailyPeriodInput: unknown,
@@ -31,6 +32,7 @@ export class SetPlannerTaskCompleted {
     const now = this.clock.now();
     const task = await this.tasks.setCompleted(
       userId,
+      guildId,
       taskId,
       completed,
       dailyPeriod,

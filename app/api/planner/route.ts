@@ -24,7 +24,12 @@ function plannerErrorResponse(error: unknown): Response {
     return Response.json(
       { error: error.message },
       {
-        status: error.code === "NOT_FOUND" ? 404 : 400,
+        status:
+          error.code === "NOT_FOUND"
+            ? 404
+            : error.code === "FORBIDDEN"
+              ? 403
+              : 400,
         headers: { "Cache-Control": "no-store" },
       },
     );
@@ -39,6 +44,7 @@ export async function GET(request: Request) {
     const params = new URL(request.url).searchParams;
     const tasks = await plannerUseCases.list.execute(
       user.id,
+      user.guildId,
       params.get("daily"),
       params.get("weekly"),
       params.get("monthly"),
@@ -63,9 +69,10 @@ export async function POST(request: Request) {
     const user = await requireSessionUser(request);
     const input = (await request.json()) as {
       kind?: unknown;
+      scope?: unknown;
       title?: unknown;
     };
-    const task = await plannerUseCases.create.execute(user.id, input);
+    const task = await plannerUseCases.create.execute(user, input);
 
     return Response.json(
       { task },
@@ -93,6 +100,7 @@ export async function PATCH(request: Request) {
     };
     const task = await plannerUseCases.setCompleted.execute(
       user.id,
+      user.guildId,
       input.id,
       input.completed,
       input.dailyPeriod,
@@ -118,7 +126,7 @@ export async function DELETE(request: Request) {
   try {
     const user = await requireSessionUser(request);
     const taskId = new URL(request.url).searchParams.get("id");
-    await plannerUseCases.delete.execute(user.id, taskId);
+    await plannerUseCases.delete.execute(user, taskId);
 
     return Response.json(
       { success: true },

@@ -16,6 +16,7 @@ interface PlannerTaskRow {
 
 function mapTask(
   row: PlannerTaskRow,
+  scope: PlannerTask["scope"],
   dailyPeriod: string,
   weeklyPeriod: string,
   monthlyPeriod: string,
@@ -31,6 +32,7 @@ function mapTask(
   return {
     id: row.id,
     kind: row.kind,
+    scope,
     title: row.title,
     completed,
     completedAt: completed ? row.completed_at : null,
@@ -42,6 +44,7 @@ function mapTask(
 export class D1PlannerTaskRepository implements PlannerTaskRepository {
   async list(
     userId: string,
+    guildId: string,
     dailyPeriod: string,
     weeklyPeriod: string,
     monthlyPeriod: string,
@@ -49,7 +52,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
     const db = getD1();
     await ensurePlannerSchema(db);
 
-    const rows = await db
+    const personalRows = await db
       .prepare(
         `SELECT
           id,
@@ -68,8 +71,48 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
       .bind(userId)
       .all<PlannerTaskRow>();
 
-    return rows.results
-      .map((row) => mapTask(row, dailyPeriod, weeklyPeriod, monthlyPeriod))
+    const guildRows = await db
+      .prepare(
+        `SELECT
+          tasks.id,
+          tasks.kind,
+          tasks.title,
+          completions.completion_period,
+          completions.completed_at,
+          tasks.created_at,
+          tasks.updated_at
+        FROM guild_planner_tasks AS tasks
+        LEFT JOIN guild_planner_task_completions AS completions
+          ON completions.task_id = tasks.id
+          AND completions.user_id = ?
+        WHERE tasks.guild_id = ?
+        ORDER BY
+          tasks.kind ASC,
+          tasks.created_at ASC`,
+      )
+      .bind(userId, guildId)
+      .all<PlannerTaskRow>();
+
+    return [
+      ...guildRows.results.map((row) =>
+        mapTask(
+          row,
+          "guild",
+          dailyPeriod,
+          weeklyPeriod,
+          monthlyPeriod,
+        ),
+      ),
+      ...personalRows.results.map((row) =>
+        mapTask(
+          row,
+          "personal",
+          dailyPeriod,
+          weeklyPeriod,
+          monthlyPeriod,
+        ),
+      ),
+    ]
       .sort(
         (left, right) =>
           Number(left.completed) - Number(right.completed) ||
@@ -78,39 +121,65 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
   }
 
   async create(
-    task: PlannerTask & { userId: string },
+    task: PlannerTask & { userId: string; guildId: string },
   ): Promise<PlannerTask> {
     const db = getD1();
     await ensurePlannerSchema(db);
 
-    await db
-      .prepare(
-        `INSERT INTO planner_tasks (
-          id,
-          user_id,
-          kind,
-          title,
-          scheduled_date,
-          completion_period,
-          completed,
-          completed_at,
-          created_at,
-          updated_at
-        ) VALUES (?, ?, ?, ?, '', NULL, 0, NULL, ?, ?)`,
-      )
-      .bind(
-        task.id,
-        task.userId,
-        task.kind,
-        task.title,
-        task.createdAt,
-        task.updatedAt,
-      )
-      .run();
+    if (task.scope === "guild") {
+      await db
+        .prepare(
+          `INSERT INTO guild_planner_tasks (
+            id,
+            guild_id,
+            created_by_user_id,
+            kind,
+            title,
+            created_at,
+            updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind(
+          task.id,
+          task.guildId,
+          task.userId,
+          task.kind,
+          task.title,
+          task.createdAt,
+          task.updatedAt,
+        )
+        .run();
+    } else {
+      await db
+        .prepare(
+          `INSERT INTO planner_tasks (
+            id,
+            user_id,
+            kind,
+            title,
+            scheduled_date,
+            completion_period,
+            completed,
+            completed_at,
+            created_at,
+            updated_at
+          ) VALUES (?, ?, ?, ?, '', NULL, 0, NULL, ?, ?)`,
+        )
+        .bind(
+          task.id,
+          task.userId,
+          task.kind,
+          task.title,
+          task.createdAt,
+          task.updatedAt,
+        )
+        .run();
+    }
 
     return {
       id: task.id,
       kind: task.kind,
+      scope: task.scope,
       title: task.title,
       completed: task.completed,
       completedAt: task.completedAt,
@@ -121,6 +190,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
 
   async setCompleted(
     userId: string,
+    guildId: string,
     taskId: string,
     completed: boolean,
     dailyPeriod: string,
@@ -160,33 +230,115 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
       )
       .run();
 
-    if (result.meta.changes < 1) {
-      return null;
+    if (result.meta.changes > 0) {
+      const row = await db
+        .prepare(
+          `SELECT
+            id,
+            kind,
+            title,
+            completion_period,
+            completed_at,
+            created_at,
+            updated_at
+           FROM planner_tasks
+           WHERE id = ? AND user_id = ?
+           LIMIT 1`,
+        )
+        .bind(taskId, userId)
+        .first<PlannerTaskRow>();
+
+      return row
+        ? mapTask(
+            row,
+            "personal",
+            dailyPeriod,
+            weeklyPeriod,
+            monthlyPeriod,
+          )
+        : null;
     }
 
-    const row = await db
+    const guildRow = await db
       .prepare(
         `SELECT
           id,
           kind,
           title,
-          completion_period,
-          completed_at,
+          NULL AS completion_period,
+          NULL AS completed_at,
           created_at,
           updated_at
-         FROM planner_tasks
-         WHERE id = ? AND user_id = ?
+         FROM guild_planner_tasks
+         WHERE id = ? AND guild_id = ?
          LIMIT 1`,
       )
-      .bind(taskId, userId)
+      .bind(taskId, guildId)
       .first<PlannerTaskRow>();
 
-    return row
-      ? mapTask(row, dailyPeriod, weeklyPeriod, monthlyPeriod)
-      : null;
+    if (!guildRow) {
+      return null;
+    }
+
+    const completionPeriod =
+      guildRow.kind === "daily"
+        ? dailyPeriod
+        : guildRow.kind === "weekly"
+          ? weeklyPeriod
+          : monthlyPeriod;
+
+    if (completed) {
+      await db
+        .prepare(
+          `INSERT INTO guild_planner_task_completions (
+            task_id,
+            user_id,
+            completion_period,
+            completed_at,
+            updated_at
+          ) VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(task_id, user_id) DO UPDATE SET
+            completion_period = excluded.completion_period,
+            completed_at = excluded.completed_at,
+            updated_at = excluded.updated_at`,
+        )
+        .bind(
+          taskId,
+          userId,
+          completionPeriod,
+          completedAt ?? updatedAt,
+          updatedAt,
+        )
+        .run();
+    } else {
+      await db
+        .prepare(
+          `DELETE FROM guild_planner_task_completions
+           WHERE task_id = ? AND user_id = ?`,
+        )
+        .bind(taskId, userId)
+        .run();
+    }
+
+    return mapTask(
+      {
+        ...guildRow,
+        completion_period: completed ? completionPeriod : null,
+        completed_at: completed ? (completedAt ?? updatedAt) : null,
+      },
+      "guild",
+      dailyPeriod,
+      weeklyPeriod,
+      monthlyPeriod,
+    );
   }
 
-  async delete(userId: string, taskId: string): Promise<boolean> {
+  async delete(
+    userId: string,
+    guildId: string,
+    canManageGuildTasks: boolean,
+    taskId: string,
+  ): Promise<boolean> {
     const db = getD1();
     await ensurePlannerSchema(db);
 
@@ -195,6 +347,21 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
       .bind(taskId, userId)
       .run();
 
-    return result.meta.changes > 0;
+    if (result.meta.changes > 0) {
+      return true;
+    }
+
+    if (!canManageGuildTasks) {
+      return false;
+    }
+
+    const guildResult = await db
+      .prepare(
+        "DELETE FROM guild_planner_tasks WHERE id = ? AND guild_id = ?",
+      )
+      .bind(taskId, guildId)
+      .run();
+
+    return guildResult.meta.changes > 0;
   }
 }

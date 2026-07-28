@@ -1,4 +1,4 @@
-export type PlannerErrorCode = "INVALID_INPUT" | "NOT_FOUND";
+export type PlannerErrorCode = "FORBIDDEN" | "INVALID_INPUT" | "NOT_FOUND";
 
 export class PlannerError extends Error {
   constructor(

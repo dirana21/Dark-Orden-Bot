@@ -6,9 +6,11 @@ import {
   validatePlannerDate,
   validatePlannerMonthStart,
   validatePlannerTaskKind,
+  validatePlannerTaskScope,
   validatePlannerTaskTitle,
   validatePlannerWeekStart,
 } from "../domain/planner/validation.ts";
+import { canManageGuildPlanner } from "../domain/planner/permissions.ts";
 
 test("validates and normalizes planner task input", () => {
   assert.equal(
@@ -18,10 +20,20 @@ test("validates and normalizes planner task input", () => {
   assert.equal(validatePlannerTaskKind("daily"), "daily");
   assert.equal(validatePlannerTaskKind("weekly"), "weekly");
   assert.equal(validatePlannerTaskKind("monthly"), "monthly");
+  assert.equal(validatePlannerTaskScope("personal"), "personal");
+  assert.equal(validatePlannerTaskScope("guild"), "guild");
   assert.equal(validatePlannerCompleted(true), true);
   assert.throws(() => validatePlannerTaskTitle(" "));
   assert.throws(() => validatePlannerTaskKind("yearly"));
+  assert.throws(() => validatePlannerTaskScope("everyone"));
   assert.throws(() => validatePlannerCompleted("yes"));
+});
+
+test("only guild heads can manage shared planner tasks", () => {
+  assert.equal(canManageGuildPlanner("superadmin"), true);
+  assert.equal(canManageGuildPlanner("owner"), true);
+  assert.equal(canManageGuildPlanner("officer"), false);
+  assert.equal(canManageGuildPlanner("member"), false);
 });
 
 test("accepts real dates and Monday week starts", () => {

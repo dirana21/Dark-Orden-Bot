@@ -17,6 +17,27 @@ const statements = [
   )`,
   `CREATE INDEX IF NOT EXISTS planner_tasks_user_schedule_idx
    ON planner_tasks(user_id, scheduled_date, kind)`,
+  `CREATE TABLE IF NOT EXISTS guild_planner_tasks (
+    id TEXT PRIMARY KEY NOT NULL,
+    guild_id TEXT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+    created_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    title TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS guild_planner_tasks_guild_kind_idx
+   ON guild_planner_tasks(guild_id, kind, created_at)`,
+  `CREATE TABLE IF NOT EXISTS guild_planner_task_completions (
+    task_id TEXT NOT NULL REFERENCES guild_planner_tasks(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    completion_period TEXT NOT NULL,
+    completed_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (task_id, user_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS guild_planner_task_completions_user_idx
+   ON guild_planner_task_completions(user_id, completion_period)`,
 ];
 
 export async function ensurePlannerSchema(db: D1Database): Promise<void> {

@@ -5,11 +5,19 @@ import {
   CalendarCheck2,
   Check,
   ListTodo,
+  LockKeyhole,
   Plus,
   RefreshCw,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
-import type { PlannerTask, PlannerTaskKind } from "@/domain/planner/model";
+import type { GuildRole } from "@/domain/auth/model";
+import type {
+  PlannerTask,
+  PlannerTaskKind,
+  PlannerTaskScope,
+} from "@/domain/planner/model";
+import { canManageGuildPlanner } from "@/domain/planner/permissions";
 import { HttpPlannerGateway } from "@/app/lib/planner-client";
 import { announcePlannerTasks } from "@/app/lib/planner-events";
 import {
@@ -31,12 +39,14 @@ function TaskList({
   tasks,
   emptyText,
   savingTaskIds,
+  canDeleteTask,
   onToggle,
   onDelete,
 }: {
   tasks: PlannerTask[];
   emptyText: string;
   savingTaskIds: Set<string>;
+  canDeleteTask: (task: PlannerTask) => boolean;
   onToggle: (task: PlannerTask) => void;
   onDelete: (task: PlannerTask) => void;
 }) {
@@ -55,7 +65,13 @@ function TaskList({
         const isSaving = savingTaskIds.has(task.id);
         return (
           <li
-            className={task.completed ? "planner-task is-complete" : "planner-task"}
+            className={[
+              "planner-task",
+              task.scope === "guild" ? "is-guild-task" : "",
+              task.completed ? "is-complete" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             key={task.id}
           >
             <button
@@ -73,16 +89,26 @@ function TaskList({
               {task.completed ? <Check size={15} strokeWidth={3} /> : null}
             </button>
             <span className="planner-task__title">{task.title}</span>
-            <button
-              className="planner-task__delete"
-              type="button"
-              aria-label={`Удалить задачу «${task.title}»`}
-              title="Удалить задачу"
-              disabled={isSaving}
-              onClick={() => onDelete(task)}
-            >
-              <Trash2 size={15} />
-            </button>
+            {canDeleteTask(task) ? (
+              <button
+                className="planner-task__delete"
+                type="button"
+                aria-label={`Удалить задачу «${task.title}»`}
+                title="Удалить задачу"
+                disabled={isSaving}
+                onClick={() => onDelete(task)}
+              >
+                <Trash2 size={15} />
+              </button>
+            ) : (
+              <span
+                className="planner-task__locked"
+                aria-label="Общая задача заблокирована администратором"
+                title="Общая задача гильдии"
+              >
+                <LockKeyhole size={14} />
+              </span>
+            )}
           </li>
         );
       })}
@@ -90,10 +116,100 @@ function TaskList({
   );
 }
 
-export function WeeklyPlanner() {
+const plannerPeriods: Array<{
+  kind: PlannerTaskKind;
+  eyebrow: string;
+  title: string;
+  resetText: string;
+  emptyText: string;
+}> = [
+  {
+    kind: "daily",
+    eyebrow: "Каждый день",
+    title: "Ежедневные",
+    resetText: "Галочки снимутся завтра",
+    emptyText: "Нет ежедневных пунктов.",
+  },
+  {
+    kind: "weekly",
+    eyebrow: "Каждую неделю",
+    title: "Еженедельные",
+    resetText: "Галочки снимутся в понедельник",
+    emptyText: "Нет еженедельных пунктов.",
+  },
+  {
+    kind: "monthly",
+    eyebrow: "Каждый месяц",
+    title: "Ежемесячные",
+    resetText: "Галочки снимутся первого числа",
+    emptyText: "Нет ежемесячных пунктов.",
+  },
+];
+
+function PlannerPeriodGrid({
+  idPrefix,
+  tasks,
+  isLoading,
+  savingTaskIds,
+  canDeleteTask,
+  onToggle,
+  onDelete,
+}: {
+  idPrefix: string;
+  tasks: PlannerTask[];
+  isLoading: boolean;
+  savingTaskIds: Set<string>;
+  canDeleteTask: (task: PlannerTask) => boolean;
+  onToggle: (task: PlannerTask) => void;
+  onDelete: (task: PlannerTask) => void;
+}) {
+  return (
+    <div className="planner-lists">
+      {plannerPeriods.map((period) => {
+        const periodTasks = tasks.filter(
+          (task) => task.kind === period.kind,
+        );
+        const titleId = `${idPrefix}-${period.kind}-tasks-title`;
+
+        return (
+          <section aria-labelledby={titleId} key={period.kind}>
+            <div className="planner-list-heading">
+              <div>
+                <small>{period.eyebrow}</small>
+                <h4 id={titleId}>{period.title}</h4>
+                <p>
+                  <RefreshCw size={12} /> {period.resetText}
+                </p>
+              </div>
+              <span>{periodTasks.length}</span>
+            </div>
+            {isLoading ? (
+              <div className="planner-loading">Загружаем задачи…</div>
+            ) : (
+              <TaskList
+                tasks={periodTasks}
+                emptyText={period.emptyText}
+                savingTaskIds={savingTaskIds}
+                canDeleteTask={canDeleteTask}
+                onToggle={onToggle}
+                onDelete={onDelete}
+              />
+            )}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+export function WeeklyPlanner({ userRole }: { userRole: GuildRole }) {
+  const canManageGuildTasks = canManageGuildPlanner(userRole);
   const [periods, setPeriods] = useState<PlannerPeriods | null>(null);
   const [tasks, setTasks] = useState<PlannerTask[]>([]);
   const [taskKind, setTaskKind] = useState<PlannerTaskKind>("daily");
+  const [taskScope, setTaskScope] = useState<PlannerTaskScope>(
+    canManageGuildTasks ? "guild" : "personal",
+  );
   const [title, setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -159,16 +275,12 @@ export function WeeklyPlanner() {
     return () => controller.abort();
   }, [periods]);
 
-  const dailyTasks = useMemo(
-    () => tasks.filter((task) => task.kind === "daily"),
+  const guildTasks = useMemo(
+    () => tasks.filter((task) => task.scope === "guild"),
     [tasks],
   );
-  const weeklyTasks = useMemo(
-    () => tasks.filter((task) => task.kind === "weekly"),
-    [tasks],
-  );
-  const monthlyTasks = useMemo(
-    () => tasks.filter((task) => task.kind === "monthly"),
+  const personalTasks = useMemo(
+    () => tasks.filter((task) => task.scope === "personal"),
     [tasks],
   );
   const completedCount = tasks.filter((task) => task.completed).length;
@@ -260,7 +372,11 @@ export function WeeklyPlanner() {
     setIsCreating(true);
     setError("");
     try {
-      const task = await gateway.create({ kind: taskKind, title });
+      const task = await gateway.create({
+        kind: taskKind,
+        scope: taskScope,
+        title,
+      });
       setTasks((current) => sortTasks([...current, task]));
       setTitle("");
     } catch (createError) {
@@ -279,12 +395,12 @@ export function WeeklyPlanner() {
       <header className="planner-header">
         <div>
           <span className="section-kicker">
-            <CalendarCheck2 size={15} /> Только для вашего аккаунта
+            <CalendarCheck2 size={15} /> Общие и личные пункты
           </span>
-          <h2 id="planner-title">Повторяющиеся задачи</h2>
+          <h2 id="planner-title">План гильдии и мои заметки</h2>
           <p>
-            Добавьте задачу один раз — выполненные отметки сбросятся сами в
-            начале нового дня, недели или месяца.
+            Общие пункты задаёт глава гильдии, а личные заметки видны только
+            вашему аккаунту. Все отметки сбрасываются по своему периоду.
           </p>
         </div>
         <div className="planner-progress" aria-label={`Выполнено ${progress}%`}>
@@ -299,6 +415,34 @@ export function WeeklyPlanner() {
       </header>
 
       <form className="planner-add-form" onSubmit={handleCreate}>
+        {canManageGuildTasks ? (
+          <div
+            className="planner-scope-switch"
+            aria-label="Кому добавить задачу"
+          >
+            <button
+              className={taskScope === "guild" ? "is-active" : ""}
+              type="button"
+              aria-pressed={taskScope === "guild"}
+              onClick={() => setTaskScope("guild")}
+            >
+              <ShieldCheck size={14} /> Для всей гильдии
+            </button>
+            <button
+              className={taskScope === "personal" ? "is-active" : ""}
+              type="button"
+              aria-pressed={taskScope === "personal"}
+              onClick={() => setTaskScope("personal")}
+            >
+              <ListTodo size={14} /> Только мне
+            </button>
+          </div>
+        ) : (
+          <div className="planner-personal-form-label">
+            <ListTodo size={14} />
+            Новая личная заметка — её видите только вы
+          </div>
+        )}
         <div className="planner-kind-switch" aria-label="Тип новой задачи">
           <button
             className={taskKind === "daily" ? "is-active" : ""}
@@ -358,79 +502,60 @@ export function WeeklyPlanner() {
         </div>
       ) : null}
 
-      <div className="planner-lists">
-        <section aria-labelledby="daily-tasks-title">
-          <div className="planner-list-heading">
-            <div>
-              <small>Каждый день</small>
-              <h3 id="daily-tasks-title">Ежедневные задачи</h3>
-              <p>
-                <RefreshCw size={12} /> Галочки снимутся завтра
-              </p>
-            </div>
-            <span>{dailyTasks.length}</span>
+      <section
+        className="planner-scope-section planner-scope-section--guild"
+        aria-labelledby="guild-planner-title"
+      >
+        <div className="planner-scope-heading">
+          <span className="planner-scope-heading__icon">
+            <LockKeyhole size={17} />
+          </span>
+          <div>
+            <small>Для всех участников</small>
+            <h3 id="guild-planner-title">Общие задачи гильдии</h3>
+            <p>
+              Игроки отмечают выполнение отдельно. Изменять список может
+              только глава гильдии.
+            </p>
           </div>
-          {isLoading ? (
-            <div className="planner-loading">Загружаем ежедневные задачи…</div>
-          ) : (
-            <TaskList
-              tasks={dailyTasks}
-              emptyText="Добавьте первую ежедневную задачу."
-              savingTaskIds={savingTaskIds}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-            />
-          )}
-        </section>
+          <strong>{guildTasks.length}</strong>
+        </div>
+        <PlannerPeriodGrid
+          idPrefix="guild"
+          tasks={guildTasks}
+          isLoading={isLoading}
+          savingTaskIds={savingTaskIds}
+          canDeleteTask={() => canManageGuildTasks}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+        />
+      </section>
 
-        <section aria-labelledby="weekly-tasks-title">
-          <div className="planner-list-heading">
-            <div>
-              <small>Каждую неделю</small>
-              <h3 id="weekly-tasks-title">Еженедельные задачи</h3>
-              <p>
-                <RefreshCw size={12} /> Галочки снимутся в понедельник
-              </p>
-            </div>
-            <span>{weeklyTasks.length}</span>
+      <section
+        className="planner-scope-section planner-scope-section--personal"
+        aria-labelledby="personal-planner-title"
+      >
+        <div className="planner-scope-heading">
+          <span className="planner-scope-heading__icon">
+            <ListTodo size={17} />
+          </span>
+          <div>
+            <small>Только для вашего аккаунта</small>
+            <h3 id="personal-planner-title">Мои заметки</h3>
+            <p>Эти пункты не видны другим участникам гильдии.</p>
           </div>
-          {isLoading ? (
-            <div className="planner-loading">Загружаем еженедельные задачи…</div>
-          ) : (
-            <TaskList
-              tasks={weeklyTasks}
-              emptyText="Добавьте первую еженедельную задачу."
-              savingTaskIds={savingTaskIds}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-            />
-          )}
-        </section>
-
-        <section aria-labelledby="monthly-tasks-title">
-          <div className="planner-list-heading">
-            <div>
-              <small>Каждый месяц</small>
-              <h3 id="monthly-tasks-title">Ежемесячные задачи</h3>
-              <p>
-                <RefreshCw size={12} /> Галочки снимутся первого числа
-              </p>
-            </div>
-            <span>{monthlyTasks.length}</span>
-          </div>
-          {isLoading ? (
-            <div className="planner-loading">Загружаем ежемесячные задачи…</div>
-          ) : (
-            <TaskList
-              tasks={monthlyTasks}
-              emptyText="Добавьте первую ежемесячную задачу."
-              savingTaskIds={savingTaskIds}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-            />
-          )}
-        </section>
-      </div>
+          <strong>{personalTasks.length}</strong>
+        </div>
+        <PlannerPeriodGrid
+          idPrefix="personal"
+          tasks={personalTasks}
+          isLoading={isLoading}
+          savingTaskIds={savingTaskIds}
+          canDeleteTask={() => true}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+        />
+      </section>
     </section>
   );
 }

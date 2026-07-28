@@ -1,4 +1,4 @@
-import type { PlannerTaskKind } from "./model";
+import type { PlannerTaskKind, PlannerTaskScope } from "./model";
 import { PlannerError } from "./errors";
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -25,6 +25,14 @@ export function validatePlannerTaskKind(value: unknown): PlannerTaskKind {
   }
 
   throw new PlannerError("INVALID_INPUT", "Неизвестный тип задачи.");
+}
+
+export function validatePlannerTaskScope(value: unknown): PlannerTaskScope {
+  if (value === "guild" || value === "personal") {
+    return value;
+  }
+
+  throw new PlannerError("INVALID_INPUT", "Неизвестная область задачи.");
 }
 
 export function validatePlannerDate(value: unknown): string {
