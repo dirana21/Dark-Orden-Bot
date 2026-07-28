@@ -104,7 +104,9 @@ export function WeeklyPlanner() {
     function syncPeriods() {
       const next = getCurrentPlannerPeriods();
       setPeriods((current) =>
-        current?.daily === next.daily && current.weekly === next.weekly
+        current?.daily === next.daily &&
+        current.weekly === next.weekly &&
+        current.monthly === next.monthly
           ? current
           : next,
       );
@@ -163,6 +165,10 @@ export function WeeklyPlanner() {
   );
   const weeklyTasks = useMemo(
     () => tasks.filter((task) => task.kind === "weekly"),
+    [tasks],
+  );
+  const monthlyTasks = useMemo(
+    () => tasks.filter((task) => task.kind === "monthly"),
     [tasks],
   );
   const completedCount = tasks.filter((task) => task.completed).length;
@@ -278,7 +284,7 @@ export function WeeklyPlanner() {
           <h2 id="planner-title">Повторяющиеся задачи</h2>
           <p>
             Добавьте задачу один раз — выполненные отметки сбросятся сами в
-            начале нового дня или недели.
+            начале нового дня, недели или месяца.
           </p>
         </div>
         <div className="planner-progress" aria-label={`Выполнено ${progress}%`}>
@@ -310,6 +316,14 @@ export function WeeklyPlanner() {
           >
             Еженедельная
           </button>
+          <button
+            className={taskKind === "monthly" ? "is-active" : ""}
+            type="button"
+            aria-pressed={taskKind === "monthly"}
+            onClick={() => setTaskKind("monthly")}
+          >
+            Ежемесячная
+          </button>
         </div>
         <label>
           <span className="sr-only">Название новой задачи</span>
@@ -320,7 +334,9 @@ export function WeeklyPlanner() {
             placeholder={
               taskKind === "daily"
                 ? "Например: забрать ежедневные награды"
-                : "Например: подготовиться к событию"
+                : taskKind === "weekly"
+                  ? "Например: подготовиться к событию"
+                  : "Например: закрыть месячную цель"
             }
             disabled={isCreating}
             onChange={(event) => setTitle(event.target.value)}
@@ -384,6 +400,30 @@ export function WeeklyPlanner() {
             <TaskList
               tasks={weeklyTasks}
               emptyText="Добавьте первую еженедельную задачу."
+              savingTaskIds={savingTaskIds}
+              onToggle={handleToggle}
+              onDelete={handleDelete}
+            />
+          )}
+        </section>
+
+        <section aria-labelledby="monthly-tasks-title">
+          <div className="planner-list-heading">
+            <div>
+              <small>Каждый месяц</small>
+              <h3 id="monthly-tasks-title">Ежемесячные задачи</h3>
+              <p>
+                <RefreshCw size={12} /> Галочки снимутся первого числа
+              </p>
+            </div>
+            <span>{monthlyTasks.length}</span>
+          </div>
+          {isLoading ? (
+            <div className="planner-loading">Загружаем ежемесячные задачи…</div>
+          ) : (
+            <TaskList
+              tasks={monthlyTasks}
+              emptyText="Добавьте первую ежемесячную задачу."
               savingTaskIds={savingTaskIds}
               onToggle={handleToggle}
               onDelete={handleDelete}

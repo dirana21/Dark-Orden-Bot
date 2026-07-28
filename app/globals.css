@@ -667,12 +667,17 @@ input:focus-visible {
   color: #181208;
 }
 
+.notification-counter--monthly {
+  background: #3d7fd6;
+  color: #f2f7ff;
+}
+
 .notification-panel {
   position: absolute;
   z-index: 110;
   top: calc(100% + 14px);
   right: -6px;
-  width: min(390px, calc(100vw - 24px));
+  width: min(510px, calc(100vw - 24px));
   overflow: hidden;
   border: 1px solid rgba(215, 180, 106, 0.2);
   background:
@@ -739,7 +744,7 @@ input:focus-visible {
   display: grid;
   gap: 7px;
   padding: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(4, 5, 6, 0.26);
 }
@@ -776,6 +781,12 @@ input:focus-visible {
   background: rgba(208, 163, 66, 0.14);
   color: #e1ba62;
   box-shadow: inset 0 0 0 1px rgba(208, 163, 66, 0.22);
+}
+
+.notification-summary__item.is-monthly > span {
+  background: rgba(61, 127, 214, 0.15);
+  color: #75aef7;
+  box-shadow: inset 0 0 0 1px rgba(61, 127, 214, 0.25);
 }
 
 .notification-summary__item strong,
@@ -936,6 +947,10 @@ input:focus-visible {
 
 .notification-task-groups i.is-weekly {
   background: #d0a342;
+}
+
+.notification-task-groups i.is-monthly {
+  background: #3d7fd6;
 }
 
 .notification-task-groups li button span {
@@ -1565,7 +1580,7 @@ input:focus-visible {
 .planner-kind-switch {
   display: grid;
   padding: 3px;
-  grid-template-columns: repeat(2, auto);
+  grid-template-columns: repeat(3, auto);
   background: #0e1011;
 }
 
@@ -1650,7 +1665,7 @@ input:focus-visible {
   display: grid;
   gap: 12px;
   margin-top: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .planner-lists > section {

@@ -20,7 +20,7 @@ export function validatePlannerTaskTitle(value: unknown): string {
 }
 
 export function validatePlannerTaskKind(value: unknown): PlannerTaskKind {
-  if (value === "weekly" || value === "daily") {
+  if (value === "monthly" || value === "weekly" || value === "daily") {
     return value;
   }
 
@@ -62,6 +62,18 @@ export function validatePlannerWeekStart(value: unknown): string {
     throw new PlannerError(
       "INVALID_INPUT",
       "Началом недели должен быть понедельник.",
+    );
+  }
+
+  return date;
+}
+
+export function validatePlannerMonthStart(value: unknown): string {
+  const date = validatePlannerDate(value);
+  if (!date.endsWith("-01")) {
+    throw new PlannerError(
+      "INVALID_INPUT",
+      "Началом месяца должно быть первое число.",
     );
   }
 

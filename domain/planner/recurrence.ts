@@ -5,9 +5,14 @@ export function isPlannerCompletionCurrent(
   completionPeriod: string | null,
   dailyPeriod: string,
   weeklyPeriod: string,
+  monthlyPeriod: string,
 ): boolean {
-  return (
-    completionPeriod ===
-    (kind === "daily" ? dailyPeriod : weeklyPeriod)
-  );
+  const currentPeriod =
+    kind === "daily"
+      ? dailyPeriod
+      : kind === "weekly"
+        ? weeklyPeriod
+        : monthlyPeriod;
+
+  return completionPeriod === currentPeriod;
 }

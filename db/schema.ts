@@ -122,7 +122,7 @@ export const plannerTasks = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    kind: text("kind", { enum: ["weekly", "daily"] }).notNull(),
+    kind: text("kind", { enum: ["monthly", "weekly", "daily"] }).notNull(),
     title: text("title").notNull(),
     scheduledDate: text("scheduled_date").notNull(),
     completionPeriod: text("completion_period"),

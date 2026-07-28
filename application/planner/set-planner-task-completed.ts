@@ -4,6 +4,7 @@ import type { PlannerTaskRepository } from "@/domain/planner/ports";
 import {
   validatePlannerCompleted,
   validatePlannerDate,
+  validatePlannerMonthStart,
   validatePlannerTaskId,
   validatePlannerWeekStart,
 } from "@/domain/planner/validation";
@@ -20,11 +21,13 @@ export class SetPlannerTaskCompleted {
     completedInput: unknown,
     dailyPeriodInput: unknown,
     weeklyPeriodInput: unknown,
+    monthlyPeriodInput: unknown,
   ) {
     const taskId = validatePlannerTaskId(taskIdInput);
     const completed = validatePlannerCompleted(completedInput);
     const dailyPeriod = validatePlannerDate(dailyPeriodInput);
     const weeklyPeriod = validatePlannerWeekStart(weeklyPeriodInput);
+    const monthlyPeriod = validatePlannerMonthStart(monthlyPeriodInput);
     const now = this.clock.now();
     const task = await this.tasks.setCompleted(
       userId,
@@ -32,6 +35,7 @@ export class SetPlannerTaskCompleted {
       completed,
       dailyPeriod,
       weeklyPeriod,
+      monthlyPeriod,
       completed ? now : null,
       now,
     );

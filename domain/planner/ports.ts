@@ -5,6 +5,7 @@ export interface PlannerTaskRepository {
     userId: string,
     dailyPeriod: string,
     weeklyPeriod: string,
+    monthlyPeriod: string,
   ): Promise<PlannerTask[]>;
   create(
     task: PlannerTask & { userId: string },
@@ -15,6 +16,7 @@ export interface PlannerTaskRepository {
     completed: boolean,
     dailyPeriod: string,
     weeklyPeriod: string,
+    monthlyPeriod: string,
     completedAt: number | null,
     updatedAt: number,
   ): Promise<PlannerTask | null>;

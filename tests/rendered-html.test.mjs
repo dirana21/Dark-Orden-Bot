@@ -38,6 +38,7 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /Незакрытые задачи/);
   assert.match(contents, /notification-counter--daily/);
   assert.match(contents, /notification-counter--weekly/);
+  assert.match(contents, /notification-counter--monthly/);
   assert.doesNotMatch(contents, /Предыдущая неделя/);
   assert.match(contents, /planner_tasks/);
   assert.match(contents, /Night of Vengeful Souls/);

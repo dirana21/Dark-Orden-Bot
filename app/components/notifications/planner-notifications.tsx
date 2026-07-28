@@ -148,7 +148,13 @@ export function PlannerNotifications() {
       tasks.filter((task) => task.kind === "weekly" && !task.completed),
     [tasks],
   );
-  const total = dailyTasks.length + weeklyTasks.length;
+  const monthlyTasks = useMemo(
+    () =>
+      tasks.filter((task) => task.kind === "monthly" && !task.completed),
+    [tasks],
+  );
+  const total =
+    dailyTasks.length + weeklyTasks.length + monthlyTasks.length;
 
   function openPlanner() {
     setIsOpen(false);
@@ -197,6 +203,11 @@ export function PlannerNotifications() {
                 {weeklyTasks.length > 9 ? "9+" : weeklyTasks.length}
               </span>
             ) : null}
+            {monthlyTasks.length > 0 ? (
+              <span className="notification-counter notification-counter--monthly">
+                {monthlyTasks.length > 9 ? "9+" : monthlyTasks.length}
+              </span>
+            ) : null}
           </span>
         ) : null}
       </button>
@@ -230,6 +241,13 @@ export function PlannerNotifications() {
                 <small>Сбросятся в понедельник</small>
               </div>
             </div>
+            <div className="notification-summary__item is-monthly">
+              <span>{monthlyTasks.length}</span>
+              <div>
+                <strong>Ежемесячные</strong>
+                <small>Сбросятся первого числа</small>
+              </div>
+            </div>
           </div>
 
           <div className="notification-panel__body">
@@ -250,7 +268,7 @@ export function PlannerNotifications() {
               <div className="notification-state is-complete">
                 <CheckCircle2 size={26} />
                 <strong>Всё выполнено</strong>
-                <p>На текущий день и неделю незакрытых задач нет.</p>
+                <p>На текущий день, неделю и месяц незакрытых задач нет.</p>
               </div>
             ) : (
               <div className="notification-task-groups">
@@ -283,6 +301,25 @@ export function PlannerNotifications() {
                         <li key={task.id}>
                           <button type="button" onClick={openPlanner}>
                             <i className="is-weekly" />
+                            <span>{task.title}</span>
+                            <ChevronRight size={14} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+
+                {monthlyTasks.length > 0 ? (
+                  <section aria-labelledby="notification-monthly-title">
+                    <h3 id="notification-monthly-title">
+                      <i className="is-monthly" /> Ежемесячные
+                    </h3>
+                    <ul>
+                      {monthlyTasks.map((task) => (
+                        <li key={task.id}>
+                          <button type="button" onClick={openPlanner}>
+                            <i className="is-monthly" />
                             <span>{task.title}</span>
                             <ChevronRight size={14} />
                           </button>

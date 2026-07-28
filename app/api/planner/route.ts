@@ -41,6 +41,7 @@ export async function GET(request: Request) {
       user.id,
       params.get("daily"),
       params.get("weekly"),
+      params.get("monthly"),
     );
 
     return Response.json(
@@ -88,6 +89,7 @@ export async function PATCH(request: Request) {
       completed?: unknown;
       dailyPeriod?: unknown;
       weeklyPeriod?: unknown;
+      monthlyPeriod?: unknown;
     };
     const task = await plannerUseCases.setCompleted.execute(
       user.id,
@@ -95,6 +97,7 @@ export async function PATCH(request: Request) {
       input.completed,
       input.dailyPeriod,
       input.weeklyPeriod,
+      input.monthlyPeriod,
     );
 
     return Response.json(

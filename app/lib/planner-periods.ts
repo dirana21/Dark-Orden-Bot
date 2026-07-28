@@ -1,6 +1,7 @@
 export interface PlannerPeriods {
   daily: string;
   weekly: string;
+  monthly: string;
 }
 
 function toIsoDate(date: Date): string {
@@ -19,5 +20,9 @@ function getWeekStart(value: string): string {
 
 export function getCurrentPlannerPeriods(): PlannerPeriods {
   const daily = toIsoDate(new Date());
-  return { daily, weekly: getWeekStart(daily) };
+  return {
+    daily,
+    weekly: getWeekStart(daily),
+    monthly: `${daily.slice(0, 7)}-01`,
+  };
 }

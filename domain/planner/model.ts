@@ -1,4 +1,4 @@
-export type PlannerTaskKind = "weekly" | "daily";
+export type PlannerTaskKind = "monthly" | "weekly" | "daily";
 
 export interface PlannerTask {
   id: string;

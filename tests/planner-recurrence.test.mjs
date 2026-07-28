@@ -9,6 +9,7 @@ test("daily task completion resets when the day changes", () => {
       "2026-07-28",
       "2026-07-28",
       "2026-07-27",
+      "2026-07-01",
     ),
     true,
   );
@@ -18,6 +19,7 @@ test("daily task completion resets when the day changes", () => {
       "2026-07-27",
       "2026-07-28",
       "2026-07-27",
+      "2026-07-01",
     ),
     false,
   );
@@ -30,6 +32,7 @@ test("weekly task completion resets when a new week starts", () => {
       "2026-07-27",
       "2026-07-30",
       "2026-07-27",
+      "2026-07-01",
     ),
     true,
   );
@@ -39,6 +42,30 @@ test("weekly task completion resets when a new week starts", () => {
       "2026-07-20",
       "2026-07-27",
       "2026-07-27",
+      "2026-07-01",
+    ),
+    false,
+  );
+});
+
+test("monthly task completion resets when a new month starts", () => {
+  assert.equal(
+    isPlannerCompletionCurrent(
+      "monthly",
+      "2026-07-01",
+      "2026-07-30",
+      "2026-07-27",
+      "2026-07-01",
+    ),
+    true,
+  );
+  assert.equal(
+    isPlannerCompletionCurrent(
+      "monthly",
+      "2026-06-01",
+      "2026-07-01",
+      "2026-06-29",
+      "2026-07-01",
     ),
     false,
   );

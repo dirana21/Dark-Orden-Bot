@@ -17,12 +17,13 @@ async function parse(response: Response): Promise<PlannerResponse> {
 
 export class HttpPlannerGateway {
   async list(
-    periods: { daily: string; weekly: string },
+    periods: { daily: string; weekly: string; monthly: string },
     signal?: AbortSignal,
   ): Promise<PlannerTask[]> {
     const params = new URLSearchParams({
       daily: periods.daily,
       weekly: periods.weekly,
+      monthly: periods.monthly,
     });
     const payload = await parse(
       await fetch(`/api/planner?${params}`, {
@@ -53,7 +54,7 @@ export class HttpPlannerGateway {
   async setCompleted(
     id: string,
     completed: boolean,
-    periods: { daily: string; weekly: string },
+    periods: { daily: string; weekly: string; monthly: string },
   ): Promise<PlannerTask> {
     const payload = await parse(
       await fetch("/api/planner", {
@@ -64,6 +65,7 @@ export class HttpPlannerGateway {
           completed,
           dailyPeriod: periods.daily,
           weeklyPeriod: periods.weekly,
+          monthlyPeriod: periods.monthly,
         }),
       }),
     );

@@ -6,7 +6,7 @@ import { ensurePlannerSchema } from "@/infrastructure/db/ensure-planner-schema";
 
 interface PlannerTaskRow {
   id: string;
-  kind: "weekly" | "daily";
+  kind: "monthly" | "weekly" | "daily";
   title: string;
   completion_period: string | null;
   completed_at: number | null;
@@ -18,12 +18,14 @@ function mapTask(
   row: PlannerTaskRow,
   dailyPeriod: string,
   weeklyPeriod: string,
+  monthlyPeriod: string,
 ): PlannerTask {
   const completed = isPlannerCompletionCurrent(
     row.kind,
     row.completion_period,
     dailyPeriod,
     weeklyPeriod,
+    monthlyPeriod,
   );
 
   return {
@@ -42,6 +44,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
     userId: string,
     dailyPeriod: string,
     weeklyPeriod: string,
+    monthlyPeriod: string,
   ): Promise<PlannerTask[]> {
     const db = getD1();
     await ensurePlannerSchema(db);
@@ -66,7 +69,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
       .all<PlannerTaskRow>();
 
     return rows.results
-      .map((row) => mapTask(row, dailyPeriod, weeklyPeriod))
+      .map((row) => mapTask(row, dailyPeriod, weeklyPeriod, monthlyPeriod))
       .sort(
         (left, right) =>
           Number(left.completed) - Number(right.completed) ||
@@ -122,6 +125,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
     completed: boolean,
     dailyPeriod: string,
     weeklyPeriod: string,
+    monthlyPeriod: string,
     completedAt: number | null,
     updatedAt: number,
   ): Promise<PlannerTask | null> {
@@ -137,6 +141,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
            completion_period = CASE
              WHEN ? = 0 THEN NULL
              WHEN kind = 'daily' THEN ?
+             WHEN kind = 'weekly' THEN ?
              ELSE ?
            END,
            updated_at = ?
@@ -148,6 +153,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
         completed ? 1 : 0,
         dailyPeriod,
         weeklyPeriod,
+        monthlyPeriod,
         updatedAt,
         taskId,
         userId,
@@ -175,7 +181,9 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
       .bind(taskId, userId)
       .first<PlannerTaskRow>();
 
-    return row ? mapTask(row, dailyPeriod, weeklyPeriod) : null;
+    return row
+      ? mapTask(row, dailyPeriod, weeklyPeriod, monthlyPeriod)
+      : null;
   }
 
   async delete(userId: string, taskId: string): Promise<boolean> {
