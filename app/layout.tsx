@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "ru_RU",
       images: [
         {
-          url: new URL("/og.png", origin).toString(),
+          url: new URL("/og-planner.png", origin).toString(),
           width: 1672,
           height: 941,
           alt: "Dark Orden Guild Command Center",
@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: "Dark Orden — Guild Command Center",
       description: "Цифровой штаб гильдии Dark Orden.",
-      images: [new URL("/og.png", origin).toString()],
+      images: [new URL("/og-planner.png", origin).toString()],
     },
   };
 }

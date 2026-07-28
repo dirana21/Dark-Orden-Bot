@@ -9,7 +9,7 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs && tsx --test tests/auth-validation.test.mjs tests/black-sun-validation.test.mjs tests/event-session-validation.test.mjs tests/vengeful-souls-validation.test.mjs tests/password-hasher.test.mjs",
+    "test": "npm run build && node --test tests/rendered-html.test.mjs && tsx --test tests/auth-validation.test.mjs tests/black-sun-validation.test.mjs tests/event-session-validation.test.mjs tests/vengeful-souls-validation.test.mjs tests/password-hasher.test.mjs tests/planner-validation.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

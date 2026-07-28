@@ -20,6 +20,7 @@ import { guildRoleLabels } from "@/app/lib/role-labels";
 import { BlackSunIcon } from "../black-sun/black-sun-icon";
 import { BrandMark } from "../brand-mark";
 import { ProfileEditor } from "../profile/profile-editor";
+import { WeeklyPlanner } from "../planner/weekly-planner";
 import { VengefulSoulsIcon } from "../vengeful-souls/vengeful-souls-icon";
 
 interface GuildDashboardProps {
@@ -80,6 +81,7 @@ export function GuildDashboard({
         <BrandMark compact />
         <nav aria-label="Основная навигация">
           <a className="is-current" href="#overview">Обзор</a>
+          <a href="#planner">Мой план</a>
           <a href="#members">Состав</a>
           <a href="#events">События</a>
         </nav>
@@ -235,6 +237,8 @@ export function GuildDashboard({
             <span className="status-pulse" />
           </article>
         </section>
+
+        <WeeklyPlanner />
 
         <div className="dashboard-grid">
           <section className="dashboard-card" id="events">

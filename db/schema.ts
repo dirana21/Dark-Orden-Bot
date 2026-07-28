@@ -114,3 +114,29 @@ export const vengefulSoulsScores = sqliteTable(
     ),
   ],
 );
+
+export const plannerTasks = sqliteTable(
+  "planner_tasks",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["weekly", "daily"] }).notNull(),
+    title: text("title").notNull(),
+    scheduledDate: text("scheduled_date").notNull(),
+    completed: integer("completed", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    completedAt: integer("completed_at"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("planner_tasks_user_schedule_idx").on(
+      table.userId,
+      table.scheduledDate,
+      table.kind,
+    ),
+  ],
+);
