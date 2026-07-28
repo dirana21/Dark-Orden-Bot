@@ -36,8 +36,12 @@ function plannerErrorResponse(error: unknown): Response {
 export async function GET(request: Request) {
   try {
     const user = await requireSessionUser(request);
-    const weekStart = new URL(request.url).searchParams.get("week");
-    const tasks = await plannerUseCases.list.execute(user.id, weekStart);
+    const params = new URL(request.url).searchParams;
+    const tasks = await plannerUseCases.list.execute(
+      user.id,
+      params.get("daily"),
+      params.get("weekly"),
+    );
 
     return Response.json(
       { tasks },
@@ -59,7 +63,6 @@ export async function POST(request: Request) {
     const input = (await request.json()) as {
       kind?: unknown;
       title?: unknown;
-      scheduledDate?: unknown;
     };
     const task = await plannerUseCases.create.execute(user.id, input);
 
@@ -83,11 +86,15 @@ export async function PATCH(request: Request) {
     const input = (await request.json()) as {
       id?: unknown;
       completed?: unknown;
+      dailyPeriod?: unknown;
+      weeklyPeriod?: unknown;
     };
     const task = await plannerUseCases.setCompleted.execute(
       user.id,
       input.id,
       input.completed,
+      input.dailyPeriod,
+      input.weeklyPeriod,
     );
 
     return Response.json(

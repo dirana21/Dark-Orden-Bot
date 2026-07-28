@@ -3,7 +3,9 @@ import { PlannerError } from "@/domain/planner/errors";
 import type { PlannerTaskRepository } from "@/domain/planner/ports";
 import {
   validatePlannerCompleted,
+  validatePlannerDate,
   validatePlannerTaskId,
+  validatePlannerWeekStart,
 } from "@/domain/planner/validation";
 
 export class SetPlannerTaskCompleted {
@@ -12,14 +14,24 @@ export class SetPlannerTaskCompleted {
     private readonly clock: Clock,
   ) {}
 
-  async execute(userId: string, taskIdInput: unknown, completedInput: unknown) {
+  async execute(
+    userId: string,
+    taskIdInput: unknown,
+    completedInput: unknown,
+    dailyPeriodInput: unknown,
+    weeklyPeriodInput: unknown,
+  ) {
     const taskId = validatePlannerTaskId(taskIdInput);
     const completed = validatePlannerCompleted(completedInput);
+    const dailyPeriod = validatePlannerDate(dailyPeriodInput);
+    const weeklyPeriod = validatePlannerWeekStart(weeklyPeriodInput);
     const now = this.clock.now();
     const task = await this.tasks.setCompleted(
       userId,
       taskId,
       completed,
+      dailyPeriod,
+      weeklyPeriod,
       completed ? now : null,
       now,
     );

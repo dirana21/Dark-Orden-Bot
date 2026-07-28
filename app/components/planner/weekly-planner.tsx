@@ -4,18 +4,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CalendarCheck2,
   Check,
-  ChevronLeft,
-  ChevronRight,
   ListTodo,
   Plus,
-  RotateCcw,
+  RefreshCw,
   Trash2,
 } from "lucide-react";
 import type { PlannerTask, PlannerTaskKind } from "@/domain/planner/model";
 import { HttpPlannerGateway } from "@/app/lib/planner-client";
 
 const gateway = new HttpPlannerGateway();
-const shortDayNames = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
+
+interface PlannerPeriods {
+  daily: string;
+  weekly: string;
+}
 
 function toIsoDate(date: Date): string {
   const year = date.getFullYear();
@@ -24,57 +26,22 @@ function toIsoDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function fromIsoDate(value: string): Date {
-  return new Date(`${value}T12:00:00`);
-}
-
-function addDays(value: string, days: number): string {
-  const date = fromIsoDate(value);
-  date.setDate(date.getDate() + days);
-  return toIsoDate(date);
-}
-
 function getWeekStart(value: string): string {
-  const date = fromIsoDate(value);
+  const date = new Date(`${value}T12:00:00`);
   const weekday = date.getDay() || 7;
   date.setDate(date.getDate() - weekday + 1);
   return toIsoDate(date);
 }
 
-function formatWeekRange(weekStart: string): string {
-  const start = fromIsoDate(weekStart);
-  const end = fromIsoDate(addDays(weekStart, 6));
-  const sameMonth = start.getMonth() === end.getMonth();
-  const startLabel = new Intl.DateTimeFormat("ru-RU", {
-    day: "numeric",
-    ...(sameMonth ? {} : { month: "short" as const }),
-  }).format(start);
-  const endLabel = new Intl.DateTimeFormat("ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(end);
-  return `${startLabel} — ${endLabel}`;
-}
-
-function formatSelectedDay(value: string): string {
-  if (!value) {
-    return "Выбранный день";
-  }
-
-  const label = new Intl.DateTimeFormat("ru-RU", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(fromIsoDate(value));
-  return label.slice(0, 1).toLocaleUpperCase("ru") + label.slice(1);
+function getCurrentPeriods(): PlannerPeriods {
+  const daily = toIsoDate(new Date());
+  return { daily, weekly: getWeekStart(daily) };
 }
 
 function sortTasks(tasks: PlannerTask[]): PlannerTask[] {
   return [...tasks].sort(
     (left, right) =>
       Number(left.completed) - Number(right.completed) ||
-      left.scheduledDate.localeCompare(right.scheduledDate) ||
       left.createdAt - right.createdAt,
   );
 }
@@ -143,9 +110,7 @@ function TaskList({
 }
 
 export function WeeklyPlanner() {
-  const [weekStart, setWeekStart] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [today, setToday] = useState("");
+  const [periods, setPeriods] = useState<PlannerPeriods | null>(null);
   const [tasks, setTasks] = useState<PlannerTask[]>([]);
   const [taskKind, setTaskKind] = useState<PlannerTaskKind>("daily");
   const [title, setTitle] = useState("");
@@ -155,14 +120,26 @@ export function WeeklyPlanner() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const currentDate = toIsoDate(new Date());
-    setToday(currentDate);
-    setWeekStart(getWeekStart(currentDate));
-    setSelectedDate(currentDate);
+    function syncPeriods() {
+      const next = getCurrentPeriods();
+      setPeriods((current) =>
+        current?.daily === next.daily && current.weekly === next.weekly
+          ? current
+          : next,
+      );
+    }
+
+    syncPeriods();
+    const interval = window.setInterval(syncPeriods, 60_000);
+    document.addEventListener("visibilitychange", syncPeriods);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", syncPeriods);
+    };
   }, []);
 
   useEffect(() => {
-    if (!weekStart) {
+    if (!periods) {
       return;
     }
 
@@ -171,7 +148,7 @@ export function WeeklyPlanner() {
     setError("");
 
     gateway
-      .list(weekStart, controller.signal)
+      .list(periods, controller.signal)
       .then((nextTasks) => setTasks(sortTasks(nextTasks)))
       .catch((loadError: unknown) => {
         if (
@@ -191,33 +168,19 @@ export function WeeklyPlanner() {
       });
 
     return () => controller.abort();
-  }, [weekStart]);
+  }, [periods]);
 
-  const days = useMemo(
-    () =>
-      weekStart
-        ? Array.from({ length: 7 }, (_, index) => addDays(weekStart, index))
-        : [],
-    [weekStart],
+  const dailyTasks = useMemo(
+    () => tasks.filter((task) => task.kind === "daily"),
+    [tasks],
   );
   const weeklyTasks = useMemo(
     () => tasks.filter((task) => task.kind === "weekly"),
     [tasks],
   );
-  const selectedDailyTasks = useMemo(
-    () =>
-      tasks.filter(
-        (task) =>
-          task.kind === "daily" && task.scheduledDate === selectedDate,
-      ),
-    [selectedDate, tasks],
-  );
   const completedCount = tasks.filter((task) => task.completed).length;
   const progress =
     tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
-  const isCurrentWeek = Boolean(
-    today && weekStart && getWeekStart(today) === weekStart,
-  );
 
   const markSaving = useCallback((taskId: string, saving: boolean) => {
     setSavingTaskIds((current) => {
@@ -233,6 +196,10 @@ export function WeeklyPlanner() {
 
   const handleToggle = useCallback(
     async (task: PlannerTask) => {
+      if (!periods) {
+        return;
+      }
+
       const completed = !task.completed;
       setError("");
       markSaving(task.id, true);
@@ -243,7 +210,11 @@ export function WeeklyPlanner() {
       );
 
       try {
-        const updated = await gateway.setCompleted(task.id, completed);
+        const updated = await gateway.setCompleted(
+          task.id,
+          completed,
+          periods,
+        );
         setTasks((current) =>
           sortTasks(
             current.map((item) => (item.id === updated.id ? updated : item)),
@@ -264,7 +235,7 @@ export function WeeklyPlanner() {
         markSaving(task.id, false);
       }
     },
-    [markSaving],
+    [markSaving, periods],
   );
 
   const handleDelete = useCallback(
@@ -289,18 +260,14 @@ export function WeeklyPlanner() {
 
   async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!title.trim() || !weekStart || !selectedDate) {
+    if (!title.trim()) {
       return;
     }
 
     setIsCreating(true);
     setError("");
     try {
-      const task = await gateway.create({
-        kind: taskKind,
-        title,
-        scheduledDate: taskKind === "weekly" ? weekStart : selectedDate,
-      });
+      const task = await gateway.create({ kind: taskKind, title });
       setTasks((current) => sortTasks([...current, task]));
       setTitle("");
     } catch (createError) {
@@ -314,19 +281,6 @@ export function WeeklyPlanner() {
     }
   }
 
-  function moveWeek(direction: number) {
-    const nextWeek = addDays(weekStart, direction * 7);
-    setWeekStart(nextWeek);
-    setSelectedDate(nextWeek);
-  }
-
-  function returnToToday() {
-    const currentDate = toIsoDate(new Date());
-    setToday(currentDate);
-    setWeekStart(getWeekStart(currentDate));
-    setSelectedDate(currentDate);
-  }
-
   return (
     <section className="planner-card" id="planner" aria-labelledby="planner-title">
       <header className="planner-header">
@@ -334,8 +288,11 @@ export function WeeklyPlanner() {
           <span className="section-kicker">
             <CalendarCheck2 size={15} /> Только для вашего аккаунта
           </span>
-          <h2 id="planner-title">Личный план</h2>
-          <p>Соберите неделю по пунктам и отмечайте сделанное каждый день.</p>
+          <h2 id="planner-title">Повторяющиеся задачи</h2>
+          <p>
+            Добавьте задачу один раз — выполненные отметки сбросятся сами в
+            начале нового дня или недели.
+          </p>
         </div>
         <div className="planner-progress" aria-label={`Выполнено ${progress}%`}>
           <strong>{progress}%</strong>
@@ -348,67 +305,6 @@ export function WeeklyPlanner() {
         </div>
       </header>
 
-      <div className="planner-week-toolbar">
-        <button
-          type="button"
-          aria-label="Предыдущая неделя"
-          onClick={() => moveWeek(-1)}
-          disabled={!weekStart}
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <div>
-          <small>Неделя</small>
-          <strong>{weekStart ? formatWeekRange(weekStart) : "Загрузка…"}</strong>
-        </div>
-        <button
-          type="button"
-          aria-label="Следующая неделя"
-          onClick={() => moveWeek(1)}
-          disabled={!weekStart}
-        >
-          <ChevronRight size={18} />
-        </button>
-        {!isCurrentWeek ? (
-          <button
-            className="planner-today-button"
-            type="button"
-            onClick={returnToToday}
-          >
-            <RotateCcw size={14} /> Сегодня
-          </button>
-        ) : null}
-      </div>
-
-      <div className="planner-days" aria-label="Дни недели">
-        {days.map((date, index) => {
-          const dayTasks = tasks.filter(
-            (task) => task.kind === "daily" && task.scheduledDate === date,
-          );
-          const done = dayTasks.filter((task) => task.completed).length;
-          return (
-            <button
-              className={[
-                date === selectedDate ? "is-selected" : "",
-                date === today ? "is-today" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              type="button"
-              key={date}
-              aria-pressed={date === selectedDate}
-              onClick={() => setSelectedDate(date)}
-            >
-              <span>{shortDayNames[index]}</span>
-              <strong>{fromIsoDate(date).getDate()}</strong>
-              <small>
-                {dayTasks.length > 0 ? `${done}/${dayTasks.length}` : "—"}
-              </small>
-            </button>
-          );
-        })}
-      </div>
-
       <form className="planner-add-form" onSubmit={handleCreate}>
         <div className="planner-kind-switch" aria-label="Тип новой задачи">
           <button
@@ -417,7 +313,7 @@ export function WeeklyPlanner() {
             aria-pressed={taskKind === "daily"}
             onClick={() => setTaskKind("daily")}
           >
-            На день
+            Ежедневная
           </button>
           <button
             className={taskKind === "weekly" ? "is-active" : ""}
@@ -425,7 +321,7 @@ export function WeeklyPlanner() {
             aria-pressed={taskKind === "weekly"}
             onClick={() => setTaskKind("weekly")}
           >
-            На неделю
+            Еженедельная
           </button>
         </div>
         <label>
@@ -435,18 +331,18 @@ export function WeeklyPlanner() {
             value={title}
             maxLength={120}
             placeholder={
-              taskKind === "weekly"
-                ? "Например: подготовиться к событию"
-                : `Задача на ${formatSelectedDay(selectedDate).toLocaleLowerCase("ru")}`
+              taskKind === "daily"
+                ? "Например: забрать ежедневные награды"
+                : "Например: подготовиться к событию"
             }
-            disabled={isCreating || !selectedDate}
+            disabled={isCreating}
             onChange={(event) => setTitle(event.target.value)}
           />
         </label>
         <button
           className="planner-add-button"
           type="submit"
-          disabled={isCreating || !title.trim() || !selectedDate}
+          disabled={isCreating || !title.trim()}
         >
           <Plus size={17} />
           {isCreating ? "Добавляем…" : "Добавить"}
@@ -460,20 +356,23 @@ export function WeeklyPlanner() {
       ) : null}
 
       <div className="planner-lists">
-        <section aria-labelledby="weekly-tasks-title">
+        <section aria-labelledby="daily-tasks-title">
           <div className="planner-list-heading">
             <div>
-              <small>Главные цели</small>
-              <h3 id="weekly-tasks-title">На всю неделю</h3>
+              <small>Каждый день</small>
+              <h3 id="daily-tasks-title">Ежедневные задачи</h3>
+              <p>
+                <RefreshCw size={12} /> Галочки снимутся завтра
+              </p>
             </div>
-            <span>{weeklyTasks.length}</span>
+            <span>{dailyTasks.length}</span>
           </div>
           {isLoading ? (
-            <div className="planner-loading">Загружаем личный план…</div>
+            <div className="planner-loading">Загружаем ежедневные задачи…</div>
           ) : (
             <TaskList
-              tasks={weeklyTasks}
-              emptyText="Добавьте первую цель на эту неделю."
+              tasks={dailyTasks}
+              emptyText="Добавьте первую ежедневную задачу."
               savingTaskIds={savingTaskIds}
               onToggle={handleToggle}
               onDelete={handleDelete}
@@ -481,20 +380,23 @@ export function WeeklyPlanner() {
           )}
         </section>
 
-        <section aria-labelledby="daily-tasks-title">
+        <section aria-labelledby="weekly-tasks-title">
           <div className="planner-list-heading">
             <div>
-              <small>Выбранный день</small>
-              <h3 id="daily-tasks-title">{formatSelectedDay(selectedDate)}</h3>
+              <small>Каждую неделю</small>
+              <h3 id="weekly-tasks-title">Еженедельные задачи</h3>
+              <p>
+                <RefreshCw size={12} /> Галочки снимутся в понедельник
+              </p>
             </div>
-            <span>{selectedDailyTasks.length}</span>
+            <span>{weeklyTasks.length}</span>
           </div>
           {isLoading ? (
-            <div className="planner-loading">Загружаем задачи дня…</div>
+            <div className="planner-loading">Загружаем еженедельные задачи…</div>
           ) : (
             <TaskList
-              tasks={selectedDailyTasks}
-              emptyText="На этот день пока ничего не запланировано."
+              tasks={weeklyTasks}
+              emptyText="Добавьте первую еженедельную задачу."
               savingTaskIds={savingTaskIds}
               onToggle={handleToggle}
               onDelete={handleDelete}

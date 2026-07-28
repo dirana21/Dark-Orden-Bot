@@ -1,5 +1,6 @@
 import type { PlannerTask } from "@/domain/planner/model";
 import type { PlannerTaskRepository } from "@/domain/planner/ports";
+import { isPlannerCompletionCurrent } from "@/domain/planner/recurrence";
 import { getD1 } from "@/infrastructure/db/d1";
 import { ensurePlannerSchema } from "@/infrastructure/db/ensure-planner-schema";
 
@@ -7,31 +8,40 @@ interface PlannerTaskRow {
   id: string;
   kind: "weekly" | "daily";
   title: string;
-  scheduled_date: string;
-  completed: number;
+  completion_period: string | null;
   completed_at: number | null;
   created_at: number;
   updated_at: number;
 }
 
-function mapTask(row: PlannerTaskRow): PlannerTask {
+function mapTask(
+  row: PlannerTaskRow,
+  dailyPeriod: string,
+  weeklyPeriod: string,
+): PlannerTask {
+  const completed = isPlannerCompletionCurrent(
+    row.kind,
+    row.completion_period,
+    dailyPeriod,
+    weeklyPeriod,
+  );
+
   return {
     id: row.id,
     kind: row.kind,
     title: row.title,
-    scheduledDate: row.scheduled_date,
-    completed: Boolean(row.completed),
-    completedAt: row.completed_at,
+    completed,
+    completedAt: completed ? row.completed_at : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
 export class D1PlannerTaskRepository implements PlannerTaskRepository {
-  async listForWeek(
+  async list(
     userId: string,
-    weekStart: string,
-    weekEnd: string,
+    dailyPeriod: string,
+    weeklyPeriod: string,
   ): Promise<PlannerTask[]> {
     const db = getD1();
     await ensurePlannerSchema(db);
@@ -42,27 +52,26 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
           id,
           kind,
           title,
-          scheduled_date,
-          completed,
+          completion_period,
           completed_at,
           created_at,
           updated_at
         FROM planner_tasks
         WHERE user_id = ?
-          AND (
-            (kind = 'weekly' AND scheduled_date = ?)
-            OR
-            (kind = 'daily' AND scheduled_date BETWEEN ? AND ?)
-          )
         ORDER BY
-          completed ASC,
-          scheduled_date ASC,
+          kind ASC,
           created_at ASC`,
       )
-      .bind(userId, weekStart, weekStart, weekEnd)
+      .bind(userId)
       .all<PlannerTaskRow>();
 
-    return rows.results.map(mapTask);
+    return rows.results
+      .map((row) => mapTask(row, dailyPeriod, weeklyPeriod))
+      .sort(
+        (left, right) =>
+          Number(left.completed) - Number(right.completed) ||
+          left.createdAt - right.createdAt,
+      );
   }
 
   async create(
@@ -79,18 +88,18 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
           kind,
           title,
           scheduled_date,
+          completion_period,
           completed,
           completed_at,
           created_at,
           updated_at
-        ) VALUES (?, ?, ?, ?, ?, 0, NULL, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, '', NULL, 0, NULL, ?, ?)`,
       )
       .bind(
         task.id,
         task.userId,
         task.kind,
         task.title,
-        task.scheduledDate,
         task.createdAt,
         task.updatedAt,
       )
@@ -100,7 +109,6 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
       id: task.id,
       kind: task.kind,
       title: task.title,
-      scheduledDate: task.scheduledDate,
       completed: task.completed,
       completedAt: task.completedAt,
       createdAt: task.createdAt,
@@ -112,6 +120,8 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
     userId: string,
     taskId: string,
     completed: boolean,
+    dailyPeriod: string,
+    weeklyPeriod: string,
     completedAt: number | null,
     updatedAt: number,
   ): Promise<PlannerTask | null> {
@@ -121,10 +131,27 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
     const result = await db
       .prepare(
         `UPDATE planner_tasks
-         SET completed = ?, completed_at = ?, updated_at = ?
+         SET
+           completed = ?,
+           completed_at = ?,
+           completion_period = CASE
+             WHEN ? = 0 THEN NULL
+             WHEN kind = 'daily' THEN ?
+             ELSE ?
+           END,
+           updated_at = ?
          WHERE id = ? AND user_id = ?`,
       )
-      .bind(completed ? 1 : 0, completedAt, updatedAt, taskId, userId)
+      .bind(
+        completed ? 1 : 0,
+        completedAt,
+        completed ? 1 : 0,
+        dailyPeriod,
+        weeklyPeriod,
+        updatedAt,
+        taskId,
+        userId,
+      )
       .run();
 
     if (result.meta.changes < 1) {
@@ -137,8 +164,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
           id,
           kind,
           title,
-          scheduled_date,
-          completed,
+          completion_period,
           completed_at,
           created_at,
           updated_at
@@ -149,7 +175,7 @@ export class D1PlannerTaskRepository implements PlannerTaskRepository {
       .bind(taskId, userId)
       .first<PlannerTaskRow>();
 
-    return row ? mapTask(row) : null;
+    return row ? mapTask(row, dailyPeriod, weeklyPeriod) : null;
   }
 
   async delete(userId: string, taskId: string): Promise<boolean> {

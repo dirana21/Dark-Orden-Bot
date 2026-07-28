@@ -1,0 +1,1 @@
+ALTER TABLE `planner_tasks` ADD `completion_period` text;

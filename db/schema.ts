@@ -125,6 +125,7 @@ export const plannerTasks = sqliteTable(
     kind: text("kind", { enum: ["weekly", "daily"] }).notNull(),
     title: text("title").notNull(),
     scheduledDate: text("scheduled_date").notNull(),
+    completionPeriod: text("completion_period"),
     completed: integer("completed", { mode: "boolean" })
       .notNull()
       .default(false),

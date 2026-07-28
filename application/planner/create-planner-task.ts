@@ -2,10 +2,8 @@ import type { Clock, IdGenerator } from "@/domain/auth/ports";
 import { PlannerError } from "@/domain/planner/errors";
 import type { PlannerTaskRepository } from "@/domain/planner/ports";
 import {
-  validatePlannerDate,
   validatePlannerTaskKind,
   validatePlannerTaskTitle,
-  validatePlannerWeekStart,
 } from "@/domain/planner/validation";
 
 export class CreatePlannerTask {
@@ -20,15 +18,10 @@ export class CreatePlannerTask {
     input: {
       kind?: unknown;
       title?: unknown;
-      scheduledDate?: unknown;
     },
   ) {
     const kind = validatePlannerTaskKind(input.kind);
     const title = validatePlannerTaskTitle(input.title);
-    const scheduledDate =
-      kind === "weekly"
-        ? validatePlannerWeekStart(input.scheduledDate)
-        : validatePlannerDate(input.scheduledDate);
 
     if (!userId) {
       throw new PlannerError("INVALID_INPUT", "Не удалось определить аккаунт.");
@@ -40,7 +33,6 @@ export class CreatePlannerTask {
       userId,
       kind,
       title,
-      scheduledDate,
       completed: false,
       completedAt: null,
       createdAt: now,

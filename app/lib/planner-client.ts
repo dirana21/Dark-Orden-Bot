@@ -16,9 +16,16 @@ async function parse(response: Response): Promise<PlannerResponse> {
 }
 
 export class HttpPlannerGateway {
-  async list(weekStart: string, signal?: AbortSignal): Promise<PlannerTask[]> {
+  async list(
+    periods: { daily: string; weekly: string },
+    signal?: AbortSignal,
+  ): Promise<PlannerTask[]> {
+    const params = new URLSearchParams({
+      daily: periods.daily,
+      weekly: periods.weekly,
+    });
     const payload = await parse(
-      await fetch(`/api/planner?week=${encodeURIComponent(weekStart)}`, {
+      await fetch(`/api/planner?${params}`, {
         cache: "no-store",
         signal,
       }),
@@ -29,7 +36,6 @@ export class HttpPlannerGateway {
   async create(input: {
     kind: PlannerTaskKind;
     title: string;
-    scheduledDate: string;
   }): Promise<PlannerTask> {
     const payload = await parse(
       await fetch("/api/planner", {
@@ -44,12 +50,21 @@ export class HttpPlannerGateway {
     return payload.task;
   }
 
-  async setCompleted(id: string, completed: boolean): Promise<PlannerTask> {
+  async setCompleted(
+    id: string,
+    completed: boolean,
+    periods: { daily: string; weekly: string },
+  ): Promise<PlannerTask> {
     const payload = await parse(
       await fetch("/api/planner", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, completed }),
+        body: JSON.stringify({
+          id,
+          completed,
+          dailyPeriod: periods.daily,
+          weeklyPeriod: periods.weekly,
+        }),
       }),
     );
     if (!payload.task) {
