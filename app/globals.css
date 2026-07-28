@@ -1863,15 +1863,20 @@ input:focus-visible {
 
 .planner-task-list {
   display: grid;
+  max-height: 268px;
   gap: 7px;
   margin: 14px 0 0;
   padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #655536 transparent;
+  scrollbar-width: thin;
   list-style: none;
 }
 
 .planner-task {
   display: grid;
-  min-height: 48px;
+  height: 48px;
   align-items: center;
   gap: 10px;
   padding: 7px 8px;
@@ -1913,8 +1918,12 @@ input:focus-visible {
 }
 
 .planner-task__title {
+  display: -webkit-box;
   min-width: 0;
+  overflow: hidden;
   overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: #c7c3bb;
   font-size: 12px;
   line-height: 1.4;
