@@ -484,7 +484,6 @@ export function BuildPortal() {
                   <span>Описание умения</span>
                   <SkillDescriptionEditor
                     key={editorKey}
-                    value={skillDescription}
                     disabled={isCreatingSkill}
                     onChange={setSkillDescription}
                   />

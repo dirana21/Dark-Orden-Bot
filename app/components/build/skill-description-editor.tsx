@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import {
   Bold,
   Eraser,
@@ -11,19 +11,16 @@ import {
 } from "lucide-react";
 
 interface SkillDescriptionEditorProps {
-  value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
 }
 
 export function SkillDescriptionEditor({
-  value,
   onChange,
   disabled = false,
 }: SkillDescriptionEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRange = useRef<Range | null>(null);
-  const [initialValue] = useState(value);
 
   function rememberSelection() {
     const selection = window.getSelection();
@@ -135,7 +132,6 @@ export function SkillDescriptionEditor({
         onMouseUp={rememberSelection}
         onKeyUp={rememberSelection}
         onBlur={rememberSelection}
-        dangerouslySetInnerHTML={{ __html: initialValue }}
       />
     </div>
   );
