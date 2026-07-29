@@ -15,6 +15,7 @@ import {
   validateBuildSkillComboAvailable,
   validateBuildSkillComboEnabled,
   validateBuildSkillName,
+  validateBuildSkillSocketTypes,
   validateBuildSkillSlotIndex,
   validateBuildSkillSlotType,
 } from "../domain/build/validation.ts";
@@ -92,8 +93,12 @@ test("allows guild officers to edit the shared skill catalog", () => {
   assert.equal(canManageBuildSkills("member"), false);
 });
 
-test("validates the six configured sigil categories and text fields", () => {
-  assert.equal(buildSigilCategories.length, 6);
+test("validates the seven configured sigil categories and text fields", () => {
+  assert.equal(buildSigilCategories.length, 7);
+  assert.equal(
+    validateBuildSigilCategory("Категория"),
+    "Категория",
+  );
   assert.equal(
     validateBuildSigilCategory("Безупречное"),
     "Безупречное",
@@ -113,4 +118,27 @@ test("validates the six configured sigil categories and text fields", () => {
   assert.throws(() => validateBuildSigilCategory("Неизвестное"));
   assert.throws(() => validateBuildSigilName("x"));
   assert.throws(() => validateBuildSigilDescription(""));
+});
+
+test("validates up to three socket specifications per skill", () => {
+  assert.deepEqual(
+    validateBuildSkillSocketTypes(
+      JSON.stringify(["Защита", "Категория", "Сияющие"]),
+    ),
+    ["Защита", "Категория", "Сияющие"],
+  );
+  assert.deepEqual(validateBuildSkillSocketTypes("[]"), []);
+  assert.throws(() =>
+    validateBuildSkillSocketTypes(
+      JSON.stringify([
+        "Защита",
+        "Светлое",
+        "Тусклое",
+        "Сияющие",
+      ]),
+    ),
+  );
+  assert.throws(() =>
+    validateBuildSkillSocketTypes(JSON.stringify(["Неизвестное"])),
+  );
 });

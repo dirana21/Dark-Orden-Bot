@@ -1,3 +1,5 @@
+import type { BuildSigilCategory } from "./sigil-model";
+
 export const buildCharacterClasses = [
   "Воин",
   "Лучница",
@@ -51,6 +53,7 @@ export interface BuildSkill {
   character: BuildCharacterClass;
   slotType: BuildSkillSlotType;
   slotIndex: number;
+  socketTypes: BuildSigilCategory[];
   name: string;
   descriptionHtml: string;
   iconUrl: string;

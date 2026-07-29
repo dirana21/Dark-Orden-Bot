@@ -155,6 +155,9 @@ export function SigilPanel({ canManage }: SigilPanelProps) {
           <label>
             <span>Категория</span>
             <select
+              className={
+                category === "Категория" ? "is-category-type" : ""
+              }
               value={category}
               disabled={isSaving}
               onChange={(event) =>
@@ -269,7 +272,15 @@ export function SigilPanel({ canManage }: SigilPanelProps) {
                   />
                 </div>
                 <div>
-                  <small>{sigil.category}</small>
+                  <small
+                    className={
+                      sigil.category === "Категория"
+                        ? "is-category-type"
+                        : ""
+                    }
+                  >
+                    {sigil.category}
+                  </small>
                   <p>{sigil.description}</p>
                 </div>
               </div>

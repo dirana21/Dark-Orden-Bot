@@ -6,6 +6,7 @@ import {
   validateBuildCharacter,
   validateBuildSkillComboAvailable,
   validateBuildSkillIcon,
+  validateBuildSkillSocketTypes,
   validateBuildSkillSlotIndex,
   validateBuildSkillSlotType,
   validateBuildSkillName,
@@ -98,6 +99,9 @@ export async function POST(request: Request) {
       slotType,
       form.get("slotIndex"),
     );
+    const socketTypes = validateBuildSkillSocketTypes(
+      form.get("socketTypes"),
+    );
     if (
       await skills.getBySlot(
         user.guildId,
@@ -134,6 +138,7 @@ export async function POST(request: Request) {
       character,
       slotType,
       slotIndex,
+      socketTypes,
       name,
       descriptionHtml,
       iconKey: uploadedKey,
@@ -188,6 +193,9 @@ export async function PATCH(request: Request) {
     const comboAvailable = validateBuildSkillComboAvailable(
       form.get("comboAvailable"),
     );
+    const socketTypes = validateBuildSkillSocketTypes(
+      form.get("socketTypes"),
+    );
     const iconEntry = form.get("icon");
     const icon =
       iconEntry instanceof File && iconEntry.size > 0
@@ -211,6 +219,7 @@ export async function PATCH(request: Request) {
       name,
       descriptionHtml,
       comboAvailable,
+      socketTypes,
       iconKey: uploadedKey ?? undefined,
       iconContentType: icon?.type,
       viewerUserId: user.id,

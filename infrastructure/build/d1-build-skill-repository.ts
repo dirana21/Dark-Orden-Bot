@@ -5,12 +5,17 @@ import type {
 } from "@/domain/build/model";
 import { getD1 } from "@/infrastructure/db/d1";
 import { ensureBuildSkillsSchema } from "@/infrastructure/db/ensure-build-skills-schema";
+import {
+  buildSigilCategories,
+  type BuildSigilCategory,
+} from "@/domain/build/sigil-model";
 
 interface BuildSkillRow {
   id: string;
   character: BuildCharacterClass;
   slot_type: BuildSkillSlotType;
   slot_index: number;
+  socket_types: string;
   name: string;
   description_html: string;
   icon_key: string;
@@ -27,11 +32,28 @@ export interface StoredBuildSkill extends BuildSkill {
 }
 
 function mapSkill(row: BuildSkillRow): StoredBuildSkill {
+  let socketTypes: BuildSigilCategory[] = [];
+  try {
+    const parsed = JSON.parse(row.socket_types) as unknown;
+    if (Array.isArray(parsed)) {
+      const allowed = buildSigilCategories as readonly string[];
+      socketTypes = parsed
+        .filter(
+          (item): item is BuildSigilCategory =>
+            typeof item === "string" && allowed.includes(item),
+        )
+        .slice(0, 3);
+    }
+  } catch {
+    socketTypes = [];
+  }
+
   return {
     id: row.id,
     character: row.character,
     slotType: row.slot_type,
     slotIndex: row.slot_index,
+    socketTypes,
     name: row.name,
     descriptionHtml: row.description_html,
     iconUrl: `/api/build/skill-icon?id=${encodeURIComponent(row.id)}&v=${row.updated_at}`,
@@ -50,6 +72,7 @@ function publicSkill(skill: StoredBuildSkill): BuildSkill {
     character: skill.character,
     slotType: skill.slotType,
     slotIndex: skill.slotIndex,
+    socketTypes: skill.socketTypes,
     name: skill.name,
     descriptionHtml: skill.descriptionHtml,
     iconUrl: skill.iconUrl,
@@ -72,7 +95,7 @@ export class D1BuildSkillRepository {
     const rows = await db
       .prepare(
         `SELECT skills.id, skills.character, skills.slot_type,
-                skills.slot_index, skills.name,
+                skills.slot_index, skills.socket_types, skills.name,
                 skills.description_html, skills.icon_key,
                 skills.icon_content_type, skills.combo_available,
                 COALESCE(settings.combo_enabled, 0) AS combo_enabled,
@@ -96,7 +119,7 @@ export class D1BuildSkillRepository {
 
     const row = await db
       .prepare(
-        `SELECT id, character, slot_type, slot_index, name,
+        `SELECT id, character, slot_type, slot_index, socket_types, name,
                 description_html, icon_key,
                 icon_content_type, combo_available, 0 AS combo_enabled,
                 created_at, updated_at
@@ -121,7 +144,7 @@ export class D1BuildSkillRepository {
 
     const row = await db
       .prepare(
-        `SELECT id, character, slot_type, slot_index, name,
+        `SELECT id, character, slot_type, slot_index, socket_types, name,
                 description_html, icon_key, icon_content_type,
                 combo_available, 0 AS combo_enabled, created_at, updated_at
          FROM build_skills
@@ -141,6 +164,7 @@ export class D1BuildSkillRepository {
     character: BuildCharacterClass;
     slotType: BuildSkillSlotType;
     slotIndex: number;
+    socketTypes: BuildSigilCategory[];
     name: string;
     descriptionHtml: string;
     iconKey: string;
@@ -155,11 +179,11 @@ export class D1BuildSkillRepository {
     await db
       .prepare(
         `INSERT INTO build_skills (
-          id, guild_id, character, slot_type, slot_index, name,
+          id, guild_id, character, slot_type, slot_index, socket_types, name,
           description_html, icon_key,
           icon_content_type, combo_available, created_by_user_id,
           created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.id,
@@ -167,6 +191,7 @@ export class D1BuildSkillRepository {
         input.character,
         input.slotType,
         input.slotIndex,
+        JSON.stringify(input.socketTypes),
         input.name,
         input.descriptionHtml,
         input.iconKey,
@@ -191,6 +216,7 @@ export class D1BuildSkillRepository {
     name: string;
     descriptionHtml: string;
     comboAvailable: boolean;
+    socketTypes: BuildSigilCategory[];
     iconKey?: string;
     iconContentType?: string;
     viewerUserId: string;
@@ -204,6 +230,7 @@ export class D1BuildSkillRepository {
         `UPDATE build_skills
          SET name = ?,
              description_html = ?,
+             socket_types = ?,
              icon_key = COALESCE(?, icon_key),
              icon_content_type = COALESCE(?, icon_content_type),
              combo_available = ?,
@@ -213,6 +240,7 @@ export class D1BuildSkillRepository {
       .bind(
         input.name,
         input.descriptionHtml,
+        JSON.stringify(input.socketTypes),
         input.iconKey ?? null,
         input.iconContentType ?? null,
         input.comboAvailable ? 1 : 0,
@@ -281,7 +309,7 @@ export class D1BuildSkillRepository {
     const row = await db
       .prepare(
         `SELECT skills.id, skills.character, skills.slot_type,
-                skills.slot_index, skills.name,
+                skills.slot_index, skills.socket_types, skills.name,
                 skills.description_html, skills.icon_key,
                 skills.icon_content_type, skills.combo_available,
                 COALESCE(settings.combo_enabled, 0) AS combo_enabled,

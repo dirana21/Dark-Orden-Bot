@@ -1,4 +1,5 @@
 export const buildSigilCategories = [
+  "Категория",
   "Безупречное",
   "Светлое",
   "Упорядоченное",

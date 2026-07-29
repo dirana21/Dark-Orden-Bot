@@ -7,6 +7,10 @@ import {
 } from "./model";
 import { BuildError } from "./errors";
 import sanitizeHtml from "sanitize-html";
+import {
+  buildSigilCategories,
+  type BuildSigilCategory,
+} from "./sigil-model";
 
 export const BUILD_SKILL_ICON_MAX_BYTES = 2 * 1024 * 1024;
 export const BUILD_SKILL_ICON_TYPES = [
@@ -72,6 +76,33 @@ export function validateBuildSkillSlotIndex(
       ? "Для Рабамов доступны только 4 слота."
       : "Для обычных умений доступны только 13 слотов.",
   );
+}
+
+export function validateBuildSkillSocketTypes(
+  value: unknown,
+): BuildSigilCategory[] {
+  let parsed: unknown;
+  try {
+    parsed =
+      typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    throw new BuildError("Не удалось прочитать сокеты умения.");
+  }
+
+  if (!Array.isArray(parsed) || parsed.length > 3) {
+    throw new BuildError("Для умения доступно не больше трёх сокетов.");
+  }
+
+  const allowed = buildSigilCategories as readonly string[];
+  if (
+    !parsed.every(
+      (item) => typeof item === "string" && allowed.includes(item),
+    )
+  ) {
+    throw new BuildError("Выберите типы сокетов из списка.");
+  }
+
+  return parsed as BuildSigilCategory[];
 }
 
 export function validateBuildSkillName(value: unknown): string {

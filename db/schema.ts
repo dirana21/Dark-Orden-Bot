@@ -207,6 +207,7 @@ export const buildSkills = sqliteTable(
     character: text("character").notNull(),
     slotType: text("slot_type").notNull().default("normal"),
     slotIndex: integer("slot_index").notNull().default(0),
+    socketTypes: text("socket_types").notNull().default("[]"),
     name: text("name").notNull(),
     descriptionHtml: text("description_html").notNull(),
     iconKey: text("icon_key").notNull(),

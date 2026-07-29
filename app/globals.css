@@ -3138,6 +3138,178 @@ input:focus-visible {
   opacity: 0.5;
 }
 
+.build-skill-socket-editor {
+  display: grid;
+  gap: 9px;
+  margin: 13px 0 0;
+  padding: 13px 14px;
+  border: 1px solid rgba(96, 117, 167, 0.17);
+  background: rgba(53, 67, 108, 0.035);
+}
+
+.build-skill-socket-editor legend {
+  padding: 0 6px;
+  color: #7888ac;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.build-skill-socket-editor > p {
+  margin: 0;
+  color: #666d7d;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.build-skill-socket-editor > div {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.build-skill-socket-editor label {
+  display: grid;
+  align-items: center;
+  gap: 7px;
+  padding: 9px;
+  grid-template-columns: 52px minmax(0, 1fr);
+  border: 1px solid rgba(101, 119, 161, 0.16);
+  background: #0c0f15;
+}
+
+.build-skill-socket-editor label > span {
+  grid-row: 1 / 3;
+}
+
+.build-skill-socket-editor label > strong {
+  color: #858c9b;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.build-skill-socket-editor select {
+  width: 100%;
+  height: 31px;
+  padding: 0 7px;
+  border: 1px solid rgba(102, 118, 157, 0.2);
+  border-radius: 0;
+  outline: none;
+  background: #090c11;
+  color: #aab0bd;
+  font: inherit;
+  font-size: 9px;
+}
+
+.build-skill-socket-editor select:focus {
+  border-color: rgba(103, 127, 187, 0.48);
+}
+
+.build-sigil-socket-icon {
+  --socket-accent: #627697;
+  --socket-glow: rgba(82, 105, 151, 0.28);
+  position: relative;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(126, 137, 163, 0.55);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #222837 0 48%, #0b0d13 50% 63%, #464d63 65% 68%, #090b10 70%);
+  box-shadow:
+    inset 0 0 10px rgba(101, 115, 153, 0.18),
+    0 0 9px var(--socket-glow);
+}
+
+.build-sigil-socket-icon--small {
+  width: 28px;
+  height: 28px;
+}
+
+.build-sigil-socket-icon--large {
+  width: 52px;
+  height: 52px;
+}
+
+.build-sigil-socket-icon > span {
+  width: 42%;
+  height: 42%;
+  border: 2px solid var(--socket-accent);
+  background: color-mix(in srgb, var(--socket-accent) 18%, transparent);
+  clip-path: polygon(
+    25% 7%,
+    75% 7%,
+    100% 50%,
+    75% 93%,
+    25% 93%,
+    0 50%
+  );
+  filter: drop-shadow(0 0 3px var(--socket-accent));
+}
+
+.build-sigil-socket-icon[data-socket-category="Категория"] {
+  --socket-accent: #d14f51;
+  --socket-glow: rgba(209, 64, 71, 0.3);
+}
+
+.build-sigil-socket-icon[data-socket-category="Категория"] > span {
+  width: 34%;
+  height: 34%;
+  border-radius: 0;
+  clip-path: none;
+  transform: rotate(45deg);
+}
+
+.build-sigil-socket-icon[data-socket-category="Защита"] {
+  --socket-accent: #69a16f;
+  --socket-glow: rgba(80, 148, 91, 0.27);
+}
+
+.build-sigil-socket-icon[data-socket-category="Защита"] > span {
+  width: 40%;
+  height: 46%;
+  clip-path: polygon(8% 0, 92% 0, 83% 67%, 50% 100%, 17% 67%);
+}
+
+.build-sigil-socket-icon[data-socket-category="Сияющие"] {
+  --socket-accent: #c5a15b;
+  --socket-glow: rgba(198, 158, 80, 0.3);
+}
+
+.build-sigil-socket-icon[data-socket-category="Сияющие"] > span {
+  width: 45%;
+  height: 45%;
+  clip-path: polygon(
+    50% 0,
+    61% 25%,
+    85% 15%,
+    75% 39%,
+    100% 50%,
+    75% 61%,
+    85% 85%,
+    61% 75%,
+    50% 100%,
+    39% 75%,
+    15% 85%,
+    25% 61%,
+    0 50%,
+    25% 39%,
+    15% 15%,
+    39% 25%
+  );
+}
+
+.build-sigil-socket-icon.is-empty {
+  opacity: 0.5;
+}
+
+.build-sigil-socket-icon.is-empty > span {
+  border-color: #505766;
+  background: transparent;
+  filter: none;
+}
+
 .skill-rich-editor {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.075);
@@ -3492,6 +3664,13 @@ input:focus-visible {
 
 .build-skill-card--rabam .build-skill-card__slot-label {
   color: #b18d50;
+}
+
+.build-skill-card__sockets {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
 }
 
 .build-skill-card--empty {
@@ -3918,6 +4097,11 @@ input:focus-visible {
   box-shadow: 0 0 0 2px rgba(55, 70, 157, 0.08);
 }
 
+.build-sigil-form select.is-category-type {
+  color: #e05258;
+  text-shadow: 0 0 7px rgba(207, 54, 62, 0.35);
+}
+
 .build-sigil-upload {
   display: grid !important;
   min-height: 49px;
@@ -4131,6 +4315,12 @@ input:focus-visible {
   text-transform: uppercase;
 }
 
+.build-sigil-card__body small.is-category-type {
+  border-color: rgba(204, 63, 69, 0.35);
+  color: #e05258;
+  text-shadow: 0 0 7px rgba(207, 54, 62, 0.38);
+}
+
 .build-sigil-card__body p {
   margin: 0;
   color: #a9afbd;
@@ -4182,6 +4372,10 @@ input:focus-visible {
   }
 
   .build-skill-editor__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .build-skill-socket-editor > div {
     grid-template-columns: 1fr;
   }
 }

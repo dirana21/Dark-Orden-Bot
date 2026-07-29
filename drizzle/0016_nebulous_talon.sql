@@ -1,0 +1,1 @@
+ALTER TABLE `build_skills` ADD `socket_types` text DEFAULT '[]' NOT NULL;

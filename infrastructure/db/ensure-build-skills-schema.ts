@@ -8,6 +8,7 @@ const tableSql = `CREATE TABLE IF NOT EXISTS build_skills (
   character TEXT NOT NULL,
   slot_type TEXT NOT NULL DEFAULT 'normal',
   slot_index INTEGER NOT NULL DEFAULT 0,
+  socket_types TEXT NOT NULL DEFAULT '[]',
   name TEXT NOT NULL,
   description_html TEXT NOT NULL,
   icon_key TEXT NOT NULL,
@@ -90,6 +91,13 @@ export async function ensureBuildSkillsSchema(
           statements.unshift(
             db.prepare(
               "ALTER TABLE build_skills ADD COLUMN slot_index INTEGER NOT NULL DEFAULT 0",
+            ),
+          );
+        }
+        if (!columns.results.some((column) => column.name === "socket_types")) {
+          statements.unshift(
+            db.prepare(
+              "ALTER TABLE build_skills ADD COLUMN socket_types TEXT NOT NULL DEFAULT '[]'",
             ),
           );
         }
