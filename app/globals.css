@@ -4290,6 +4290,13 @@ input:focus-visible {
     0 0 10px rgba(57, 78, 213, 0.75);
 }
 
+.build-sigil-card--category .build-sigil-card__title h3 {
+  color: #e05258;
+  text-shadow:
+    0 0 4px rgba(224, 82, 88, 0.95),
+    0 0 10px rgba(207, 54, 62, 0.7);
+}
+
 .build-sigil-card__title button {
   display: grid;
   width: 25px;

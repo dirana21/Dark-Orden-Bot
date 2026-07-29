@@ -245,7 +245,17 @@ export function SigilPanel({ canManage }: SigilPanelProps) {
           </div>
         ) : (
           sigils.map((sigil) => (
-            <article className="build-sigil-card" key={sigil.id}>
+            <article
+              className={[
+                "build-sigil-card",
+                sigil.category === "Категория"
+                  ? "build-sigil-card--category"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              key={sigil.id}
+            >
               <div className="build-sigil-card__title">
                 <span aria-hidden="true" />
                 <h3>{sigil.name}</h3>
