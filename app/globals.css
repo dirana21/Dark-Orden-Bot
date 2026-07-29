@@ -2949,6 +2949,16 @@ input:focus-visible {
   text-transform: uppercase;
 }
 
+.build-skill-editor__slot {
+  display: inline-flex;
+  margin-top: 4px;
+  color: #c7a45f;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .build-skill-editor__heading h3 {
   margin: 4px 0 0;
   color: #e6ddce;
@@ -3309,7 +3319,71 @@ input:focus-visible {
   margin-top: 16px;
 }
 
+.build-skill-fixed-catalog {
+  display: grid;
+  gap: 22px;
+  margin-top: 16px;
+}
+
+.build-skill-slot-group {
+  display: grid;
+  gap: 10px;
+}
+
+.build-skill-slot-group > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 3px 7px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.build-skill-slot-group > header span,
+.build-skill-slot-group > header h3 {
+  display: block;
+  margin: 0;
+}
+
+.build-skill-slot-group > header span {
+  margin-bottom: 2px;
+  color: #6f746f;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.build-skill-slot-group > header h3 {
+  color: #c9cbc8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.build-skill-slot-group > header strong {
+  color: #6e726d;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.build-skill-slot-group--rabam > header {
+  border-bottom-color: rgba(205, 166, 91, 0.18);
+}
+
+.build-skill-slot-group--rabam > header span,
+.build-skill-slot-group--rabam > header h3,
+.build-skill-slot-group--rabam > header strong {
+  color: #ba9758;
+}
+
+.build-skill-slot-group > div {
+  display: grid;
+  gap: 10px;
+}
+
 .build-skill-card {
+  position: relative;
   display: grid;
   align-items: start;
   gap: 16px;
@@ -3321,11 +3395,62 @@ input:focus-visible {
     #101318;
 }
 
+.build-skill-card--rabam {
+  overflow: hidden;
+  border-color: rgba(202, 165, 94, 0.2);
+  background:
+    radial-gradient(
+      circle at 47px 50%,
+      rgba(190, 147, 70, 0.12),
+      transparent 115px
+    ),
+    linear-gradient(110deg, rgba(126, 97, 46, 0.09), transparent 48%),
+    #11141a;
+  box-shadow: inset 3px 0 rgba(187, 145, 71, 0.42);
+}
+
 .build-skill-card--with-combo {
   grid-template-columns: 72px minmax(0, 1fr) 82px;
 }
 
+.build-skill-card__icon-frame {
+  position: relative;
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  color: #4d535c;
+}
+
+.build-skill-card__icon-frame.is-rabam::before,
+.build-skill-card__icon-frame.is-rabam::after {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.build-skill-card__icon-frame.is-rabam::before {
+  width: 114px;
+  height: 114px;
+  border: 2px solid rgba(187, 147, 75, 0.36);
+  box-shadow:
+    0 0 0 7px rgba(170, 128, 58, 0.09),
+    0 0 0 13px rgba(198, 159, 85, 0.08),
+    inset 0 0 0 5px rgba(183, 140, 67, 0.08);
+}
+
+.build-skill-card__icon-frame.is-rabam::after {
+  width: 92px;
+  height: 92px;
+  border: 1px dashed rgba(223, 187, 113, 0.31);
+  transform: rotate(17deg);
+}
+
 .build-skill-card__icon {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 72px;
   height: 72px;
@@ -3333,6 +3458,108 @@ input:focus-visible {
   background: #07090d;
   box-shadow: 0 0 22px rgba(62, 105, 173, 0.13);
   object-fit: cover;
+}
+
+.build-skill-card__icon-frame.is-rabam .build-skill-card__icon {
+  border-color: rgba(221, 186, 115, 0.46);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3px #080a0e,
+    0 0 0 5px rgba(191, 150, 77, 0.6),
+    0 0 25px rgba(182, 136, 57, 0.2);
+}
+
+.build-skill-card__slot-label {
+  display: block;
+  margin-bottom: 2px;
+  color: #747a83;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.build-skill-card--rabam .build-skill-card__slot-label {
+  color: #b18d50;
+}
+
+.build-skill-card--empty {
+  min-height: 108px;
+  align-items: center;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  border-style: dashed;
+  background: rgba(15, 18, 23, 0.7);
+}
+
+.build-skill-card--empty.build-skill-card--rabam {
+  background:
+    radial-gradient(
+      circle at 47px 50%,
+      rgba(190, 147, 70, 0.1),
+      transparent 110px
+    ),
+    rgba(17, 19, 24, 0.82);
+}
+
+.build-skill-card__empty-content {
+  min-width: 0;
+}
+
+.build-skill-card__empty-content small,
+.build-skill-card__empty-content strong,
+.build-skill-card__empty-content p {
+  display: block;
+  margin: 0;
+}
+
+.build-skill-card__empty-content small {
+  margin-bottom: 2px;
+  color: #70756f;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.build-skill-card--rabam .build-skill-card__empty-content small {
+  color: #aa884e;
+}
+
+.build-skill-card__empty-content strong {
+  color: #979b96;
+  font-size: 15px;
+}
+
+.build-skill-card__empty-content p {
+  margin-top: 4px;
+  color: #5f645f;
+  font-size: 10px;
+}
+
+.build-skill-slot-add {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 13px;
+  border: 1px solid rgba(205, 170, 100, 0.2);
+  background: rgba(191, 150, 70, 0.06);
+  color: #a88d5a;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.build-skill-slot-add:hover:not(:disabled) {
+  border-color: rgba(220, 182, 107, 0.38);
+  color: #dfbd7a;
+}
+
+.build-skill-slot-add:disabled {
+  cursor: wait;
+  opacity: 0.45;
 }
 
 .build-skill-card__content {
@@ -3659,9 +3886,33 @@ input:focus-visible {
     grid-template-columns: 54px minmax(0, 1fr);
   }
 
+  .build-skill-card--empty {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
+  .build-skill-card__icon-frame {
+    width: 54px;
+    height: 54px;
+  }
+
   .build-skill-card__icon {
     width: 54px;
     height: 54px;
+  }
+
+  .build-skill-card__icon-frame.is-rabam::before {
+    width: 92px;
+    height: 92px;
+  }
+
+  .build-skill-card__icon-frame.is-rabam::after {
+    width: 72px;
+    height: 72px;
+  }
+
+  .build-skill-slot-add {
+    grid-column: 1 / -1;
+    justify-self: stretch;
   }
 
   .build-skill-card__content h3 {

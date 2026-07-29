@@ -6,6 +6,8 @@ const tableSql = `CREATE TABLE IF NOT EXISTS build_skills (
   id TEXT PRIMARY KEY NOT NULL,
   guild_id TEXT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
   character TEXT NOT NULL,
+  slot_type TEXT NOT NULL DEFAULT 'normal',
+  slot_index INTEGER NOT NULL DEFAULT 0,
   name TEXT NOT NULL,
   description_html TEXT NOT NULL,
   icon_key TEXT NOT NULL,
@@ -18,6 +20,24 @@ const tableSql = `CREATE TABLE IF NOT EXISTS build_skills (
 
 const indexSql = `CREATE INDEX IF NOT EXISTS build_skills_guild_character_idx
   ON build_skills (guild_id, character, created_at)`;
+
+const slotIndexSql = `CREATE UNIQUE INDEX IF NOT EXISTS build_skills_guild_character_slot_idx
+  ON build_skills (guild_id, character, slot_type, slot_index)`;
+
+const backfillSlotsSql = `WITH ranked AS (
+  SELECT id,
+         ROW_NUMBER() OVER (
+           PARTITION BY guild_id, character
+           ORDER BY created_at, id
+         ) AS position
+  FROM build_skills
+  WHERE slot_index = 0
+)
+UPDATE build_skills
+SET slot_index = (
+  SELECT position FROM ranked WHERE ranked.id = build_skills.id
+)
+WHERE slot_index = 0`;
 
 const settingsTableSql = `CREATE TABLE IF NOT EXISTS user_build_skill_settings (
   skill_id TEXT NOT NULL REFERENCES build_skills(id) ON DELETE CASCADE,
@@ -59,7 +79,23 @@ export async function ensureBuildSkillsSchema(
             ),
           );
         }
+        if (!columns.results.some((column) => column.name === "slot_type")) {
+          statements.unshift(
+            db.prepare(
+              "ALTER TABLE build_skills ADD COLUMN slot_type TEXT NOT NULL DEFAULT 'normal'",
+            ),
+          );
+        }
+        if (!columns.results.some((column) => column.name === "slot_index")) {
+          statements.unshift(
+            db.prepare(
+              "ALTER TABLE build_skills ADD COLUMN slot_index INTEGER NOT NULL DEFAULT 0",
+            ),
+          );
+        }
         await db.batch(statements);
+        await db.prepare(backfillSlotsSql).run();
+        await db.prepare(slotIndexSql).run();
       })
       .catch((error: unknown) => {
         initialization = null;

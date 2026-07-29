@@ -2,6 +2,8 @@ import {
   buildCharacterClasses,
   type BuildCharacterClass,
   type BuildCharacterSlot,
+  buildSkillSlotLimits,
+  type BuildSkillSlotType,
 } from "./model";
 import { BuildError } from "./errors";
 import sanitizeHtml from "sanitize-html";
@@ -34,6 +36,42 @@ export function validateBuildCharacterSlot(
   }
 
   throw new BuildError("Не удалось определить слот персонажа.");
+}
+
+export function validateBuildSkillSlotType(
+  value: unknown,
+): BuildSkillSlotType {
+  if (value === "rabam" || value === "normal") {
+    return value;
+  }
+
+  throw new BuildError("Не удалось определить тип слота умения.");
+}
+
+export function validateBuildSkillSlotIndex(
+  slotType: BuildSkillSlotType,
+  value: unknown,
+): number {
+  const slotIndex =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim()
+        ? Number(value)
+        : Number.NaN;
+
+  if (
+    Number.isInteger(slotIndex) &&
+    slotIndex >= 1 &&
+    slotIndex <= buildSkillSlotLimits[slotType]
+  ) {
+    return slotIndex;
+  }
+
+  throw new BuildError(
+    slotType === "rabam"
+      ? "Для Рабамов доступны только 4 слота."
+      : "Для обычных умений доступны только 13 слотов.",
+  );
 }
 
 export function validateBuildSkillName(value: unknown): string {

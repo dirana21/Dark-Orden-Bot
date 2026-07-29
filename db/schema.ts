@@ -205,6 +205,8 @@ export const buildSkills = sqliteTable(
       .notNull()
       .references(() => guilds.id, { onDelete: "cascade" }),
     character: text("character").notNull(),
+    slotType: text("slot_type").notNull().default("normal"),
+    slotIndex: integer("slot_index").notNull().default(0),
     name: text("name").notNull(),
     descriptionHtml: text("description_html").notNull(),
     iconKey: text("icon_key").notNull(),
@@ -223,6 +225,12 @@ export const buildSkills = sqliteTable(
       table.guildId,
       table.character,
       table.createdAt,
+    ),
+    uniqueIndex("build_skills_guild_character_slot_idx").on(
+      table.guildId,
+      table.character,
+      table.slotType,
+      table.slotIndex,
     ),
   ],
 );

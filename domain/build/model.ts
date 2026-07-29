@@ -33,6 +33,12 @@ export const buildCharacterClasses = [
 
 export type BuildCharacterClass = (typeof buildCharacterClasses)[number];
 export type BuildCharacterSlot = "main" | "mirror";
+export type BuildSkillSlotType = "rabam" | "normal";
+
+export const buildSkillSlotLimits: Record<BuildSkillSlotType, number> = {
+  rabam: 4,
+  normal: 13,
+};
 
 export interface BuildProfile {
   mainCharacter: BuildCharacterClass | null;
@@ -43,6 +49,8 @@ export interface BuildProfile {
 export interface BuildSkill {
   id: string;
   character: BuildCharacterClass;
+  slotType: BuildSkillSlotType;
+  slotIndex: number;
   name: string;
   descriptionHtml: string;
   iconUrl: string;

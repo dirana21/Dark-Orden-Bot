@@ -1,6 +1,7 @@
 import type {
   BuildCharacterClass,
   BuildSkill,
+  BuildSkillSlotType,
 } from "@/domain/build/model";
 import { getD1 } from "@/infrastructure/db/d1";
 import { ensureBuildSkillsSchema } from "@/infrastructure/db/ensure-build-skills-schema";
@@ -8,6 +9,8 @@ import { ensureBuildSkillsSchema } from "@/infrastructure/db/ensure-build-skills
 interface BuildSkillRow {
   id: string;
   character: BuildCharacterClass;
+  slot_type: BuildSkillSlotType;
+  slot_index: number;
   name: string;
   description_html: string;
   icon_key: string;
@@ -27,6 +30,8 @@ function mapSkill(row: BuildSkillRow): StoredBuildSkill {
   return {
     id: row.id,
     character: row.character,
+    slotType: row.slot_type,
+    slotIndex: row.slot_index,
     name: row.name,
     descriptionHtml: row.description_html,
     iconUrl: `/api/build/skill-icon?id=${encodeURIComponent(row.id)}&v=${row.updated_at}`,
@@ -43,6 +48,8 @@ function publicSkill(skill: StoredBuildSkill): BuildSkill {
   return {
     id: skill.id,
     character: skill.character,
+    slotType: skill.slotType,
+    slotIndex: skill.slotIndex,
     name: skill.name,
     descriptionHtml: skill.descriptionHtml,
     iconUrl: skill.iconUrl,
@@ -64,7 +71,8 @@ export class D1BuildSkillRepository {
 
     const rows = await db
       .prepare(
-        `SELECT skills.id, skills.character, skills.name,
+        `SELECT skills.id, skills.character, skills.slot_type,
+                skills.slot_index, skills.name,
                 skills.description_html, skills.icon_key,
                 skills.icon_content_type, skills.combo_available,
                 COALESCE(settings.combo_enabled, 0) AS combo_enabled,
@@ -73,7 +81,8 @@ export class D1BuildSkillRepository {
          LEFT JOIN user_build_skill_settings AS settings
            ON settings.skill_id = skills.id AND settings.user_id = ?
          WHERE skills.guild_id = ? AND skills.character = ?
-         ORDER BY skills.created_at ASC`,
+         ORDER BY CASE skills.slot_type WHEN 'rabam' THEN 0 ELSE 1 END,
+                  skills.slot_index ASC`,
       )
       .bind(userId, guildId, character)
       .all<BuildSkillRow>();
@@ -87,7 +96,8 @@ export class D1BuildSkillRepository {
 
     const row = await db
       .prepare(
-        `SELECT id, character, name, description_html, icon_key,
+        `SELECT id, character, slot_type, slot_index, name,
+                description_html, icon_key,
                 icon_content_type, combo_available, 0 AS combo_enabled,
                 created_at, updated_at
          FROM build_skills
@@ -100,10 +110,37 @@ export class D1BuildSkillRepository {
     return row ? mapSkill(row) : null;
   }
 
+  async getBySlot(
+    guildId: string,
+    character: BuildCharacterClass,
+    slotType: BuildSkillSlotType,
+    slotIndex: number,
+  ): Promise<StoredBuildSkill | null> {
+    const db = getD1();
+    await ensureBuildSkillsSchema(db);
+
+    const row = await db
+      .prepare(
+        `SELECT id, character, slot_type, slot_index, name,
+                description_html, icon_key, icon_content_type,
+                combo_available, 0 AS combo_enabled, created_at, updated_at
+         FROM build_skills
+         WHERE guild_id = ? AND character = ?
+           AND slot_type = ? AND slot_index = ?
+         LIMIT 1`,
+      )
+      .bind(guildId, character, slotType, slotIndex)
+      .first<BuildSkillRow>();
+
+    return row ? mapSkill(row) : null;
+  }
+
   async create(input: {
     id: string;
     guildId: string;
     character: BuildCharacterClass;
+    slotType: BuildSkillSlotType;
+    slotIndex: number;
     name: string;
     descriptionHtml: string;
     iconKey: string;
@@ -118,15 +155,18 @@ export class D1BuildSkillRepository {
     await db
       .prepare(
         `INSERT INTO build_skills (
-          id, guild_id, character, name, description_html, icon_key,
+          id, guild_id, character, slot_type, slot_index, name,
+          description_html, icon_key,
           icon_content_type, combo_available, created_by_user_id,
           created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.id,
         input.guildId,
         input.character,
+        input.slotType,
+        input.slotIndex,
         input.name,
         input.descriptionHtml,
         input.iconKey,
@@ -240,7 +280,8 @@ export class D1BuildSkillRepository {
     await ensureBuildSkillsSchema(db);
     const row = await db
       .prepare(
-        `SELECT skills.id, skills.character, skills.name,
+        `SELECT skills.id, skills.character, skills.slot_type,
+                skills.slot_index, skills.name,
                 skills.description_html, skills.icon_key,
                 skills.icon_content_type, skills.combo_available,
                 COALESCE(settings.combo_enabled, 0) AS combo_enabled,

@@ -8,6 +8,8 @@ import {
   validateBuildSkillComboAvailable,
   validateBuildSkillComboEnabled,
   validateBuildSkillName,
+  validateBuildSkillSlotIndex,
+  validateBuildSkillSlotType,
 } from "../domain/build/validation.ts";
 
 test("accepts the configured build characters", () => {
@@ -62,4 +64,16 @@ test("validates combo availability and personal state", () => {
   assert.equal(validateBuildSkillComboEnabled(false), false);
   assert.throws(() => validateBuildSkillComboAvailable("yes"));
   assert.throws(() => validateBuildSkillComboEnabled("true"));
+});
+
+test("limits build skill slots to four Rabams and thirteen normal skills", () => {
+  assert.equal(validateBuildSkillSlotType("rabam"), "rabam");
+  assert.equal(validateBuildSkillSlotType("normal"), "normal");
+  assert.equal(validateBuildSkillSlotIndex("rabam", "1"), 1);
+  assert.equal(validateBuildSkillSlotIndex("rabam", "4"), 4);
+  assert.equal(validateBuildSkillSlotIndex("normal", "13"), 13);
+  assert.throws(() => validateBuildSkillSlotType("ultimate"));
+  assert.throws(() => validateBuildSkillSlotIndex("rabam", "5"));
+  assert.throws(() => validateBuildSkillSlotIndex("normal", "14"));
+  assert.throws(() => validateBuildSkillSlotIndex("normal", "1.5"));
 });

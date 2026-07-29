@@ -33,10 +33,12 @@ import {
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import {
   buildCharacterClasses,
+  buildSkillSlotLimits,
   type BuildCharacterClass,
   type BuildCharacterSlot,
   type BuildProfile,
   type BuildSkill,
+  type BuildSkillSlotType,
 } from "@/domain/build/model";
 import { canManageBuildSkills } from "@/domain/build/permissions";
 import { BrandMark } from "../brand-mark";
@@ -74,6 +76,10 @@ export function BuildPortal() {
   const [deletingSkillId, setDeletingSkillId] = useState<string | null>(null);
   const [savingComboId, setSavingComboId] = useState<string | null>(null);
   const [editingSkill, setEditingSkill] = useState<BuildSkill | null>(null);
+  const [editingSlot, setEditingSlot] = useState<{
+    type: BuildSkillSlotType;
+    index: number;
+  } | null>(null);
   const skillFormRef = useRef<HTMLFormElement>(null);
   const selectedCharacter =
     character === "main" ? profile.mainCharacter : profile.mirrorCharacter;
@@ -194,6 +200,7 @@ export function BuildPortal() {
   const canManageSkills = canManageBuildSkills(user.role);
 
   function openCharacterPicker(slot: BuildCharacterSlot) {
+    resetSkillEditor();
     setCharacter(slot);
     setSelectingSlot(slot);
     setSearch("");
@@ -225,6 +232,7 @@ export function BuildPortal() {
   function resetSkillEditor(form = skillFormRef.current) {
     form?.reset();
     setEditingSkill(null);
+    setEditingSlot(null);
     setSkillName("");
     setSkillDescription("");
     setSkillIcon(null);
@@ -232,9 +240,15 @@ export function BuildPortal() {
     setEditorKey((current) => current + 1);
   }
 
+  function activateCharacterSlot(slot: BuildCharacterSlot) {
+    resetSkillEditor();
+    setCharacter(slot);
+  }
+
   function startEditingSkill(skill: BuildSkill) {
     skillFormRef.current?.reset();
     setEditingSkill(skill);
+    setEditingSlot({ type: skill.slotType, index: skill.slotIndex });
     setSkillName(skill.name);
     setSkillDescription(skill.descriptionHtml);
     setSkillIcon(null);
@@ -248,10 +262,34 @@ export function BuildPortal() {
     });
   }
 
+  function startCreatingSkillSlot(
+    type: BuildSkillSlotType,
+    index: number,
+  ) {
+    skillFormRef.current?.reset();
+    setEditingSkill(null);
+    setEditingSlot({ type, index });
+    setSkillName("");
+    setSkillDescription("");
+    setSkillIcon(null);
+    setComboAvailable(false);
+    setSkillError("");
+    setEditorKey((current) => current + 1);
+    requestAnimationFrame(() => {
+      document
+        .getElementById("build-skill-editor")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   async function saveSkill(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    if (!selectedCharacter || (!editingSkill && !skillIcon)) {
+    if (
+      !selectedCharacter ||
+      !editingSlot ||
+      (!editingSkill && !skillIcon)
+    ) {
       setSkillError(
         editingSkill
           ? "Заполните название и описание умения."
@@ -265,6 +303,8 @@ export function BuildPortal() {
     try {
       const formData = new FormData();
       formData.set("character", selectedCharacter);
+      formData.set("slotType", editingSlot.type);
+      formData.set("slotIndex", String(editingSlot.index));
       formData.set("name", skillName);
       formData.set("descriptionHtml", skillDescription);
       formData.set("comboAvailable", String(comboAvailable));
@@ -337,6 +377,168 @@ export function BuildPortal() {
     } finally {
       setSavingComboId(null);
     }
+  }
+
+  function renderFixedSkillSlot(
+    slotType: BuildSkillSlotType,
+    slotIndex: number,
+  ) {
+    const skill = skills.find(
+      (item) =>
+        item.slotType === slotType && item.slotIndex === slotIndex,
+    );
+    const isRabam = slotType === "rabam";
+    const slotLabel = isRabam
+      ? `Рабам ${slotIndex}`
+      : `Навык ${slotIndex}`;
+
+    if (!skill) {
+      return (
+        <article
+          className={[
+            "build-skill-card",
+            "build-skill-card--empty",
+            isRabam ? "build-skill-card--rabam" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          key={`${slotType}-${slotIndex}`}
+        >
+          <div
+            className={[
+              "build-skill-card__icon-frame",
+              isRabam ? "is-rabam" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            aria-hidden="true"
+          >
+            <Sparkles size={25} />
+          </div>
+          <div className="build-skill-card__empty-content">
+            <small>{slotLabel}</small>
+            <strong>Пустой слот</strong>
+            <p>
+              {canManageSkills
+                ? "Нажмите, чтобы заполнить этот слот."
+                : "Администратор пока не добавил умение."}
+            </p>
+          </div>
+          {canManageSkills ? (
+            <button
+              className="build-skill-slot-add"
+              type="button"
+              disabled={isCreatingSkill}
+              onClick={() =>
+                startCreatingSkillSlot(slotType, slotIndex)
+              }
+            >
+              <Plus size={16} />
+              Заполнить
+            </button>
+          ) : null}
+        </article>
+      );
+    }
+
+    return (
+      <article
+        className={[
+          "build-skill-card",
+          skill.comboAvailable ? "build-skill-card--with-combo" : "",
+          isRabam ? "build-skill-card--rabam" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        key={skill.id}
+      >
+        <div
+          className={[
+            "build-skill-card__icon-frame",
+            isRabam ? "is-rabam" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <Image
+            className="build-skill-card__icon"
+            src={skill.iconUrl}
+            alt=""
+            width={72}
+            height={72}
+            unoptimized
+          />
+        </div>
+        <div className="build-skill-card__content">
+          <header>
+            <div>
+              <small className="build-skill-card__slot-label">
+                {slotLabel}
+              </small>
+              <h3>{skill.name}</h3>
+            </div>
+            {canManageSkills ? (
+              <span className="build-skill-card__actions">
+                <button
+                  type="button"
+                  title="Редактировать умение"
+                  aria-label={`Редактировать умение ${skill.name}`}
+                  disabled={
+                    deletingSkillId !== null || isCreatingSkill
+                  }
+                  onClick={() => startEditingSkill(skill)}
+                >
+                  <PencilLine size={15} />
+                </button>
+                <button
+                  className="is-delete"
+                  type="button"
+                  title="Очистить слот"
+                  aria-label={`Удалить умение ${skill.name}`}
+                  disabled={
+                    deletingSkillId !== null || isCreatingSkill
+                  }
+                  onClick={() => void deleteSkill(skill.id)}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </span>
+            ) : null}
+          </header>
+          <div
+            className="build-skill-card__description"
+            dangerouslySetInnerHTML={{
+              __html: skill.descriptionHtml,
+            }}
+          />
+        </div>
+        {skill.comboAvailable ? (
+          <button
+            className={[
+              "build-skill-combo-toggle",
+              skill.comboEnabled ? "is-enabled" : "is-disabled",
+            ].join(" ")}
+            type="button"
+            aria-pressed={skill.comboEnabled}
+            aria-label={`Выбрать состояние «${skill.comboEnabled ? "Без комбо" : "С комбо"}» для умения ${skill.name}`}
+            title={skill.comboEnabled ? "С комбо" : "Без комбо"}
+            disabled={savingComboId !== null}
+            onClick={() => void toggleSkillCombo(skill)}
+          >
+            <Image
+              src={
+                skill.comboEnabled ? "/combo-on.png" : "/combo-off.png"
+              }
+              alt=""
+              width={256}
+              height={256}
+              unoptimized
+            />
+            <span>Комбо</span>
+          </button>
+        ) : null}
+      </article>
+    );
   }
 
   return (
@@ -458,7 +660,7 @@ export function BuildPortal() {
               type="button"
               aria-pressed={isMain}
               aria-label={`Основной герой: ${profile.mainCharacter ?? "не выбран"}`}
-              onClick={() => setCharacter("main")}
+              onClick={() => activateCharacterSlot("main")}
             >
               <UserRound size={20} />
               <span>
@@ -471,7 +673,7 @@ export function BuildPortal() {
               type="button"
               aria-pressed={!isMain}
               aria-label={`Зеркало: ${profile.mirrorCharacter ?? "не выбрано"}`}
-              onClick={() => setCharacter("mirror")}
+              onClick={() => activateCharacterSlot("mirror")}
             >
               <Copy size={20} />
               <span>
@@ -503,10 +705,10 @@ export function BuildPortal() {
                   героя.
                 </p>
               </div>
-              <span>{skills.length} умений</span>
+              <span>{skills.length} / 17 умений</span>
             </header>
 
-            {canManageSkills ? (
+            {canManageSkills && editingSlot ? (
               <form
                 ref={skillFormRef}
                 id="build-skill-editor"
@@ -519,6 +721,11 @@ export function BuildPortal() {
                   </span>
                   <div>
                     <small>Только для администраторов</small>
+                    <span className="build-skill-editor__slot">
+                      {editingSlot.type === "rabam"
+                        ? `Рабам ${editingSlot.index} из 4`
+                        : `Обычный навык ${editingSlot.index} из 13`}
+                    </span>
                     <h3>
                       {editingSkill
                         ? `Редактирование: ${editingSkill.name}`
@@ -655,6 +862,56 @@ export function BuildPortal() {
             ) : null}
 
             <div
+              className="build-skill-fixed-catalog"
+              aria-live="polite"
+              aria-busy={isLoadingSkills}
+            >
+              {isLoadingSkills ? (
+                <div className="build-skill-empty">
+                  <span className="boot-screen__spinner" />
+                  <p>Загружаем умения класса…</p>
+                </div>
+              ) : (
+                <>
+                  <section className="build-skill-slot-group build-skill-slot-group--rabam">
+                    <header>
+                      <div>
+                        <span>Особые умения</span>
+                        <h3>Рабамы</h3>
+                      </div>
+                      <strong>4 слота</strong>
+                    </header>
+                    <div>
+                      {Array.from(
+                        { length: buildSkillSlotLimits.rabam },
+                        (_, index) =>
+                          renderFixedSkillSlot("rabam", index + 1),
+                      )}
+                    </div>
+                  </section>
+
+                  <section className="build-skill-slot-group">
+                    <header>
+                      <div>
+                        <span>Основной набор</span>
+                        <h3>Обычные навыки</h3>
+                      </div>
+                      <strong>13 слотов</strong>
+                    </header>
+                    <div>
+                      {Array.from(
+                        { length: buildSkillSlotLimits.normal },
+                        (_, index) =>
+                          renderFixedSkillSlot("normal", index + 1),
+                      )}
+                    </div>
+                  </section>
+                </>
+              )}
+            </div>
+
+            <div
+              hidden
               className="build-skill-catalog"
               aria-live="polite"
               aria-busy={isLoadingSkills}

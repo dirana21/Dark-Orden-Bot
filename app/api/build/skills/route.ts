@@ -6,6 +6,8 @@ import {
   validateBuildCharacter,
   validateBuildSkillComboAvailable,
   validateBuildSkillIcon,
+  validateBuildSkillSlotIndex,
+  validateBuildSkillSlotType,
   validateBuildSkillName,
 } from "@/domain/build/validation";
 import { D1BuildSkillRepository } from "@/infrastructure/build/d1-build-skill-repository";
@@ -91,6 +93,21 @@ export async function POST(request: Request) {
 
     const form = await request.formData();
     const character = validateBuildCharacter(form.get("character"));
+    const slotType = validateBuildSkillSlotType(form.get("slotType"));
+    const slotIndex = validateBuildSkillSlotIndex(
+      slotType,
+      form.get("slotIndex"),
+    );
+    if (
+      await skills.getBySlot(
+        user.guildId,
+        character,
+        slotType,
+        slotIndex,
+      )
+    ) {
+      throw new BuildError("Этот слот уже занят другим умением.");
+    }
     const name = validateBuildSkillName(form.get("name"));
     const descriptionHtml = sanitizeBuildSkillDescription(
       form.get("descriptionHtml"),
@@ -115,6 +132,8 @@ export async function POST(request: Request) {
       id,
       guildId: user.guildId,
       character,
+      slotType,
+      slotIndex,
       name,
       descriptionHtml,
       iconKey: uploadedKey,
