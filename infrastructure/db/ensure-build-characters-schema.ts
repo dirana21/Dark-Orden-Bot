@@ -2,6 +2,7 @@ import { buildCharacterClasses } from "@/domain/build/model";
 import { ensureAuthSchema } from "./ensure-auth-schema";
 
 let initialization: Promise<void> | null = null;
+const seededGuilds = new Map<string, Promise<void>>();
 
 const tableSql = `CREATE TABLE IF NOT EXISTS build_characters (
   id TEXT PRIMARY KEY NOT NULL,
@@ -42,8 +43,43 @@ export async function ensureBuildCharactersSchema(
 
   await initialization;
 
+  let seeded = seededGuilds.get(guildId);
+  if (!seeded) {
+    seeded = seedDefaultCharacters(db, guildId).catch(
+      (error: unknown) => {
+        seededGuilds.delete(guildId);
+        throw error;
+      },
+    );
+    seededGuilds.set(guildId, seeded);
+  }
+  await seeded;
+}
+
+async function seedDefaultCharacters(
+  db: D1Database,
+  guildId: string,
+): Promise<void> {
+  const existing = await db
+    .prepare(
+      `SELECT name
+       FROM build_characters
+       WHERE guild_id = ?`,
+    )
+    .bind(guildId)
+    .all<{ name: string }>();
+  const existingNames = new Set(
+    existing.results.map((character) => character.name),
+  );
+  const missingDefaults = buildCharacterClasses
+    .map((name, index) => ({ name, index }))
+    .filter(({ name }) => !existingNames.has(name));
+  if (missingDefaults.length === 0) {
+    return;
+  }
+
   await db.batch(
-    buildCharacterClasses.map((name, index) =>
+    missingDefaults.map(({ name, index }) =>
       db
         .prepare(
           `INSERT OR IGNORE INTO build_characters (

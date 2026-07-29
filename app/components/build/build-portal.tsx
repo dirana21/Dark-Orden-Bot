@@ -133,10 +133,6 @@ export function BuildPortal() {
   }, [auth.isBooting, auth.user]);
 
   useEffect(() => {
-    if (!auth.user) {
-      return;
-    }
-
     const controller = new AbortController();
     gateway
       .getBootstrap(controller.signal)
@@ -166,7 +162,7 @@ export function BuildPortal() {
       });
 
     return () => controller.abort();
-  }, [auth.user]);
+  }, []);
 
   useEffect(() => {
     if (!selectingSlot) {

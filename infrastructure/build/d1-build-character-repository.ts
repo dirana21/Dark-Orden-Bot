@@ -87,13 +87,32 @@ export class D1BuildCharacterRepository {
     guildId: string,
     name: string,
   ): Promise<StoredBuildCharacter | null> {
+    const db = getD1();
+    await ensureBuildCharactersSchema(db, guildId);
+    const exact = await db
+      .prepare(
+        `SELECT id, name, image_key, image_content_type,
+                created_at, updated_at
+         FROM build_characters
+         WHERE guild_id = ? AND name = ?
+         LIMIT 1`,
+      )
+      .bind(guildId, name)
+      .first<BuildCharacterRow>();
+    if (exact) {
+      return mapCharacter(exact);
+    }
+
     const normalized = name.toLocaleLowerCase("ru");
     const characters = await this.list(guildId);
     const match = characters.find(
       (character) =>
         character.name.toLocaleLowerCase("ru") === normalized,
     );
-    return match ? this.get(guildId, match.id) : null;
+    if (!match) {
+      return null;
+    }
+    return this.get(guildId, match.id);
   }
 
   async create(input: {
