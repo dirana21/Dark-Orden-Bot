@@ -578,10 +578,11 @@ export function BuildPortal() {
                 </div>
 
                 <fieldset className="build-skill-combo-choice">
-                  <legend>Комбо для этого умения</legend>
+                  <legend>Показывать пункт «Комбо»</legend>
                   <p>
-                    Сначала укажите, должен ли игрок видеть переключатель
-                    комбо.
+                    Если добавить этот пункт, игрок сможет выбирать между
+                    состояниями «С комбо» и «Без комбо». Если не добавлять —
+                    на карточке ничего не появится.
                   </p>
                   <div>
                     <button
@@ -591,7 +592,7 @@ export function BuildPortal() {
                       disabled={isCreatingSkill}
                       onClick={() => setComboAvailable(true)}
                     >
-                      Есть комбо
+                      Добавить выбор комбо
                     </button>
                     <button
                       className={!comboAvailable ? "is-selected" : ""}
@@ -600,7 +601,7 @@ export function BuildPortal() {
                       disabled={isCreatingSkill}
                       onClick={() => setComboAvailable(false)}
                     >
-                      Без комбо
+                      Нет пункта комбо
                     </button>
                   </div>
                 </fieldset>
@@ -740,8 +741,8 @@ export function BuildPortal() {
                         ].join(" ")}
                         type="button"
                         aria-pressed={skill.comboEnabled}
-                        aria-label={`${skill.comboEnabled ? "Выключить" : "Включить"} комбо для умения ${skill.name}`}
-                        title={`Комбо: ${skill.comboEnabled ? "Вкл" : "Выкл"}`}
+                        aria-label={`Выбрать состояние «${skill.comboEnabled ? "Без комбо" : "С комбо"}» для умения ${skill.name}`}
+                        title={skill.comboEnabled ? "С комбо" : "Без комбо"}
                         disabled={savingComboId !== null}
                         onClick={() => void toggleSkillCombo(skill)}
                       >
@@ -752,17 +753,11 @@ export function BuildPortal() {
                               : "/combo-off.png"
                           }
                           alt=""
-                          width={93}
-                          height={121}
+                          width={256}
+                          height={256}
                           unoptimized
                         />
-                        <span>
-                          {savingComboId === skill.id
-                            ? "Сохраняем…"
-                            : skill.comboEnabled
-                              ? "Вкл"
-                              : "Выкл"}
-                        </span>
+                        <span>Комбо</span>
                       </button>
                     ) : null}
                   </article>

@@ -3322,7 +3322,7 @@ input:focus-visible {
 }
 
 .build-skill-card--with-combo {
-  grid-template-columns: 72px minmax(0, 1fr) 104px;
+  grid-template-columns: 72px minmax(0, 1fr) 82px;
 }
 
 .build-skill-card__icon {
@@ -3427,13 +3427,12 @@ input:focus-visible {
 .build-skill-combo-toggle {
   position: relative;
   display: grid;
-  width: 94px;
-  min-height: 126px;
+  width: 74px;
+  height: 74px;
   align-self: center;
   justify-self: end;
   place-items: center;
-  align-content: center;
-  padding: 0 0 6px;
+  padding: 0;
   overflow: hidden;
   border: 1px solid rgba(119, 139, 170, 0.12);
   background: #0b0f16;
@@ -3472,22 +3471,27 @@ input:focus-visible {
 
 .build-skill-combo-toggle img {
   display: block;
-  width: 78px;
-  height: auto;
-  margin: -2px auto -12px;
-  object-fit: contain;
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
 }
 
 .build-skill-combo-toggle > span {
-  position: relative;
+  position: absolute;
   z-index: 1;
-  padding: 3px 7px;
-  border: 1px solid currentColor;
-  background: rgba(6, 9, 14, 0.9);
-  font-size: 7px;
-  font-weight: 900;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
+  right: 2px;
+  bottom: 3px;
+  left: 2px;
+  color: #f1f1ef;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+  text-align: center;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 4px #000;
 }
 
 .build-skill-empty {
@@ -3665,13 +3669,14 @@ input:focus-visible {
   }
 
   .build-skill-combo-toggle {
-    width: 84px;
-    min-height: 105px;
+    width: 74px;
+    height: 74px;
     grid-column: 1 / -1;
   }
 
   .build-skill-combo-toggle img {
-    width: 68px;
+    width: 72px;
+    height: 72px;
   }
 }
 

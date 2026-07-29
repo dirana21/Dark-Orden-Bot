@@ -40,7 +40,9 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /api\/build\/skill-combo/);
   assert.match(contents, /combo-on\.png/);
   assert.match(contents, /combo-off\.png/);
-  assert.match(contents, /Есть комбо/);
+  assert.match(contents, /Добавить выбор комбо/);
+  assert.match(contents, /Нет пункта комбо/);
+  assert.match(contents, /С комбо/);
   assert.match(contents, /Без комбо/);
   assert.match(contents, /Редактор умений/);
   assert.match(contents, /Цвет текста/);
