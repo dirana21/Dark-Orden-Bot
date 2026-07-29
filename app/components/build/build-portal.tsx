@@ -80,6 +80,10 @@ export function BuildPortal() {
     type: BuildSkillSlotType;
     index: number;
   } | null>(null);
+  const [pendingSkillSlot, setPendingSkillSlot] = useState<{
+    type: BuildSkillSlotType;
+    index: number;
+  } | null>(null);
   const skillFormRef = useRef<HTMLFormElement>(null);
   const selectedCharacter =
     character === "main" ? profile.mainCharacter : profile.mirrorCharacter;
@@ -130,6 +134,7 @@ export function BuildPortal() {
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === "Escape" && !savingSlot) {
         setSelectingSlot(null);
+        setPendingSkillSlot(null);
       }
     }
 
@@ -201,6 +206,7 @@ export function BuildPortal() {
 
   function openCharacterPicker(slot: BuildCharacterSlot) {
     resetSkillEditor();
+    setPendingSkillSlot(null);
     setCharacter(slot);
     setSelectingSlot(slot);
     setSearch("");
@@ -218,6 +224,15 @@ export function BuildPortal() {
     try {
       setProfile(await gateway.setCharacter(slot, nextCharacter));
       setSelectingSlot(null);
+      if (pendingSkillSlot) {
+        const nextSlot = pendingSkillSlot;
+        setPendingSkillSlot(null);
+        startCreatingSkillSlot(
+          nextSlot.type,
+          nextSlot.index,
+          true,
+        );
+      }
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -265,7 +280,17 @@ export function BuildPortal() {
   function startCreatingSkillSlot(
     type: BuildSkillSlotType,
     index: number,
+    characterIsSelected = false,
   ) {
+    if (!selectedCharacter && !characterIsSelected) {
+      setPendingSkillSlot({ type, index });
+      setCharacter("main");
+      setSelectingSlot("main");
+      setSearch("");
+      setError("");
+      return;
+    }
+
     skillFormRef.current?.reset();
     setEditingSkill(null);
     setEditingSlot({ type, index });
@@ -391,19 +416,17 @@ export function BuildPortal() {
     const slotLabel = isRabam
       ? `Рабам ${slotIndex}`
       : `Навык ${slotIndex}`;
+    const emptyClassName = [
+      "build-skill-card",
+      "build-skill-card--empty",
+      isRabam ? "build-skill-card--rabam" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     if (!skill) {
-      return (
-        <article
-          className={[
-            "build-skill-card",
-            "build-skill-card--empty",
-            isRabam ? "build-skill-card--rabam" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          key={`${slotType}-${slotIndex}`}
-        >
+      const emptySlotContent = (
+        <>
           <div
             className={[
               "build-skill-card__icon-frame",
@@ -420,23 +443,41 @@ export function BuildPortal() {
             <strong>Пустой слот</strong>
             <p>
               {canManageSkills
-                ? "Нажмите, чтобы заполнить этот слот."
+                ? "Нажмите и заполните название, иконку и описание."
                 : "Администратор пока не добавил умение."}
             </p>
           </div>
           {canManageSkills ? (
-            <button
-              className="build-skill-slot-add"
-              type="button"
-              disabled={isCreatingSkill}
-              onClick={() =>
-                startCreatingSkillSlot(slotType, slotIndex)
-              }
-            >
+            <span className="build-skill-slot-add">
               <Plus size={16} />
               Заполнить
-            </button>
+            </span>
           ) : null}
+        </>
+      );
+
+      if (canManageSkills) {
+        return (
+          <button
+            className={emptyClassName}
+            type="button"
+            disabled={isCreatingSkill}
+            key={`${slotType}-${slotIndex}`}
+            onClick={() =>
+              startCreatingSkillSlot(slotType, slotIndex)
+            }
+          >
+            {emptySlotContent}
+          </button>
+        );
+      }
+
+      return (
+        <article
+          className={emptyClassName}
+          key={`${slotType}-${slotIndex}`}
+        >
+          {emptySlotContent}
         </article>
       );
     }
@@ -538,6 +579,46 @@ export function BuildPortal() {
           </button>
         ) : null}
       </article>
+    );
+  }
+
+  function renderFixedSkillGroups() {
+    return (
+      <>
+        <section className="build-skill-slot-group build-skill-slot-group--rabam">
+          <header>
+            <div>
+              <span>Особые умения</span>
+              <h3>Рабамы</h3>
+            </div>
+            <strong>4 слота</strong>
+          </header>
+          <div>
+            {Array.from(
+              { length: buildSkillSlotLimits.rabam },
+              (_, index) =>
+                renderFixedSkillSlot("rabam", index + 1),
+            )}
+          </div>
+        </section>
+
+        <section className="build-skill-slot-group">
+          <header>
+            <div>
+              <span>Основной набор</span>
+              <h3>Обычные навыки</h3>
+            </div>
+            <strong>13 слотов</strong>
+          </header>
+          <div>
+            {Array.from(
+              { length: buildSkillSlotLimits.normal },
+              (_, index) =>
+                renderFixedSkillSlot("normal", index + 1),
+            )}
+          </div>
+        </section>
+      </>
     );
   }
 
@@ -1023,6 +1104,34 @@ export function BuildPortal() {
             </div>
           </section>
         ) : null}
+
+        {!selectedCharacter && canManageSkills ? (
+          <section
+            className="build-skills-section build-skills-section--unassigned"
+            aria-labelledby="build-empty-slots-title"
+          >
+            <header className="build-skills-heading">
+              <div>
+                <span className="section-kicker">
+                  <BookOpen size={15} /> Слоты класса
+                </span>
+                <h2 id="build-empty-slots-title">
+                  4 Рабама и 13 обычных навыков
+                </h2>
+                <p>
+                  Нажмите на любой пустой слот. Если герой ещё не
+                  выбран, сначала откроется список классов, а затем —
+                  редактор этого слота.
+                </p>
+              </div>
+              <span>0 / 17 умений</span>
+            </header>
+
+            <div className="build-skill-fixed-catalog">
+              {renderFixedSkillGroups()}
+            </div>
+          </section>
+        ) : null}
       </main>
 
       {selectingSlot ? (
@@ -1032,6 +1141,7 @@ export function BuildPortal() {
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !savingSlot) {
               setSelectingSlot(null);
+              setPendingSkillSlot(null);
             }
           }}
         >
@@ -1053,7 +1163,10 @@ export function BuildPortal() {
               <button
                 type="button"
                 aria-label="Закрыть выбор персонажа"
-                onClick={() => setSelectingSlot(null)}
+                onClick={() => {
+                  setSelectingSlot(null);
+                  setPendingSkillSlot(null);
+                }}
                 disabled={savingSlot !== null}
               >
                 <X size={18} />

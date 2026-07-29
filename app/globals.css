@@ -3491,6 +3491,41 @@ input:focus-visible {
   background: rgba(15, 18, 23, 0.7);
 }
 
+.build-skill-card--empty:is(button) {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.build-skill-card--empty:is(button):hover:not(:disabled),
+.build-skill-card--empty:is(button):focus-visible {
+  border-color: rgba(216, 179, 105, 0.36);
+  background: rgba(27, 29, 32, 0.88);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.build-skill-card--empty.build-skill-card--rabam:is(button):hover:not(
+    :disabled
+  ),
+.build-skill-card--empty.build-skill-card--rabam:is(button):focus-visible {
+  border-color: rgba(222, 180, 98, 0.48);
+  background:
+    radial-gradient(
+      circle at 47px 50%,
+      rgba(212, 164, 77, 0.16),
+      transparent 115px
+    ),
+    rgba(22, 23, 26, 0.94);
+}
+
+.build-skill-card--empty:is(button):disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .build-skill-card--empty.build-skill-card--rabam {
   background:
     radial-gradient(
