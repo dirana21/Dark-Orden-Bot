@@ -18,6 +18,7 @@ import type { AuthUser } from "@/domain/auth/model";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import { BlackSunIcon } from "../black-sun/black-sun-icon";
 import { BrandMark } from "../brand-mark";
+import { MobileSiteNav } from "../mobile-site-nav";
 import { PlannerNotifications } from "../notifications/planner-notifications";
 import { ProfileEditor } from "../profile/profile-editor";
 import { WeeklyPlanner } from "../planner/weekly-planner";
@@ -86,6 +87,7 @@ export function GuildDashboard({
           <a href="#events">События</a>
           <Link href="/build">Билд</Link>
         </nav>
+        <MobileSiteNav current="overview" />
         <div className="dashboard-header__actions">
           <div
             className="event-nav-desktop"
@@ -117,37 +119,6 @@ export function GuildDashboard({
               </span>
             </Link>
           </div>
-          <details className="event-nav-mobile">
-            <summary
-              aria-label="Открыть список событий"
-              title="События"
-            >
-              <Sparkles size={19} />
-              <span className="event-nav-mobile__dot" />
-            </summary>
-            <nav className="event-nav-mobile__menu" aria-label="События гильдии">
-              <Link
-                className="event-nav-mobile__item event-nav-mobile__item--vengeful"
-                href="/vengeful-souls"
-              >
-                <VengefulSoulsIcon size={42} />
-                <span className="event-nav-card__copy">
-                  <strong>Ночью неупокоеных душ</strong>
-                  <small>Night of Vengeful Souls</small>
-                </span>
-              </Link>
-              <Link
-                className="event-nav-mobile__item event-nav-mobile__item--black-sun"
-                href="/black-sun"
-              >
-                <BlackSunIcon size={42} />
-                <span className="event-nav-card__copy">
-                  <strong>Чёрное Солнце</strong>
-                  <small>Black Sun</small>
-                </span>
-              </Link>
-            </nav>
-          </details>
           <PlannerNotifications />
           <button
             className="profile-chip"

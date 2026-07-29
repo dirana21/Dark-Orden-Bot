@@ -29,6 +29,7 @@ import { eventRoleLabels } from "@/app/lib/event-role-labels";
 import { HttpVengefulSoulsGateway } from "@/app/lib/vengeful-souls-client";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import { BrandMark } from "../brand-mark";
+import { MobileSiteNav } from "../mobile-site-nav";
 import { EventRoleDialog } from "../events/event-role-dialog";
 import { EventSessionSelector } from "../events/event-session-selector";
 import { VengefulSoulsIcon } from "./vengeful-souls-icon";
@@ -280,6 +281,7 @@ export function VengefulSoulsPortal() {
         </Link>
         <Link href="/black-sun">Чёрное Солнце</Link>
       </nav>
+      <MobileSiteNav current="vengeful-souls" />
       <div className="dashboard-header__actions">
         <Link
           className="icon-button"

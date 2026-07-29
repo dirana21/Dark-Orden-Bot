@@ -47,6 +47,7 @@ import {
   type BuildSigilCategory,
 } from "@/domain/build/sigil-model";
 import { BrandMark } from "../brand-mark";
+import { MobileSiteNav } from "../mobile-site-nav";
 import { SkillDescriptionEditor } from "./skill-description-editor";
 import { SigilPanel } from "./sigil-panel";
 import { SigilSocketIcon } from "./sigil-socket-icon";
@@ -689,6 +690,7 @@ export function BuildPortal() {
             Билд
           </Link>
         </nav>
+        <MobileSiteNav current="build" />
         <div className="dashboard-header__actions">
           <Link
             className="icon-button"

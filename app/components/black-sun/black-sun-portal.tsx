@@ -29,6 +29,7 @@ import { HttpBlackSunGateway } from "@/app/lib/black-sun-client";
 import { eventRoleLabels } from "@/app/lib/event-role-labels";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import { BrandMark } from "../brand-mark";
+import { MobileSiteNav } from "../mobile-site-nav";
 import { EventRoleDialog } from "../events/event-role-dialog";
 import { EventSessionSelector } from "../events/event-session-selector";
 import { BlackSunIcon } from "./black-sun-icon";
@@ -280,6 +281,7 @@ export function BlackSunPortal() {
           Чёрное Солнце
         </Link>
       </nav>
+      <MobileSiteNav current="black-sun" />
       <div className="dashboard-header__actions">
         <Link
           className="icon-button"
