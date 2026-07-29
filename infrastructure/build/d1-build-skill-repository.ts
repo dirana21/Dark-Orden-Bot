@@ -27,7 +27,7 @@ function mapSkill(row: BuildSkillRow): StoredBuildSkill {
     character: row.character,
     name: row.name,
     descriptionHtml: row.description_html,
-    iconUrl: `/api/build/skill-icon?id=${encodeURIComponent(row.id)}`,
+    iconUrl: `/api/build/skill-icon?id=${encodeURIComponent(row.id)}&v=${row.updated_at}`,
     iconKey: row.icon_key,
     iconContentType: row.icon_content_type,
     createdAt: row.created_at,
@@ -127,6 +127,47 @@ export class D1BuildSkillRepository {
       throw new Error("Created build skill could not be loaded.");
     }
     return publicSkill(created);
+  }
+
+  async update(input: {
+    guildId: string;
+    id: string;
+    name: string;
+    descriptionHtml: string;
+    iconKey?: string;
+    iconContentType?: string;
+    now: number;
+  }): Promise<BuildSkill | null> {
+    const db = getD1();
+    await ensureBuildSkillsSchema(db);
+
+    const result = await db
+      .prepare(
+        `UPDATE build_skills
+         SET name = ?,
+             description_html = ?,
+             icon_key = COALESCE(?, icon_key),
+             icon_content_type = COALESCE(?, icon_content_type),
+             updated_at = ?
+         WHERE guild_id = ? AND id = ?`,
+      )
+      .bind(
+        input.name,
+        input.descriptionHtml,
+        input.iconKey ?? null,
+        input.iconContentType ?? null,
+        input.now,
+        input.guildId,
+        input.id,
+      )
+      .run();
+
+    if (!result.meta.changes) {
+      return null;
+    }
+
+    const updated = await this.get(input.guildId, input.id);
+    return updated ? publicSkill(updated) : null;
   }
 
   async delete(guildId: string, id: string): Promise<StoredBuildSkill | null> {

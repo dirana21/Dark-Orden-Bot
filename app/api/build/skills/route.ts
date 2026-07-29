@@ -24,6 +24,14 @@ const skills = new D1BuildSkillRepository();
 const ids = new CryptoIdGenerator();
 const clock = new SystemClock();
 
+function iconExtension(contentType: string): string {
+  return contentType === "image/png"
+    ? "png"
+    : contentType === "image/webp"
+      ? "webp"
+      : "jpg";
+}
+
 async function requireSessionUser(request: Request) {
   const user = await authUseCases.getSession.execute(readSessionCookie(request));
   if (!user) {
@@ -88,12 +96,7 @@ export async function POST(request: Request) {
     );
     const icon = validateBuildSkillIcon(form.get("icon"));
     const id = ids.generate();
-    const extension =
-      icon.type === "image/png"
-        ? "png"
-        : icon.type === "image/webp"
-          ? "webp"
-          : "jpg";
+    const extension = iconExtension(icon.type);
     uploadedKey = `guilds/${user.guildId}/build-skills/${id}.${extension}`;
 
     await getSkillIconsBucket().put(uploadedKey, icon.stream(), {
@@ -126,6 +129,87 @@ export async function POST(request: Request) {
         await getSkillIconsBucket().delete(uploadedKey);
       } catch {
         // The metadata write did not complete; best-effort cleanup only.
+      }
+    }
+    return skillErrorResponse(error);
+  }
+}
+
+export async function PATCH(request: Request) {
+  const rejected = validateMutationRequest(request, 2_500_000);
+  if (rejected) {
+    return rejected;
+  }
+
+  let uploadedKey: string | null = null;
+  let updateCommitted = false;
+  try {
+    const user = await requireSessionUser(request);
+    requireAdmin(user.role);
+    const id = new URL(request.url).searchParams.get("id")?.trim();
+    if (!id) {
+      throw new BuildError("Не удалось определить умение.");
+    }
+
+    const current = await skills.get(user.guildId, id);
+    if (!current) {
+      throw new BuildError("Умение уже удалено или не найдено.");
+    }
+
+    const form = await request.formData();
+    const name = validateBuildSkillName(form.get("name"));
+    const descriptionHtml = sanitizeBuildSkillDescription(
+      form.get("descriptionHtml"),
+    );
+    const iconEntry = form.get("icon");
+    const icon =
+      iconEntry instanceof File && iconEntry.size > 0
+        ? validateBuildSkillIcon(iconEntry)
+        : null;
+
+    if (icon) {
+      uploadedKey = `guilds/${user.guildId}/build-skills/${id}-${ids.generate()}.${iconExtension(icon.type)}`;
+      await getSkillIconsBucket().put(uploadedKey, icon.stream(), {
+        httpMetadata: { contentType: icon.type },
+        customMetadata: {
+          guildId: user.guildId,
+          createdByUserId: user.id,
+        },
+      });
+    }
+
+    const updated = await skills.update({
+      guildId: user.guildId,
+      id,
+      name,
+      descriptionHtml,
+      iconKey: uploadedKey ?? undefined,
+      iconContentType: icon?.type,
+      now: clock.now(),
+    });
+    if (!updated) {
+      throw new BuildError("Умение уже удалено или не найдено.");
+    }
+    updateCommitted = true;
+
+    if (uploadedKey && current.iconKey !== uploadedKey) {
+      try {
+        await getSkillIconsBucket().delete(current.iconKey);
+      } catch {
+        // The new icon is active; stale bytes can be cleaned up later.
+      }
+    }
+
+    return Response.json(
+      { skill: updated },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    if (uploadedKey && !updateCommitted) {
+      try {
+        await getSkillIconsBucket().delete(uploadedKey);
+      } catch {
+        // Best-effort cleanup when the metadata update did not complete.
       }
     }
     return skillErrorResponse(error);

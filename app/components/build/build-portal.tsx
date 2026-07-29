@@ -1,6 +1,12 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  type FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -65,6 +71,8 @@ export function BuildPortal() {
   const [editorKey, setEditorKey] = useState(0);
   const [isCreatingSkill, setIsCreatingSkill] = useState(false);
   const [deletingSkillId, setDeletingSkillId] = useState<string | null>(null);
+  const [editingSkill, setEditingSkill] = useState<BuildSkill | null>(null);
+  const skillFormRef = useRef<HTMLFormElement>(null);
   const selectedCharacter =
     character === "main" ? profile.mainCharacter : profile.mirrorCharacter;
 
@@ -212,11 +220,39 @@ export function BuildPortal() {
     }
   }
 
-  async function createSkill(event: FormEvent<HTMLFormElement>) {
+  function resetSkillEditor(form = skillFormRef.current) {
+    form?.reset();
+    setEditingSkill(null);
+    setSkillName("");
+    setSkillDescription("");
+    setSkillIcon(null);
+    setEditorKey((current) => current + 1);
+  }
+
+  function startEditingSkill(skill: BuildSkill) {
+    skillFormRef.current?.reset();
+    setEditingSkill(skill);
+    setSkillName(skill.name);
+    setSkillDescription(skill.descriptionHtml);
+    setSkillIcon(null);
+    setSkillError("");
+    setEditorKey((current) => current + 1);
+    requestAnimationFrame(() => {
+      document
+        .getElementById("build-skill-editor")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  async function saveSkill(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    if (!selectedCharacter || !skillIcon) {
-      setSkillError("Заполните название, описание и добавьте иконку умения.");
+    if (!selectedCharacter || (!editingSkill && !skillIcon)) {
+      setSkillError(
+        editingSkill
+          ? "Заполните название и описание умения."
+          : "Заполните название, описание и добавьте иконку умения.",
+      );
       return;
     }
 
@@ -227,19 +263,29 @@ export function BuildPortal() {
       formData.set("character", selectedCharacter);
       formData.set("name", skillName);
       formData.set("descriptionHtml", skillDescription);
-      formData.set("icon", skillIcon);
-      const created = await skillGateway.create(formData);
-      setSkills((current) => [...current, created]);
-      setSkillName("");
-      setSkillDescription("");
-      setSkillIcon(null);
-      setEditorKey((current) => current + 1);
-      form.reset();
+      if (skillIcon) {
+        formData.set("icon", skillIcon);
+      }
+
+      if (editingSkill) {
+        const updated = await skillGateway.update(editingSkill.id, formData);
+        setSkills((current) =>
+          current.map((skill) =>
+            skill.id === updated.id ? updated : skill,
+          ),
+        );
+      } else {
+        const created = await skillGateway.create(formData);
+        setSkills((current) => [...current, created]);
+      }
+      resetSkillEditor(form);
     } catch (caught) {
       setSkillError(
         caught instanceof Error
           ? caught.message
-          : "Не удалось добавить умение.",
+          : editingSkill
+            ? "Не удалось изменить умение."
+            : "Не удалось добавить умение.",
       );
     } finally {
       setIsCreatingSkill(false);
@@ -252,6 +298,9 @@ export function BuildPortal() {
     try {
       await skillGateway.delete(id);
       setSkills((current) => current.filter((skill) => skill.id !== id));
+      if (editingSkill?.id === id) {
+        resetSkillEditor();
+      }
     } catch (caught) {
       setSkillError(
         caught instanceof Error
@@ -432,8 +481,10 @@ export function BuildPortal() {
 
             {canManageSkills ? (
               <form
+                ref={skillFormRef}
+                id="build-skill-editor"
                 className="build-skill-editor"
-                onSubmit={(event) => void createSkill(event)}
+                onSubmit={(event) => void saveSkill(event)}
               >
                 <div className="build-skill-editor__heading">
                   <span>
@@ -441,7 +492,11 @@ export function BuildPortal() {
                   </span>
                   <div>
                     <small>Только для администраторов</small>
-                    <h3>Редактор умений</h3>
+                    <h3>
+                      {editingSkill
+                        ? `Редактирование: ${editingSkill.name}`
+                        : "Редактор умений"}
+                    </h3>
                   </div>
                 </div>
 
@@ -465,14 +520,18 @@ export function BuildPortal() {
                     </span>
                     <span>
                       <strong>
-                        {skillIcon ? skillIcon.name : "Добавить иконку умения"}
+                        {skillIcon
+                          ? skillIcon.name
+                          : editingSkill
+                            ? "Заменить иконку (необязательно)"
+                            : "Добавить иконку умения"}
                       </strong>
                       <small>PNG, JPG или WEBP · до 2 МБ</small>
                     </span>
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
-                      required
+                      required={!editingSkill}
                       disabled={isCreatingSkill}
                       onChange={(event) =>
                         setSkillIcon(event.target.files?.[0] ?? null)
@@ -485,6 +544,7 @@ export function BuildPortal() {
                   <span>Описание умения</span>
                   <SkillDescriptionEditor
                     key={editorKey}
+                    initialHtml={editingSkill?.descriptionHtml ?? ""}
                     disabled={isCreatingSkill}
                     onChange={setSkillDescription}
                   />
@@ -495,18 +555,39 @@ export function BuildPortal() {
                     Выделите нужный участок текста, затем выберите цвет или
                     формат. Списки создаются отдельными кнопками.
                   </p>
-                  <button
-                    type="submit"
-                    disabled={
-                      isCreatingSkill ||
-                      !skillIcon ||
-                      !skillName.trim() ||
-                      !skillDescription.trim()
-                    }
-                  >
-                    <Plus size={16} />
-                    {isCreatingSkill ? "Сохраняем…" : "Добавить для всех"}
-                  </button>
+                  <span className="build-skill-editor__actions">
+                    {editingSkill ? (
+                      <button
+                        className="is-secondary"
+                        type="button"
+                        disabled={isCreatingSkill}
+                        onClick={() => resetSkillEditor()}
+                      >
+                        <X size={15} />
+                        Отмена
+                      </button>
+                    ) : null}
+                    <button
+                      type="submit"
+                      disabled={
+                        isCreatingSkill ||
+                        (!editingSkill && !skillIcon) ||
+                        !skillName.trim() ||
+                        !skillDescription.trim()
+                      }
+                    >
+                      {editingSkill ? (
+                        <PencilLine size={16} />
+                      ) : (
+                        <Plus size={16} />
+                      )}
+                      {isCreatingSkill
+                        ? "Сохраняем…"
+                        : editingSkill
+                          ? "Сохранить изменения"
+                          : "Добавить для всех"}
+                    </button>
+                  </span>
                 </footer>
               </form>
             ) : null}
@@ -552,15 +633,31 @@ export function BuildPortal() {
                       <header>
                         <h3>{skill.name}</h3>
                         {canManageSkills ? (
-                          <button
-                            type="button"
-                            title="Удалить умение"
-                            aria-label={`Удалить умение ${skill.name}`}
-                            disabled={deletingSkillId !== null}
-                            onClick={() => void deleteSkill(skill.id)}
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          <span className="build-skill-card__actions">
+                            <button
+                              type="button"
+                              title="Редактировать умение"
+                              aria-label={`Редактировать умение ${skill.name}`}
+                              disabled={
+                                deletingSkillId !== null || isCreatingSkill
+                              }
+                              onClick={() => startEditingSkill(skill)}
+                            >
+                              <PencilLine size={15} />
+                            </button>
+                            <button
+                              className="is-delete"
+                              type="button"
+                              title="Удалить умение"
+                              aria-label={`Удалить умение ${skill.name}`}
+                              disabled={
+                                deletingSkillId !== null || isCreatingSkill
+                              }
+                              onClick={() => void deleteSkill(skill.id)}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </span>
                         ) : null}
                       </header>
                       <div

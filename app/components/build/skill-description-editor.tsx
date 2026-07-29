@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   Bold,
   Eraser,
@@ -20,16 +20,24 @@ const textColorPresets = [
 ] as const;
 
 interface SkillDescriptionEditorProps {
+  initialHtml?: string;
   onChange: (value: string) => void;
   disabled?: boolean;
 }
 
 export function SkillDescriptionEditor({
+  initialHtml = "",
   onChange,
   disabled = false,
 }: SkillDescriptionEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRange = useRef<Range | null>(null);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = initialHtml;
+    }
+  }, [initialHtml]);
 
   function rememberSelection() {
     const selection = window.getSelection();

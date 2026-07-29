@@ -90,6 +90,24 @@ export class HttpBuildSkillGateway {
     return payload.skill;
   }
 
+  async update(id: string, formData: FormData): Promise<BuildSkill> {
+    const response = await fetch(
+      `/api/build/skills?id=${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        body: formData,
+      },
+    );
+    const payload = (await response.json()) as BuildSkillsResponse;
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Не удалось изменить умение.");
+    }
+    if (!payload.skill) {
+      throw new Error("Сервер не вернул изменённое умение.");
+    }
+    return payload.skill;
+  }
+
   async delete(id: string): Promise<void> {
     const response = await fetch(
       `/api/build/skills?id=${encodeURIComponent(id)}`,

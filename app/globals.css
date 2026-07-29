@@ -3225,6 +3225,24 @@ input:focus-visible {
   opacity: 0.45;
 }
 
+.build-skill-editor__actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.build-skill-editor > footer button.is-secondary {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.025);
+  color: #868a84;
+}
+
+.build-skill-editor > footer button.is-secondary:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.055);
+  color: #c2c4bf;
+}
+
 .build-skill-catalog {
   display: grid;
   gap: 10px;
@@ -3278,19 +3296,36 @@ input:focus-visible {
   color: #e7bb43;
 }
 
+.build-skill-card__actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
 .build-skill-card__content > header button {
   display: grid;
   width: 30px;
   height: 30px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(195, 84, 84, 0.16);
-  background: rgba(155, 55, 55, 0.05);
-  color: #9d6767;
+  border: 1px solid rgba(215, 180, 106, 0.15);
+  background: rgba(215, 180, 106, 0.045);
+  color: #998b70;
   cursor: pointer;
 }
 
 .build-skill-card__content > header button:hover:not(:disabled) {
+  border-color: rgba(215, 180, 106, 0.3);
+  color: var(--gold-soft);
+}
+
+.build-skill-card__content > header button.is-delete {
+  border-color: rgba(195, 84, 84, 0.16);
+  background: rgba(155, 55, 55, 0.05);
+  color: #9d6767;
+}
+
+.build-skill-card__content > header button.is-delete:hover:not(:disabled) {
   border-color: rgba(214, 95, 95, 0.3);
   color: #d18a8a;
 }
@@ -3469,6 +3504,15 @@ input:focus-visible {
   .build-skill-editor > footer {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .build-skill-editor__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .build-skill-editor__actions > button:only-child {
+    grid-column: 1 / -1;
   }
 
   .build-skill-card {
