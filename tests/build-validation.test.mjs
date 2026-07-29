@@ -25,16 +25,21 @@ import {
   validateBuildSkillSlotType,
 } from "../domain/build/validation.ts";
 
-test("accepts the configured build characters", () => {
+test("accepts configured and future build characters", () => {
   assert.equal(buildCharacterClasses.length, 30);
   assert.equal(validateBuildCharacter("Воин"), "Воин");
   assert.equal(validateBuildCharacter("Сераф"), "Сераф");
+  assert.equal(
+    validateBuildCharacter("  Новый   герой  "),
+    "Новый герой",
+  );
   assert.equal(validateBuildCharacterSlot("main"), "main");
   assert.equal(validateBuildCharacterSlot("mirror"), "mirror");
 });
 
-test("rejects unknown build characters and slots", () => {
-  assert.throws(() => validateBuildCharacter("Неизвестный герой"));
+test("rejects invalid build character names and slots", () => {
+  assert.throws(() => validateBuildCharacter("x"));
+  assert.throws(() => validateBuildCharacter("Герой ⚔"));
   assert.throws(() => validateBuildCharacterSlot("third"));
 });
 

@@ -120,6 +120,13 @@
       "when": 1785347043153,
       "tag": "0016_nebulous_talon",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1785357145005,
+      "tag": "0017_eager_anthem",
+      "breakpoints": true
     }
   ]
 }

@@ -197,6 +197,35 @@ export const userBuildProfiles = sqliteTable("user_build_profiles", {
   updatedAt: integer("updated_at").notNull(),
 });
 
+export const buildCharacters = sqliteTable(
+  "build_characters",
+  {
+    id: text("id").primaryKey(),
+    guildId: text("guild_id")
+      .notNull()
+      .references(() => guilds.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    imageKey: text("image_key"),
+    imageContentType: text("image_content_type"),
+    createdByUserId: text("created_by_user_id").references(
+      () => users.id,
+      { onDelete: "set null" },
+    ),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("build_characters_guild_name_idx").on(
+      table.guildId,
+      table.name,
+    ),
+    index("build_characters_guild_created_idx").on(
+      table.guildId,
+      table.createdAt,
+    ),
+  ],
+);
+
 export const buildSkills = sqliteTable(
   "build_skills",
   {

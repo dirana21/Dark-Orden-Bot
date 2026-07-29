@@ -32,9 +32,9 @@ import {
 } from "@/app/lib/build-client";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import {
-  buildCharacterClasses,
   buildSkillSlotLimits,
   isSocketlessBuildSkillSlot,
+  type BuildCharacter,
   type BuildCharacterClass,
   type BuildCharacterSlot,
   type BuildProfile,
@@ -68,6 +68,7 @@ export function BuildPortal() {
   const auth = useAuthController();
   const [character, setCharacter] = useState<BuildCharacterSlot>("main");
   const [profile, setProfile] = useState<BuildProfile>(emptyProfile);
+  const [characters, setCharacters] = useState<BuildCharacter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [savingSlot, setSavingSlot] =
     useState<BuildCharacterSlot | null>(null);
@@ -98,9 +99,20 @@ export function BuildPortal() {
     type: BuildSkillSlotType;
     index: number;
   } | null>(null);
+  const [newCharacterName, setNewCharacterName] = useState("");
+  const [newCharacterImage, setNewCharacterImage] =
+    useState<File | null>(null);
+  const [isSavingCharacterCatalog, setIsSavingCharacterCatalog] =
+    useState(false);
+  const [characterCatalogError, setCharacterCatalogError] =
+    useState("");
+  const characterCatalogFormRef = useRef<HTMLFormElement>(null);
   const skillFormRef = useRef<HTMLFormElement>(null);
   const selectedCharacter =
     character === "main" ? profile.mainCharacter : profile.mirrorCharacter;
+  const selectedCharacterEntry = characters.find(
+    (entry) => entry.name === selectedCharacter,
+  );
 
   useEffect(() => {
     if (!auth.isBooting && !auth.user) {
@@ -114,10 +126,13 @@ export function BuildPortal() {
     }
 
     const controller = new AbortController();
-    gateway
-      .get(controller.signal)
-      .then((nextProfile) => {
+    Promise.all([
+      gateway.get(controller.signal),
+      gateway.listCharacters(controller.signal),
+    ])
+      .then(([nextProfile, nextCharacters]) => {
         setProfile(nextProfile);
+        setCharacters(nextCharacters);
         setError("");
       })
       .catch((caught: unknown) => {
@@ -194,11 +209,11 @@ export function BuildPortal() {
   const filteredClasses = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("ru");
     return query
-      ? buildCharacterClasses.filter((name) =>
-          name.toLocaleLowerCase("ru").includes(query),
+      ? characters.filter((entry) =>
+          entry.name.toLocaleLowerCase("ru").includes(query),
         )
-      : buildCharacterClasses;
-  }, [search]);
+      : characters;
+  }, [characters, search]);
 
   if (auth.isBooting || !auth.user) {
     return (
@@ -255,6 +270,64 @@ export function BuildPortal() {
       );
     } finally {
       setSavingSlot(null);
+    }
+  }
+
+  async function createCharacter(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!newCharacterName.trim()) {
+      setCharacterCatalogError("Укажите название персонажа.");
+      return;
+    }
+
+    setIsSavingCharacterCatalog(true);
+    setCharacterCatalogError("");
+    try {
+      const formData = new FormData();
+      formData.set("name", newCharacterName);
+      if (newCharacterImage) {
+        formData.set("image", newCharacterImage);
+      }
+      const created = await gateway.createCharacter(formData);
+      setCharacters((current) => [...current, created]);
+      setNewCharacterName("");
+      setNewCharacterImage(null);
+      characterCatalogFormRef.current?.reset();
+    } catch (caught) {
+      setCharacterCatalogError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось добавить персонажа.",
+      );
+    } finally {
+      setIsSavingCharacterCatalog(false);
+    }
+  }
+
+  async function updateCharacterImage(
+    characterId: string,
+    image: File,
+  ) {
+    setIsSavingCharacterCatalog(true);
+    setCharacterCatalogError("");
+    try {
+      const updated = await gateway.updateCharacterImage(
+        characterId,
+        image,
+      );
+      setCharacters((current) =>
+        current.map((entry) =>
+          entry.id === updated.id ? updated : entry,
+        ),
+      );
+    } catch (caught) {
+      setCharacterCatalogError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось обновить изображение персонажа.",
+      );
+    } finally {
+      setIsSavingCharacterCatalog(false);
     }
   }
 
@@ -747,10 +820,27 @@ export function BuildPortal() {
 
         <section className="build-character-stage">
           <article
-            className="build-character-card"
+            className={[
+              "build-character-card",
+              selectedCharacterEntry?.imageUrl
+                ? "build-character-card--with-image"
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             aria-live="polite"
             aria-labelledby="build-character-title"
           >
+            {selectedCharacterEntry?.imageUrl ? (
+              <Image
+                className="build-character-card__background"
+                src={selectedCharacterEntry.imageUrl}
+                alt=""
+                fill
+                sizes="(max-width: 800px) 100vw, 900px"
+                unoptimized
+              />
+            ) : null}
             <span className="build-character-card__mark" aria-hidden="true">
               {isMain ? (
                 <UserRound size={42} />
@@ -1304,6 +1394,68 @@ export function BuildPortal() {
               </button>
             </header>
 
+            {canManageSkills ? (
+              <form
+                ref={characterCatalogFormRef}
+                className="build-character-admin-form"
+                onSubmit={(event) => void createCharacter(event)}
+              >
+                <div>
+                  <span>Редактор каталога</span>
+                  <strong>Добавить нового персонажа</strong>
+                </div>
+                <label>
+                  <span className="sr-only">Название персонажа</span>
+                  <input
+                    type="text"
+                    value={newCharacterName}
+                    minLength={2}
+                    maxLength={40}
+                    required
+                    disabled={isSavingCharacterCatalog}
+                    placeholder="Название нового персонажа"
+                    onChange={(event) =>
+                      setNewCharacterName(event.target.value)
+                    }
+                  />
+                </label>
+                <label className="build-character-admin-form__upload">
+                  <ImagePlus size={16} />
+                  <span>
+                    {newCharacterImage
+                      ? newCharacterImage.name
+                      : "Фото 16:9 · необязательно"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={isSavingCharacterCatalog}
+                    onChange={(event) =>
+                      setNewCharacterImage(
+                        event.target.files?.[0] ?? null,
+                      )
+                    }
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={
+                    isSavingCharacterCatalog ||
+                    !newCharacterName.trim()
+                  }
+                >
+                  <Plus size={16} />
+                  Добавить
+                </button>
+              </form>
+            ) : null}
+
+            {characterCatalogError ? (
+              <p className="build-character-catalog-error" role="alert">
+                {characterCatalogError}
+              </p>
+            ) : null}
+
             <label className="build-picker-search">
               <Search size={17} />
               <span className="sr-only">Найти персонажа</span>
@@ -1317,24 +1469,83 @@ export function BuildPortal() {
             </label>
 
             <div className="build-picker-grid">
-              {filteredClasses.map((name) => {
+              {filteredClasses.map((entry) => {
                 const isSelected =
                   (selectingSlot === "main"
                     ? profile.mainCharacter
-                    : profile.mirrorCharacter) === name;
+                    : profile.mirrorCharacter) === entry.name;
                 return (
-                  <button
-                    className={isSelected ? "is-selected" : ""}
-                    type="button"
-                    key={name}
-                    disabled={savingSlot !== null}
-                    onClick={() => void selectCharacter(name)}
+                  <article
+                    className={[
+                      "build-picker-character",
+                      isSelected ? "is-selected" : "",
+                      entry.imageUrl ? "has-image" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    key={entry.id}
                   >
-                    <span>{name}</span>
-                    {isSelected ? <Check size={15} /> : null}
-                  </button>
+                    {entry.imageUrl ? (
+                      <Image
+                        src={entry.imageUrl}
+                        alt=""
+                        fill
+                        sizes="(max-width: 520px) 100vw, 260px"
+                        unoptimized
+                      />
+                    ) : null}
+                    <button
+                      className="build-picker-character__select"
+                      type="button"
+                      disabled={
+                        savingSlot !== null ||
+                        isSavingCharacterCatalog
+                      }
+                      onClick={() =>
+                        void selectCharacter(entry.name)
+                      }
+                    >
+                      <span>{entry.name}</span>
+                      {isSelected ? <Check size={15} /> : null}
+                    </button>
+                    {canManageSkills ? (
+                      <label
+                        className="build-picker-character__image-action"
+                        title={
+                          entry.imageUrl
+                            ? "Заменить изображение"
+                            : "Добавить изображение"
+                        }
+                      >
+                        <ImagePlus size={14} />
+                        <span>
+                          {entry.imageUrl ? "Заменить" : "Добавить фото"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          disabled={isSavingCharacterCatalog}
+                          onChange={(event) => {
+                            const image = event.target.files?.[0];
+                            if (image) {
+                              void updateCharacterImage(
+                                entry.id,
+                                image,
+                              );
+                            }
+                            event.currentTarget.value = "";
+                          }}
+                        />
+                      </label>
+                    ) : null}
+                  </article>
                 );
               })}
+              {filteredClasses.length === 0 ? (
+                <p className="build-picker-grid__empty">
+                  Персонажи не найдены.
+                </p>
+              ) : null}
             </div>
           </section>
         </div>

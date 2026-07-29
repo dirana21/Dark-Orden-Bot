@@ -5,6 +5,7 @@ import {
   validateBuildCharacterSlot,
 } from "@/domain/build/validation";
 import { D1BuildRepository } from "@/infrastructure/build/d1-build-repository";
+import { D1BuildCharacterRepository } from "@/infrastructure/build/d1-build-character-repository";
 import { SystemClock } from "@/infrastructure/system/system-services";
 import { authUseCases } from "../auth/_shared/dependencies";
 import {
@@ -14,6 +15,7 @@ import {
 } from "../auth/_shared/http";
 
 const builds = new D1BuildRepository();
+const characters = new D1BuildCharacterRepository();
 const clock = new SystemClock();
 
 async function requireSessionUser(request: Request) {
@@ -63,10 +65,14 @@ export async function PATCH(request: Request) {
       slot?: unknown;
       character?: unknown;
     };
+    const character = validateBuildCharacter(input.character);
+    if (!await characters.findByName(user.guildId, character)) {
+      throw new BuildError("Выберите персонажа из каталога.");
+    }
     const profile = await builds.setCharacter(
       user.id,
       validateBuildCharacterSlot(input.slot),
-      validateBuildCharacter(input.character),
+      character,
       clock.now(),
     );
     return Response.json(

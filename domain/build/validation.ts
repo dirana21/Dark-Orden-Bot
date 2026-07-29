@@ -1,5 +1,4 @@
 import {
-  buildCharacterClasses,
   type BuildCharacterClass,
   type BuildCharacterSlot,
   buildSkillSlotLimits,
@@ -22,14 +21,61 @@ export const BUILD_SKILL_ICON_TYPES = [
 export function validateBuildCharacter(
   value: unknown,
 ): BuildCharacterClass {
-  if (
-    typeof value === "string" &&
-    (buildCharacterClasses as readonly string[]).includes(value)
-  ) {
-    return value as BuildCharacterClass;
+  if (typeof value !== "string") {
+    throw new BuildError("Укажите название персонажа.");
   }
 
-  throw new BuildError("Выберите персонажа из списка.");
+  const character = value
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/g, " ");
+  if (character.length < 2 || character.length > 40) {
+    throw new BuildError(
+      "Название персонажа должно содержать от 2 до 40 символов.",
+    );
+  }
+  if (!/^[\p{L}\p{N}\s'’_-]+$/u.test(character)) {
+    throw new BuildError(
+      "В названии персонажа разрешены буквы, цифры, пробел, дефис и апостроф.",
+    );
+  }
+
+  return character;
+}
+
+export const BUILD_CHARACTER_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+export const BUILD_CHARACTER_IMAGE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+] as const;
+
+export function validateBuildCharacterImage(
+  value: unknown,
+  required = true,
+): File | null {
+  if (!(value instanceof File) || value.size === 0) {
+    if (!required) {
+      return null;
+    }
+    throw new BuildError("Добавьте изображение персонажа.");
+  }
+  if (value.size > BUILD_CHARACTER_IMAGE_MAX_BYTES) {
+    throw new BuildError(
+      "Изображение персонажа должно быть не больше 8 МБ.",
+    );
+  }
+  if (
+    !(BUILD_CHARACTER_IMAGE_TYPES as readonly string[]).includes(
+      value.type,
+    )
+  ) {
+    throw new BuildError(
+      "Изображение персонажа должно быть в формате PNG, JPG или WEBP.",
+    );
+  }
+
+  return value;
 }
 
 export function validateBuildCharacterSlot(

@@ -2841,6 +2841,28 @@ input:focus-visible {
   border-color: rgba(215, 180, 106, 0.025);
 }
 
+.build-character-card__background {
+  z-index: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.build-character-card--with-image::before {
+  z-index: 1;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(6, 7, 9, 0.74), rgba(6, 7, 9, 0.18) 48%, rgba(6, 7, 9, 0.34)),
+    linear-gradient(0deg, rgba(6, 7, 9, 0.72), transparent 62%);
+}
+
+.build-character-card--with-image::after {
+  display: none;
+}
+
 .build-character-card__mark {
   position: relative;
   z-index: 1;
@@ -2858,6 +2880,21 @@ input:focus-visible {
 .build-character-card > div {
   position: relative;
   z-index: 1;
+}
+
+.build-character-card--with-image .build-character-card__mark,
+.build-character-card--with-image > div {
+  z-index: 2;
+}
+
+.build-character-card--with-image .build-character-card__mark {
+  background: rgba(9, 11, 14, 0.58);
+  box-shadow: 0 0 55px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(7px);
+}
+
+.build-character-card--with-image h2 {
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.88);
 }
 
 .build-character-card small {
@@ -2996,7 +3033,7 @@ input:focus-visible {
 .build-picker-dialog {
   width: min(820px, 100%);
   max-height: min(760px, calc(100svh - 48px));
-  overflow: hidden;
+  overflow: auto;
   border: 1px solid rgba(215, 180, 106, 0.2);
   background:
     linear-gradient(135deg, rgba(215, 180, 106, 0.05), transparent 36%),
@@ -3045,6 +3082,124 @@ input:focus-visible {
   color: var(--gold-soft);
 }
 
+.build-character-admin-form {
+  display: grid;
+  align-items: end;
+  gap: 9px;
+  margin: 16px 18px 0;
+  padding: 13px;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.7fr) auto;
+  border: 1px solid rgba(215, 180, 106, 0.13);
+  background:
+    linear-gradient(115deg, rgba(215, 180, 106, 0.055), transparent 46%),
+    rgba(5, 7, 9, 0.42);
+}
+
+.build-character-admin-form > div {
+  grid-column: 1 / -1;
+}
+
+.build-character-admin-form > div span,
+.build-character-admin-form > div strong {
+  display: block;
+}
+
+.build-character-admin-form > div span {
+  color: var(--gold);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.build-character-admin-form > div strong {
+  margin-top: 4px;
+  color: #ddd5c8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.build-character-admin-form input[type="text"] {
+  width: 100%;
+  height: 40px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  outline: 0;
+  background: #0b0d0f;
+  color: #ddd6ca;
+  font-size: 11px;
+}
+
+.build-character-admin-form input[type="text"]:focus {
+  border-color: rgba(215, 180, 106, 0.3);
+}
+
+.build-character-admin-form__upload {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 40px;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  padding: 0 11px;
+  border: 1px dashed rgba(215, 180, 106, 0.18);
+  color: #858880;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.build-character-admin-form__upload:hover {
+  border-color: rgba(215, 180, 106, 0.34);
+  color: var(--gold-soft);
+}
+
+.build-character-admin-form__upload span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.build-character-admin-form__upload input,
+.build-picker-character__image-action input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.build-character-admin-form > button {
+  display: inline-flex;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 1px solid rgba(215, 180, 106, 0.27);
+  background: rgba(215, 180, 106, 0.09);
+  color: var(--gold-soft);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.build-character-admin-form > button:disabled {
+  cursor: wait;
+  opacity: 0.48;
+}
+
+.build-character-catalog-error {
+  margin: 10px 18px 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(196, 88, 88, 0.18);
+  background: rgba(129, 43, 43, 0.09);
+  color: #d58e8e;
+  font-size: 10px;
+}
+
 .build-picker-search {
   display: grid;
   min-height: 48px;
@@ -3080,7 +3235,7 @@ input:focus-visible {
 
 .build-picker-grid {
   display: grid;
-  max-height: min(520px, calc(100svh - 205px));
+  max-height: min(430px, calc(100svh - 380px));
   gap: 8px;
   padding: 16px 18px 20px;
   overflow-y: auto;
@@ -3090,36 +3245,103 @@ input:focus-visible {
   scrollbar-width: thin;
 }
 
-.build-picker-grid button {
-  display: flex;
-  min-height: 50px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 13px;
+.build-picker-character {
+  position: relative;
+  min-height: 112px;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.055);
   background: rgba(255, 255, 255, 0.018);
-  color: #9b9d97;
-  cursor: pointer;
-  font-size: 11px;
-  text-align: left;
 }
 
-.build-picker-grid button:hover:not(:disabled) {
+.build-picker-character > img {
+  z-index: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.build-picker-character__select {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  min-height: 112px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 42px 13px 12px;
+  border: 0;
+  background: linear-gradient(0deg, rgba(6, 8, 10, 0.92), rgba(6, 8, 10, 0.08) 76%);
+  color: #9b9d97;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.88);
+}
+
+.build-picker-character:hover {
   border-color: rgba(215, 180, 106, 0.2);
-  background: rgba(215, 180, 106, 0.045);
+}
+
+.build-picker-character__select:hover:not(:disabled) {
+  background:
+    linear-gradient(0deg, rgba(6, 8, 10, 0.94), rgba(215, 180, 106, 0.09) 76%);
   color: #ded5c6;
 }
 
-.build-picker-grid button.is-selected {
+.build-picker-character.is-selected {
   border-color: rgba(215, 180, 106, 0.32);
-  background: rgba(215, 180, 106, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(215, 180, 106, 0.08);
+}
+
+.build-picker-character.is-selected .build-picker-character__select {
   color: var(--gold-soft);
 }
 
-.build-picker-grid button:disabled {
+.build-picker-character__select:disabled {
   cursor: wait;
   opacity: 0.58;
+}
+
+.build-picker-character__image-action {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  min-height: 29px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 10, 12, 0.78);
+  color: #c2c3bd;
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(7px);
+}
+
+.build-picker-character__image-action:hover {
+  border-color: rgba(215, 180, 106, 0.34);
+  color: var(--gold-soft);
+}
+
+.build-picker-character__image-action:has(input:disabled) {
+  cursor: wait;
+  opacity: 0.52;
+}
+
+.build-picker-grid__empty {
+  margin: 0;
+  padding: 26px;
+  grid-column: 1 / -1;
+  border: 1px dashed rgba(255, 255, 255, 0.07);
+  color: #747872;
+  font-size: 11px;
+  text-align: center;
 }
 
 .build-skills-section {
@@ -4656,6 +4878,14 @@ input:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .build-character-admin-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .build-character-admin-form__upload {
+    grid-column: 1 / 2;
+  }
+
   .build-skill-editor__fields {
     grid-template-columns: 1fr;
   }
@@ -4705,6 +4935,7 @@ input:focus-visible {
 
   .build-picker-dialog {
     max-height: calc(100svh - 16px);
+    overflow-y: auto;
   }
 
   .build-picker-dialog > header {
@@ -4715,8 +4946,22 @@ input:focus-visible {
     margin: 12px 12px 0;
   }
 
+  .build-character-admin-form {
+    margin: 12px 12px 0;
+    grid-template-columns: 1fr;
+  }
+
+  .build-character-admin-form > div,
+  .build-character-admin-form__upload {
+    grid-column: auto;
+  }
+
+  .build-character-catalog-error {
+    margin: 9px 12px 0;
+  }
+
   .build-picker-grid {
-    max-height: calc(100svh - 173px);
+    max-height: none;
     padding: 12px;
     grid-template-columns: 1fr;
   }

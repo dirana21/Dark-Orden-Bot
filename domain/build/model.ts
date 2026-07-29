@@ -33,9 +33,17 @@ export const buildCharacterClasses = [
   "Сераф",
 ] as const;
 
-export type BuildCharacterClass = (typeof buildCharacterClasses)[number];
+export type BuildCharacterClass = string;
 export type BuildCharacterSlot = "main" | "mirror";
 export type BuildSkillSlotType = "rabam" | "normal";
+
+export interface BuildCharacter {
+  id: string;
+  name: BuildCharacterClass;
+  imageUrl: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
 
 export const buildSkillSlotLimits: Record<BuildSkillSlotType, number> = {
   rabam: 4,

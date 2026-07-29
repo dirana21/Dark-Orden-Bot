@@ -13,6 +13,7 @@ import {
   validateBuildSkillName,
 } from "@/domain/build/validation";
 import { D1BuildSkillRepository } from "@/infrastructure/build/d1-build-skill-repository";
+import { D1BuildCharacterRepository } from "@/infrastructure/build/d1-build-character-repository";
 import { getSkillIconsBucket } from "@/infrastructure/db/d1";
 import {
   CryptoIdGenerator,
@@ -26,6 +27,7 @@ import {
 } from "../../auth/_shared/http";
 
 const skills = new D1BuildSkillRepository();
+const characters = new D1BuildCharacterRepository();
 const ids = new CryptoIdGenerator();
 const clock = new SystemClock();
 
@@ -73,6 +75,9 @@ export async function GET(request: Request) {
     const character = validateBuildCharacter(
       new URL(request.url).searchParams.get("character"),
     );
+    if (!await characters.findByName(user.guildId, character)) {
+      throw new BuildError("Персонаж не найден в каталоге.");
+    }
     return Response.json(
       { skills: await skills.list(user.guildId, user.id, character) },
       { headers: { "Cache-Control": "no-store" } },
@@ -95,6 +100,9 @@ export async function POST(request: Request) {
 
     const form = await request.formData();
     const character = validateBuildCharacter(form.get("character"));
+    if (!await characters.findByName(user.guildId, character)) {
+      throw new BuildError("Персонаж не найден в каталоге.");
+    }
     const slotType = validateBuildSkillSlotType(form.get("slotType"));
     const slotIndex = validateBuildSkillSlotIndex(
       slotType,

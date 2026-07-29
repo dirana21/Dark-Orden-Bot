@@ -1,5 +1,6 @@
 import type {
   BuildCharacterClass,
+  BuildCharacter,
   BuildCharacterSlot,
   BuildProfile,
   BuildSkill,
@@ -14,6 +15,12 @@ interface BuildResponse {
 interface BuildSkillsResponse {
   skills?: BuildSkill[];
   skill?: BuildSkill;
+  error?: string;
+}
+
+interface BuildCharactersResponse {
+  characters?: BuildCharacter[];
+  character?: BuildCharacter;
   error?: string;
 }
 
@@ -55,6 +62,60 @@ export class HttpBuildGateway {
         body: JSON.stringify({ slot, character }),
       }),
     );
+  }
+
+  async listCharacters(signal?: AbortSignal): Promise<BuildCharacter[]> {
+    const response = await fetch("/api/build/characters", {
+      cache: "no-store",
+      signal,
+    });
+    const payload = (await response.json()) as BuildCharactersResponse;
+    if (!response.ok) {
+      throw new Error(
+        payload.error ?? "Не удалось загрузить каталог персонажей.",
+      );
+    }
+    return payload.characters ?? [];
+  }
+
+  async createCharacter(formData: FormData): Promise<BuildCharacter> {
+    const response = await fetch("/api/build/characters", {
+      method: "POST",
+      body: formData,
+    });
+    const payload = (await response.json()) as BuildCharactersResponse;
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Не удалось добавить персонажа.");
+    }
+    if (!payload.character) {
+      throw new Error("Сервер не вернул нового персонажа.");
+    }
+    return payload.character;
+  }
+
+  async updateCharacterImage(
+    id: string,
+    image: File,
+  ): Promise<BuildCharacter> {
+    const formData = new FormData();
+    formData.set("image", image);
+    const response = await fetch(
+      `/api/build/characters?id=${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        body: formData,
+      },
+    );
+    const payload = (await response.json()) as BuildCharactersResponse;
+    if (!response.ok) {
+      throw new Error(
+        payload.error ?? "Не удалось обновить изображение персонажа.",
+      );
+    }
+    if (!payload.character) {
+      throw new Error("Сервер не вернул персонажа.");
+    }
+    return payload.character;
   }
 }
 
