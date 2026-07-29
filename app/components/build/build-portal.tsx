@@ -59,6 +59,11 @@ const SkillDescriptionEditor = dynamic(() =>
     (module) => module.SkillDescriptionEditor,
   ),
 );
+const PlayerBuildPanel = dynamic(() =>
+  import("./player-build-panel").then(
+    (module) => module.PlayerBuildPanel,
+  ),
+);
 
 const gateway = new HttpBuildGateway();
 const skillGateway = new HttpBuildSkillGateway();
@@ -75,6 +80,8 @@ const emptyProfile: BuildProfile = {
 export function BuildPortal() {
   const auth = useAuthController();
   const [character, setCharacter] = useState<BuildCharacterSlot>("main");
+  const [activeBuildView, setActiveBuildView] =
+    useState<"catalog" | "loadout">("catalog");
   const [profile, setProfile] = useState<BuildProfile>(emptyProfile);
   const [characters, setCharacters] = useState<BuildCharacter[]>([]);
   const [initialSigils, setInitialSigils] =
@@ -945,6 +952,30 @@ export function BuildPortal() {
           </aside>
         </section>
 
+        <div className="build-view-tabs" role="tablist" aria-label="Разделы билда">
+          <button
+            className={activeBuildView === "catalog" ? "is-active" : ""}
+            type="button"
+            role="tab"
+            aria-selected={activeBuildView === "catalog"}
+            onClick={() => setActiveBuildView("catalog")}
+          >
+            <BookOpen size={16} />
+            Библиотека навыков
+          </button>
+          <button
+            className={activeBuildView === "loadout" ? "is-active" : ""}
+            type="button"
+            role="tab"
+            aria-selected={activeBuildView === "loadout"}
+            onClick={() => setActiveBuildView("loadout")}
+          >
+            <Sparkles size={16} />
+            Мой билд
+          </button>
+        </div>
+
+        {activeBuildView === "catalog" ? (
         <div className="build-library-layout">
           <div className="build-library-layout__skills">
             {selectedCharacter ? (
@@ -1391,8 +1422,35 @@ export function BuildPortal() {
             canManage={canManageSkills}
             initialSigils={initialSigils ?? undefined}
             paused={isLoading}
+            onSigilsChange={setInitialSigils}
           />
         </div>
+        ) : selectedCharacter ? (
+          <PlayerBuildPanel
+            key={selectedCharacter}
+            character={selectedCharacter}
+            displayName={user.displayName}
+            skills={skills}
+            sigils={initialSigils ?? []}
+            isSkillsLoading={isLoadingSkills}
+          />
+        ) : (
+          <section className="player-build-no-character">
+            <Sparkles size={30} />
+            <h2>Сначала выберите персонажа</h2>
+            <p>
+              Личный билд сохраняется отдельно для основного героя и
+              зеркала.
+            </p>
+            <button
+              type="button"
+              onClick={() => openCharacterPicker(character)}
+            >
+              <Plus size={16} />
+              Выбрать героя
+            </button>
+          </section>
+        )}
       </main>
 
       {selectingSlot ? (

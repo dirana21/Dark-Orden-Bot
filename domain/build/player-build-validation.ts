@@ -1,0 +1,60 @@
+import { BuildError } from "./errors";
+import {
+  PLAYER_BUILD_SLOT_LIMIT,
+  type PlayerBuildSlot,
+} from "./player-build-model";
+
+function validateId(value: unknown, label: string): string {
+  if (
+    typeof value !== "string" ||
+    value.length < 1 ||
+    value.length > 160
+  ) {
+    throw new BuildError(`Не удалось определить ${label}.`);
+  }
+  return value;
+}
+
+export function validatePlayerBuildSlots(
+  value: unknown,
+): PlayerBuildSlot[] {
+  if (!Array.isArray(value) || value.length > PLAYER_BUILD_SLOT_LIMIT) {
+    throw new BuildError(
+      `В личном билде доступно не больше ${PLAYER_BUILD_SLOT_LIMIT} навыков.`,
+    );
+  }
+
+  const slots = value.map((item) => {
+    if (!item || typeof item !== "object") {
+      throw new BuildError("Не удалось прочитать слот личного билда.");
+    }
+    const candidate = item as {
+      skillId?: unknown;
+      sigilIds?: unknown;
+    };
+    if (
+      !Array.isArray(candidate.sigilIds) ||
+      candidate.sigilIds.length > 4
+    ) {
+      throw new BuildError(
+        "Для навыка доступно не больше четырёх сигилов.",
+      );
+    }
+
+    return {
+      skillId: validateId(candidate.skillId, "навык"),
+      sigilIds: candidate.sigilIds.map((sigilId) =>
+        sigilId === null
+          ? null
+          : validateId(sigilId, "сигил"),
+      ),
+    };
+  });
+
+  if (new Set(slots.map((slot) => slot.skillId)).size !== slots.length) {
+    throw new BuildError(
+      "Один навык нельзя добавить в личный билд несколько раз.",
+    );
+  }
+  return slots;
+}

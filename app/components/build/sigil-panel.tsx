@@ -27,12 +27,14 @@ interface SigilPanelProps {
   canManage: boolean;
   initialSigils?: BuildSigil[];
   paused?: boolean;
+  onSigilsChange?: (sigils: BuildSigil[]) => void;
 }
 
 export function SigilPanel({
   canManage,
   initialSigils,
   paused = false,
+  onSigilsChange,
 }: SigilPanelProps) {
   const [sigils, setSigils] = useState<BuildSigil[]>(
     initialSigils ?? [],
@@ -58,6 +60,7 @@ export function SigilPanel({
       .list(controller.signal)
       .then((items) => {
         setSigils(items);
+        onSigilsChange?.(items);
         setError("");
       })
       .catch((caught: unknown) => {
@@ -78,7 +81,7 @@ export function SigilPanel({
       });
 
     return () => controller.abort();
-  }, [initialSigils, paused]);
+  }, [initialSigils, onSigilsChange, paused]);
 
   async function createSigil(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,7 +106,9 @@ export function SigilPanel({
         }),
       );
       const created = await gateway.create(formData);
-      setSigils((current) => [...current, created]);
+      const next = [...sigils, created];
+      setSigils(next);
+      onSigilsChange?.(next);
       formRef.current?.reset();
       setName("");
       setCategory("Безупречное");
@@ -125,9 +130,9 @@ export function SigilPanel({
     setError("");
     try {
       await gateway.delete(id);
-      setSigils((current) =>
-        current.filter((sigil) => sigil.id !== id),
-      );
+      const next = sigils.filter((sigil) => sigil.id !== id);
+      setSigils(next);
+      onSigilsChange?.(next);
     } catch (caught) {
       setError(
         caught instanceof Error

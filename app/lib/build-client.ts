@@ -6,6 +6,10 @@ import type {
   BuildSkill,
 } from "@/domain/build/model";
 import type { BuildSigil } from "@/domain/build/sigil-model";
+import type {
+  PlayerBuildLoadout,
+  PlayerBuildSlot,
+} from "@/domain/build/player-build-model";
 
 interface BuildResponse {
   profile?: BuildProfile;
@@ -37,6 +41,11 @@ interface BuildCharactersResponse {
 interface BuildSigilsResponse {
   sigils?: BuildSigil[];
   sigil?: BuildSigil;
+  error?: string;
+}
+
+interface PlayerBuildResponse {
+  loadout?: PlayerBuildLoadout;
   error?: string;
 }
 
@@ -278,5 +287,48 @@ export class HttpBuildSigilGateway {
     if (!response.ok) {
       throw new Error(payload.error ?? "Не удалось удалить сигил.");
     }
+  }
+}
+
+export class HttpPlayerBuildGateway {
+  async get(
+    character: BuildCharacterClass,
+    signal?: AbortSignal,
+  ): Promise<PlayerBuildLoadout> {
+    const response = await fetch(
+      `/api/build/loadout?character=${encodeURIComponent(character)}`,
+      { cache: "no-store", signal },
+    );
+    const payload = (await response.json()) as PlayerBuildResponse;
+    if (!response.ok) {
+      throw new Error(
+        payload.error ?? "Не удалось загрузить личный билд.",
+      );
+    }
+    if (!payload.loadout) {
+      throw new Error("Сервер не вернул личный билд.");
+    }
+    return payload.loadout;
+  }
+
+  async save(
+    character: BuildCharacterClass,
+    slots: PlayerBuildSlot[],
+  ): Promise<PlayerBuildLoadout> {
+    const response = await fetch("/api/build/loadout", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character, slots }),
+    });
+    const payload = (await response.json()) as PlayerBuildResponse;
+    if (!response.ok) {
+      throw new Error(
+        payload.error ?? "Не удалось сохранить личный билд.",
+      );
+    }
+    if (!payload.loadout) {
+      throw new Error("Сервер не вернул сохранённый билд.");
+    }
+    return payload.loadout;
   }
 }

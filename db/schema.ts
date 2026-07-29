@@ -197,6 +197,22 @@ export const userBuildProfiles = sqliteTable("user_build_profiles", {
   updatedAt: integer("updated_at").notNull(),
 });
 
+export const userBuildLoadouts = sqliteTable(
+  "user_build_loadouts",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    character: text("character").notNull(),
+    slotsJson: text("slots_json").notNull().default("[]"),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.character] }),
+    index("user_build_loadouts_user_idx").on(table.userId),
+  ],
+);
+
 export const buildCharacters = sqliteTable(
   "build_characters",
   {

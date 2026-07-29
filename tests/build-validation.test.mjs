@@ -7,6 +7,8 @@ import {
   normalizeBuildSkillConfigurableSocketTypes,
 } from "../domain/build/model.ts";
 import { canManageBuildSkills } from "../domain/build/permissions.ts";
+import { PLAYER_BUILD_SLOT_LIMIT } from "../domain/build/player-build-model.ts";
+import { validatePlayerBuildSlots } from "../domain/build/player-build-validation.ts";
 import { buildSigilCategories } from "../domain/build/sigil-model.ts";
 import {
   validateBuildSigilCategory,
@@ -181,5 +183,35 @@ test("fixes Category as socket one and removes sockets from skill 17", () => {
       "Сияющие",
     ]),
     [],
+  );
+});
+
+test("validates ten unique skills and up to four sigils in a personal build", () => {
+  assert.equal(PLAYER_BUILD_SLOT_LIMIT, 10);
+  const slots = Array.from({ length: PLAYER_BUILD_SLOT_LIMIT }, (_, index) => ({
+    skillId: `skill-${index + 1}`,
+    sigilIds: [null, `sigil-${index + 1}`],
+  }));
+
+  assert.deepEqual(validatePlayerBuildSlots(slots), slots);
+  assert.throws(() =>
+    validatePlayerBuildSlots([
+      { skillId: "skill-1", sigilIds: [] },
+      { skillId: "skill-1", sigilIds: [] },
+    ]),
+  );
+  assert.throws(() =>
+    validatePlayerBuildSlots([
+      {
+        skillId: "skill-1",
+        sigilIds: ["one", "two", "three", "four", "five"],
+      },
+    ]),
+  );
+  assert.throws(() =>
+    validatePlayerBuildSlots([
+      ...slots,
+      { skillId: "skill-11", sigilIds: [] },
+    ]),
   );
 });
