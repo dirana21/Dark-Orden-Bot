@@ -42,6 +42,49 @@ export const buildSkillSlotLimits: Record<BuildSkillSlotType, number> = {
   normal: 13,
 };
 
+export const fixedBuildSkillSocketCategory: BuildSigilCategory =
+  "Категория";
+
+export function isSocketlessBuildSkillSlot(
+  slotType: BuildSkillSlotType,
+  slotIndex: number,
+): boolean {
+  return slotType === "normal" && slotIndex === buildSkillSlotLimits.normal;
+}
+
+export function normalizeBuildSkillConfigurableSocketTypes(
+  slotType: BuildSkillSlotType,
+  slotIndex: number,
+  socketTypes: readonly BuildSigilCategory[],
+): BuildSigilCategory[] {
+  if (isSocketlessBuildSkillSlot(slotType, slotIndex)) {
+    return [];
+  }
+
+  return socketTypes
+    .filter((socketType) => socketType !== fixedBuildSkillSocketCategory)
+    .slice(0, 3);
+}
+
+export function getBuildSkillSocketTypes(
+  slotType: BuildSkillSlotType,
+  slotIndex: number,
+  configurableSocketTypes: readonly BuildSigilCategory[],
+): BuildSigilCategory[] {
+  if (isSocketlessBuildSkillSlot(slotType, slotIndex)) {
+    return [];
+  }
+
+  return [
+    fixedBuildSkillSocketCategory,
+    ...normalizeBuildSkillConfigurableSocketTypes(
+      slotType,
+      slotIndex,
+      configurableSocketTypes,
+    ),
+  ];
+}
+
 export interface BuildProfile {
   mainCharacter: BuildCharacterClass | null;
   mirrorCharacter: BuildCharacterClass | null;

@@ -1,6 +1,7 @@
 import { AuthError } from "@/domain/auth/errors";
 import { BuildError } from "@/domain/build/errors";
 import { canManageBuildSkills } from "@/domain/build/permissions";
+import { normalizeBuildSkillConfigurableSocketTypes } from "@/domain/build/model";
 import {
   sanitizeBuildSkillDescription,
   validateBuildCharacter,
@@ -99,8 +100,10 @@ export async function POST(request: Request) {
       slotType,
       form.get("slotIndex"),
     );
-    const socketTypes = validateBuildSkillSocketTypes(
-      form.get("socketTypes"),
+    const socketTypes = normalizeBuildSkillConfigurableSocketTypes(
+      slotType,
+      slotIndex,
+      validateBuildSkillSocketTypes(form.get("socketTypes")),
     );
     if (
       await skills.getBySlot(
@@ -193,8 +196,10 @@ export async function PATCH(request: Request) {
     const comboAvailable = validateBuildSkillComboAvailable(
       form.get("comboAvailable"),
     );
-    const socketTypes = validateBuildSkillSocketTypes(
-      form.get("socketTypes"),
+    const socketTypes = normalizeBuildSkillConfigurableSocketTypes(
+      current.slotType,
+      current.slotIndex,
+      validateBuildSkillSocketTypes(form.get("socketTypes")),
     );
     const iconEntry = form.get("icon");
     const icon =

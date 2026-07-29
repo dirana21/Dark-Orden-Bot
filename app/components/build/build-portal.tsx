@@ -34,6 +34,7 @@ import { guildRoleLabels } from "@/app/lib/role-labels";
 import {
   buildCharacterClasses,
   buildSkillSlotLimits,
+  isSocketlessBuildSkillSlot,
   type BuildCharacterClass,
   type BuildCharacterSlot,
   type BuildProfile,
@@ -52,6 +53,9 @@ import { SigilSocketIcon } from "./sigil-socket-icon";
 
 const gateway = new HttpBuildGateway();
 const skillGateway = new HttpBuildSkillGateway();
+const configurableBuildSigilCategories = buildSigilCategories.filter(
+  (category) => category !== "Категория",
+);
 
 const emptyProfile: BuildProfile = {
   mainCharacter: null,
@@ -279,9 +283,9 @@ export function BuildPortal() {
     setSkillIcon(null);
     setComboAvailable(skill.comboAvailable);
     setSkillSocketTypes([
-      skill.socketTypes[0] ?? "",
       skill.socketTypes[1] ?? "",
       skill.socketTypes[2] ?? "",
+      skill.socketTypes[3] ?? "",
     ]);
     setSkillError("");
     setEditorKey((current) => current + 1);
@@ -542,12 +546,23 @@ export function BuildPortal() {
                   className="build-skill-card__sockets"
                   aria-label="Сокеты сигилов"
                 >
-                  {skill.socketTypes.map((socketType, index) => (
-                    <SigilSocketIcon
-                      category={socketType}
-                      key={`${socketType}-${index}`}
-                    />
-                  ))}
+                  {Array.from({ length: 4 }, (_, index) => {
+                    const socketType = skill.socketTypes[index];
+                    return socketType ? (
+                      <SigilSocketIcon
+                        category={socketType}
+                        key={`${socketType}-${index}`}
+                      />
+                    ) : (
+                      <span
+                        className="build-sigil-socket-icon is-empty"
+                        aria-hidden="true"
+                        key={`empty-${index}`}
+                      >
+                        <span />
+                      </span>
+                    );
+                  })}
                 </div>
               ) : null}
             </div>
@@ -929,53 +944,80 @@ export function BuildPortal() {
                   </div>
                 </fieldset>
 
-                <fieldset className="build-skill-socket-editor">
-                  <legend>Сокеты сигилов</legend>
-                  <p>
-                    Выберите до трёх типов сокетов. В каждый сокет позже
-                    можно будет вставить только сигил той же категории.
-                  </p>
-                  <div>
-                    {skillSocketTypes.map((socketType, index) => (
-                      <label key={index}>
-                        <span>
-                          {socketType ? (
-                            <SigilSocketIcon
-                              category={socketType}
-                              size="large"
-                            />
-                          ) : (
-                            <span
-                              className="build-sigil-socket-icon build-sigil-socket-icon--large is-empty"
-                              aria-hidden="true"
-                            >
-                              <span />
-                            </span>
-                          )}
-                        </span>
-                        <strong>Сокет {index + 1}</strong>
-                        <select
-                          value={socketType}
-                          disabled={isCreatingSkill}
-                          onChange={(event) => {
-                            const next = [...skillSocketTypes];
-                            next[index] = event.target.value as
-                              | BuildSigilCategory
-                              | "";
-                            setSkillSocketTypes(next);
-                          }}
-                        >
-                          <option value="">Пусто</option>
-                          {buildSigilCategories.map((item) => (
-                            <option key={item} value={item}>
-                              {item}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ))}
+                {isSocketlessBuildSkillSlot(
+                  editingSlot.type,
+                  editingSlot.index,
+                ) ? (
+                  <div className="build-skill-socketless-note">
+                    <strong>Навык 17 — без сокетов</strong>
+                    <p>
+                      Для последнего обычного навыка сокеты сигилов не
+                      добавляются.
+                    </p>
                   </div>
-                </fieldset>
+                ) : (
+                  <fieldset className="build-skill-socket-editor">
+                    <legend>Сокеты сигилов</legend>
+                    <p>
+                      Первый сокет всегда «Категория». Выберите типы ещё
+                      для трёх сокетов.
+                    </p>
+                    <div>
+                      <div className="build-skill-socket-editor__fixed">
+                        <span className="build-skill-socket-editor__icon">
+                          <SigilSocketIcon
+                            category="Категория"
+                            size="large"
+                          />
+                        </span>
+                        <strong>Сокет 1</strong>
+                        <span className="build-skill-socket-editor__fixed-value">
+                          Категория · всегда
+                        </span>
+                      </div>
+                      {skillSocketTypes.map((socketType, index) => (
+                        <label key={index}>
+                          <span>
+                            {socketType ? (
+                              <SigilSocketIcon
+                                category={socketType}
+                                size="large"
+                              />
+                            ) : (
+                              <span
+                                className="build-sigil-socket-icon build-sigil-socket-icon--large is-empty"
+                                aria-hidden="true"
+                              >
+                                <span />
+                              </span>
+                            )}
+                          </span>
+                          <strong>Сокет {index + 2}</strong>
+                          <select
+                            value={socketType}
+                            disabled={isCreatingSkill}
+                            onChange={(event) => {
+                              const next = [...skillSocketTypes];
+                              next[index] = event.target.value as
+                                | BuildSigilCategory
+                                | "";
+                              setSkillSocketTypes(next);
+                            }}
+                          >
+                            <option value="">Пусто</option>
+                            {configurableBuildSigilCategories.map(
+                              (item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
 
                 <footer>
                   <p>

@@ -1,7 +1,8 @@
-import type {
-  BuildCharacterClass,
-  BuildSkill,
-  BuildSkillSlotType,
+import {
+  getBuildSkillSocketTypes,
+  type BuildCharacterClass,
+  type BuildSkill,
+  type BuildSkillSlotType,
 } from "@/domain/build/model";
 import { getD1 } from "@/infrastructure/db/d1";
 import { ensureBuildSkillsSchema } from "@/infrastructure/db/ensure-build-skills-schema";
@@ -32,12 +33,12 @@ export interface StoredBuildSkill extends BuildSkill {
 }
 
 function mapSkill(row: BuildSkillRow): StoredBuildSkill {
-  let socketTypes: BuildSigilCategory[] = [];
+  let configurableSocketTypes: BuildSigilCategory[] = [];
   try {
     const parsed = JSON.parse(row.socket_types) as unknown;
     if (Array.isArray(parsed)) {
       const allowed = buildSigilCategories as readonly string[];
-      socketTypes = parsed
+      configurableSocketTypes = parsed
         .filter(
           (item): item is BuildSigilCategory =>
             typeof item === "string" && allowed.includes(item),
@@ -45,7 +46,7 @@ function mapSkill(row: BuildSkillRow): StoredBuildSkill {
         .slice(0, 3);
     }
   } catch {
-    socketTypes = [];
+    configurableSocketTypes = [];
   }
 
   return {
@@ -53,7 +54,11 @@ function mapSkill(row: BuildSkillRow): StoredBuildSkill {
     character: row.character,
     slotType: row.slot_type,
     slotIndex: row.slot_index,
-    socketTypes,
+    socketTypes: getBuildSkillSocketTypes(
+      row.slot_type,
+      row.slot_index,
+      configurableSocketTypes,
+    ),
     name: row.name,
     descriptionHtml: row.description_html,
     iconUrl: `/api/build/skill-icon?id=${encodeURIComponent(row.id)}&v=${row.updated_at}`,

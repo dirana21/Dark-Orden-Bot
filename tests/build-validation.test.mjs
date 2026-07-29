@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildCharacterClasses } from "../domain/build/model.ts";
+import {
+  buildCharacterClasses,
+  getBuildSkillSocketTypes,
+  isSocketlessBuildSkillSlot,
+  normalizeBuildSkillConfigurableSocketTypes,
+} from "../domain/build/model.ts";
 import { canManageBuildSkills } from "../domain/build/permissions.ts";
 import { buildSigilCategories } from "../domain/build/sigil-model.ts";
 import {
@@ -140,5 +145,36 @@ test("validates up to three socket specifications per skill", () => {
   );
   assert.throws(() =>
     validateBuildSkillSocketTypes(JSON.stringify(["Неизвестное"])),
+  );
+});
+
+test("fixes Category as socket one and removes sockets from skill 17", () => {
+  assert.deepEqual(getBuildSkillSocketTypes("rabam", 1, []), [
+    "Категория",
+  ]);
+  assert.deepEqual(
+    getBuildSkillSocketTypes("normal", 12, [
+      "Категория",
+      "Защита",
+      "Сияющие",
+    ]),
+    ["Категория", "Защита", "Сияющие"],
+  );
+  assert.deepEqual(
+    normalizeBuildSkillConfigurableSocketTypes("normal", 4, [
+      "Категория",
+      "Светлое",
+      "Тусклое",
+    ]),
+    ["Светлое", "Тусклое"],
+  );
+  assert.equal(isSocketlessBuildSkillSlot("normal", 13), true);
+  assert.equal(isSocketlessBuildSkillSlot("rabam", 4), false);
+  assert.deepEqual(
+    getBuildSkillSocketTypes("normal", 13, [
+      "Защита",
+      "Сияющие",
+    ]),
+    [],
   );
 });
