@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { HttpBuildSigilGateway } from "@/app/lib/build-client";
+import { optimizeImageUpload } from "@/app/lib/image-upload";
 import {
   buildSigilCategories,
   type BuildSigil,
@@ -24,11 +25,19 @@ const gateway = new HttpBuildSigilGateway();
 
 interface SigilPanelProps {
   canManage: boolean;
+  initialSigils?: BuildSigil[];
+  paused?: boolean;
 }
 
-export function SigilPanel({ canManage }: SigilPanelProps) {
-  const [sigils, setSigils] = useState<BuildSigil[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function SigilPanel({
+  canManage,
+  initialSigils,
+  paused = false,
+}: SigilPanelProps) {
+  const [sigils, setSigils] = useState<BuildSigil[]>(
+    initialSigils ?? [],
+  );
+  const [isLoading, setIsLoading] = useState(!initialSigils);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -40,6 +49,10 @@ export function SigilPanel({ canManage }: SigilPanelProps) {
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
+    if (paused || initialSigils) {
+      return;
+    }
+
     const controller = new AbortController();
     gateway
       .list(controller.signal)
@@ -65,7 +78,7 @@ export function SigilPanel({ canManage }: SigilPanelProps) {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [initialSigils, paused]);
 
   async function createSigil(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,7 +94,14 @@ export function SigilPanel({ canManage }: SigilPanelProps) {
       formData.set("name", name);
       formData.set("category", category);
       formData.set("description", description);
-      formData.set("icon", icon);
+      formData.set(
+        "icon",
+        await optimizeImageUpload(icon, {
+          maxWidth: 256,
+          maxHeight: 256,
+          quality: 0.9,
+        }),
+      );
       const created = await gateway.create(formData);
       setSigils((current) => [...current, created]);
       formRef.current?.reset();

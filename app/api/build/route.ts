@@ -6,6 +6,8 @@ import {
 } from "@/domain/build/validation";
 import { D1BuildRepository } from "@/infrastructure/build/d1-build-repository";
 import { D1BuildCharacterRepository } from "@/infrastructure/build/d1-build-character-repository";
+import { D1BuildSigilRepository } from "@/infrastructure/build/d1-build-sigil-repository";
+import { D1BuildSkillRepository } from "@/infrastructure/build/d1-build-skill-repository";
 import { SystemClock } from "@/infrastructure/system/system-services";
 import { authUseCases } from "../auth/_shared/dependencies";
 import {
@@ -16,6 +18,8 @@ import {
 
 const builds = new D1BuildRepository();
 const characters = new D1BuildCharacterRepository();
+const sigils = new D1BuildSigilRepository();
+const skills = new D1BuildSkillRepository();
 const clock = new SystemClock();
 
 async function requireSessionUser(request: Request) {
@@ -44,8 +48,25 @@ export async function GET(request: Request) {
   try {
     const user = await requireSessionUser(request);
     const profile = await builds.get(user.id);
+    const [characterCatalog, sigilCatalog, skillCatalog] =
+      await Promise.all([
+        characters.list(user.guildId),
+        sigils.list(user.guildId),
+        profile.mainCharacter
+          ? skills.list(
+              user.guildId,
+              user.id,
+              profile.mainCharacter,
+            )
+          : Promise.resolve([]),
+      ]);
     return Response.json(
-      { profile },
+      {
+        profile,
+        characters: characterCatalog,
+        sigils: sigilCatalog,
+        skills: skillCatalog,
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

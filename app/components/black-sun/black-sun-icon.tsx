@@ -11,7 +11,7 @@ export function BlackSunIcon({ size = 18 }: { size?: number }) {
       <span className="black-sun-symbol__aura" />
       <Image
         className="black-sun-symbol__image"
-        src="/black-sun-icon.png"
+        src="/black-sun-icon.webp"
         width={size}
         height={size}
         alt=""

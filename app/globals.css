@@ -130,7 +130,7 @@ input:focus-visible {
   justify-content: space-between;
   overflow: hidden;
   padding: 42px 54px 34px;
-  background-image: url("/og.png");
+  background-image: url("/og.webp");
   background-position: 88% center;
   background-size: cover;
   isolation: isolate;
@@ -1603,7 +1603,7 @@ input:focus-visible {
   border: 1px solid rgba(215, 180, 106, 0.18);
   background:
     linear-gradient(90deg, rgba(11, 13, 15, 0.97), rgba(11, 13, 15, 0.54)),
-    url("/og.png") 28% 42% / cover;
+    url("/og.webp") 28% 42% / cover;
 }
 
 .welcome-banner::after {

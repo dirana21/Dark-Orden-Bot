@@ -9,7 +9,17 @@ import type { BuildSigil } from "@/domain/build/sigil-model";
 
 interface BuildResponse {
   profile?: BuildProfile;
+  characters?: BuildCharacter[];
+  skills?: BuildSkill[];
+  sigils?: BuildSigil[];
   error?: string;
+}
+
+export interface BuildBootstrap {
+  profile: BuildProfile;
+  characters: BuildCharacter[];
+  skills: BuildSkill[];
+  sigils: BuildSigil[];
 }
 
 interface BuildSkillsResponse {
@@ -41,9 +51,36 @@ async function parse(response: Response): Promise<BuildProfile> {
   return payload.profile;
 }
 
+async function parseBootstrap(
+  response: Response,
+): Promise<BuildBootstrap> {
+  const payload = (await response.json()) as BuildResponse;
+  if (!response.ok) {
+    throw new Error(payload.error ?? "Не удалось загрузить билд.");
+  }
+  if (!payload.profile) {
+    throw new Error("Сервер не вернул профиль билда.");
+  }
+  return {
+    profile: payload.profile,
+    characters: payload.characters ?? [],
+    skills: payload.skills ?? [],
+    sigils: payload.sigils ?? [],
+  };
+}
+
 export class HttpBuildGateway {
   async get(signal?: AbortSignal): Promise<BuildProfile> {
     return parse(
+      await fetch("/api/build", {
+        cache: "no-store",
+        signal,
+      }),
+    );
+  }
+
+  async getBootstrap(signal?: AbortSignal): Promise<BuildBootstrap> {
+    return parseBootstrap(
       await fetch("/api/build", {
         cache: "no-store",
         signal,

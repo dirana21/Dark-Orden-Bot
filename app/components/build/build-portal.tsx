@@ -9,6 +9,7 @@ import {
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   BookOpen,
@@ -30,6 +31,7 @@ import {
   HttpBuildGateway,
   HttpBuildSkillGateway,
 } from "@/app/lib/build-client";
+import { optimizeImageUpload } from "@/app/lib/image-upload";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import {
   buildSkillSlotLimits,
@@ -44,13 +46,19 @@ import {
 import { canManageBuildSkills } from "@/domain/build/permissions";
 import {
   buildSigilCategories,
+  type BuildSigil,
   type BuildSigilCategory,
 } from "@/domain/build/sigil-model";
 import { BrandMark } from "../brand-mark";
 import { MobileSiteNav } from "../mobile-site-nav";
-import { SkillDescriptionEditor } from "./skill-description-editor";
 import { SigilPanel } from "./sigil-panel";
 import { SigilSocketIcon } from "./sigil-socket-icon";
+
+const SkillDescriptionEditor = dynamic(() =>
+  import("./skill-description-editor").then(
+    (module) => module.SkillDescriptionEditor,
+  ),
+);
 
 const gateway = new HttpBuildGateway();
 const skillGateway = new HttpBuildSkillGateway();
@@ -69,6 +77,8 @@ export function BuildPortal() {
   const [character, setCharacter] = useState<BuildCharacterSlot>("main");
   const [profile, setProfile] = useState<BuildProfile>(emptyProfile);
   const [characters, setCharacters] = useState<BuildCharacter[]>([]);
+  const [initialSigils, setInitialSigils] =
+    useState<BuildSigil[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [savingSlot, setSavingSlot] =
     useState<BuildCharacterSlot | null>(null);
@@ -77,6 +87,8 @@ export function BuildPortal() {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [skills, setSkills] = useState<BuildSkill[]>([]);
+  const [skillsCharacter, setSkillsCharacter] =
+    useState<BuildCharacterClass | null>(null);
   const [isLoadingSkills, setIsLoadingSkills] = useState(false);
   const [skillError, setSkillError] = useState("");
   const [skillName, setSkillName] = useState("");
@@ -126,13 +138,14 @@ export function BuildPortal() {
     }
 
     const controller = new AbortController();
-    Promise.all([
-      gateway.get(controller.signal),
-      gateway.listCharacters(controller.signal),
-    ])
-      .then(([nextProfile, nextCharacters]) => {
-        setProfile(nextProfile);
-        setCharacters(nextCharacters);
+    gateway
+      .getBootstrap(controller.signal)
+      .then((bootstrap) => {
+        setProfile(bootstrap.profile);
+        setCharacters(bootstrap.characters);
+        setSkills(bootstrap.skills);
+        setSkillsCharacter(bootstrap.profile.mainCharacter);
+        setInitialSigils(bootstrap.sigils);
         setError("");
       })
       .catch((caught: unknown) => {
@@ -172,7 +185,11 @@ export function BuildPortal() {
   }, [savingSlot, selectingSlot]);
 
   useEffect(() => {
-    if (!auth.user || !selectedCharacter) {
+    if (
+      !auth.user ||
+      !selectedCharacter ||
+      selectedCharacter === skillsCharacter
+    ) {
       return;
     }
 
@@ -185,7 +202,10 @@ export function BuildPortal() {
     });
     skillGateway
       .list(selectedCharacter, controller.signal)
-      .then(setSkills)
+      .then((nextSkills) => {
+        setSkills(nextSkills);
+        setSkillsCharacter(selectedCharacter);
+      })
       .catch((caught: unknown) => {
         if (
           !(caught instanceof DOMException && caught.name === "AbortError")
@@ -204,7 +224,7 @@ export function BuildPortal() {
       });
 
     return () => controller.abort();
-  }, [auth.user, selectedCharacter]);
+  }, [auth.user, selectedCharacter, skillsCharacter]);
 
   const filteredClasses = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("ru");
@@ -286,7 +306,14 @@ export function BuildPortal() {
       const formData = new FormData();
       formData.set("name", newCharacterName);
       if (newCharacterImage) {
-        formData.set("image", newCharacterImage);
+        formData.set(
+          "image",
+          await optimizeImageUpload(newCharacterImage, {
+            maxWidth: 1920,
+            maxHeight: 1080,
+            quality: 0.86,
+          }),
+        );
       }
       const created = await gateway.createCharacter(formData);
       setCharacters((current) => [...current, created]);
@@ -313,7 +340,11 @@ export function BuildPortal() {
     try {
       const updated = await gateway.updateCharacterImage(
         characterId,
-        image,
+        await optimizeImageUpload(image, {
+          maxWidth: 1920,
+          maxHeight: 1080,
+          quality: 0.86,
+        }),
       );
       setCharacters((current) =>
         current.map((entry) =>
@@ -432,7 +463,14 @@ export function BuildPortal() {
         JSON.stringify(skillSocketTypes.filter(Boolean)),
       );
       if (skillIcon) {
-        formData.set("icon", skillIcon);
+        formData.set(
+          "icon",
+          await optimizeImageUpload(skillIcon, {
+            maxWidth: 256,
+            maxHeight: 256,
+            quality: 0.9,
+          }),
+        );
       }
 
       if (editingSkill) {
@@ -690,7 +728,7 @@ export function BuildPortal() {
           >
             <Image
               src={
-                skill.comboEnabled ? "/combo-on.png" : "/combo-off.png"
+                skill.comboEnabled ? "/combo-on.webp" : "/combo-off.webp"
               }
               alt=""
               width={256}
@@ -837,6 +875,7 @@ export function BuildPortal() {
                 src={selectedCharacterEntry.imageUrl}
                 alt=""
                 fill
+                priority
                 sizes="(max-width: 800px) 100vw, 900px"
                 unoptimized
               />
@@ -1304,8 +1343,8 @@ export function BuildPortal() {
                         <Image
                           src={
                             skill.comboEnabled
-                              ? "/combo-on.png"
-                              : "/combo-off.png"
+                              ? "/combo-on.webp"
+                              : "/combo-off.webp"
                           }
                           alt=""
                           width={256}
@@ -1351,7 +1390,12 @@ export function BuildPortal() {
             ) : null}
           </div>
 
-          <SigilPanel canManage={canManageSkills} />
+          <SigilPanel
+            key={isLoading ? "sigils-pending" : "sigils-ready"}
+            canManage={canManageSkills}
+            initialSigils={initialSigils ?? undefined}
+            paused={isLoading}
+          />
         </div>
       </main>
 

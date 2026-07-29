@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   CalendarDays,
   ChevronRight,
@@ -20,9 +21,14 @@ import { BlackSunIcon } from "../black-sun/black-sun-icon";
 import { BrandMark } from "../brand-mark";
 import { MobileSiteNav } from "../mobile-site-nav";
 import { PlannerNotifications } from "../notifications/planner-notifications";
-import { ProfileEditor } from "../profile/profile-editor";
 import { WeeklyPlanner } from "../planner/weekly-planner";
 import { VengefulSoulsIcon } from "../vengeful-souls/vengeful-souls-icon";
+
+const ProfileEditor = dynamic(() =>
+  import("../profile/profile-editor").then(
+    (module) => module.ProfileEditor,
+  ),
+);
 
 interface GuildDashboardProps {
   user: AuthUser;

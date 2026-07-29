@@ -2,7 +2,7 @@
 
 ## [Открыть приложение](https://dark-orden-guild-hub.rkvvx28vrb.chatgpt.site)
 
-[![Dark Orden Guild Command Center](public/og-recurring.png)](https://dark-orden-guild-hub.rkvvx28vrb.chatgpt.site)
+[![Dark Orden Guild Command Center](public/og-recurring.jpg)](https://dark-orden-guild-hub.rkvvx28vrb.chatgpt.site)
 
 **Dark Orden Guild Command Center** — личный кабинет участника гильдии Dark Orden в Black Desert Mobile.
 

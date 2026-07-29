@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     return new Response(object.body, {
       headers: {
         "Content-Type": character.imageContentType,
-        "Cache-Control": "private, max-age=3600",
+        "Cache-Control": "private, max-age=31536000, immutable",
         "Content-Length": String(object.size),
         "X-Content-Type-Options": "nosniff",
       },

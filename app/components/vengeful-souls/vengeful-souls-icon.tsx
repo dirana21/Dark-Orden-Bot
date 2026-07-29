@@ -11,7 +11,7 @@ export function VengefulSoulsIcon({ size = 18 }: { size?: number }) {
       <span className="vengeful-souls-symbol__aura" />
       <Image
         className="vengeful-souls-symbol__image"
-        src="/vengeful-souls-icon.png"
+        src="/vengeful-souls-icon.webp"
         width={size}
         height={size}
         alt=""
