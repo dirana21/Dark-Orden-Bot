@@ -1,32 +1,43 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
+  BookOpen,
   Check,
   Copy,
+  ImagePlus,
   LogOut,
   PencilLine,
   Plus,
   Search,
   Shield,
+  Sparkles,
+  Trash2,
   UserRound,
   X,
 } from "lucide-react";
 import { useAuthController } from "@/app/hooks/use-auth-controller";
-import { HttpBuildGateway } from "@/app/lib/build-client";
+import {
+  HttpBuildGateway,
+  HttpBuildSkillGateway,
+} from "@/app/lib/build-client";
 import { guildRoleLabels } from "@/app/lib/role-labels";
 import {
   buildCharacterClasses,
   type BuildCharacterClass,
   type BuildCharacterSlot,
   type BuildProfile,
+  type BuildSkill,
 } from "@/domain/build/model";
+import { canManageBuildSkills } from "@/domain/build/permissions";
 import { BrandMark } from "../brand-mark";
+import { SkillDescriptionEditor } from "./skill-description-editor";
 
 const gateway = new HttpBuildGateway();
+const skillGateway = new HttpBuildSkillGateway();
 
 const emptyProfile: BuildProfile = {
   mainCharacter: null,
@@ -45,6 +56,17 @@ export function BuildPortal() {
     useState<BuildCharacterSlot | null>(null);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [skills, setSkills] = useState<BuildSkill[]>([]);
+  const [isLoadingSkills, setIsLoadingSkills] = useState(false);
+  const [skillError, setSkillError] = useState("");
+  const [skillName, setSkillName] = useState("");
+  const [skillDescription, setSkillDescription] = useState("");
+  const [skillIcon, setSkillIcon] = useState<File | null>(null);
+  const [editorKey, setEditorKey] = useState(0);
+  const [isCreatingSkill, setIsCreatingSkill] = useState(false);
+  const [deletingSkillId, setDeletingSkillId] = useState<string | null>(null);
+  const selectedCharacter =
+    character === "main" ? profile.mainCharacter : profile.mirrorCharacter;
 
   useEffect(() => {
     if (!auth.isBooting && !auth.user) {
@@ -58,7 +80,6 @@ export function BuildPortal() {
     }
 
     const controller = new AbortController();
-    setIsLoading(true);
     gateway
       .get(controller.signal)
       .then((nextProfile) => {
@@ -100,6 +121,41 @@ export function BuildPortal() {
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [savingSlot, selectingSlot]);
 
+  useEffect(() => {
+    if (!auth.user || !selectedCharacter) {
+      return;
+    }
+
+    const controller = new AbortController();
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) {
+        setIsLoadingSkills(true);
+        setSkillError("");
+      }
+    });
+    skillGateway
+      .list(selectedCharacter, controller.signal)
+      .then(setSkills)
+      .catch((caught: unknown) => {
+        if (
+          !(caught instanceof DOMException && caught.name === "AbortError")
+        ) {
+          setSkillError(
+            caught instanceof Error
+              ? caught.message
+              : "Не удалось загрузить умения.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoadingSkills(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [auth.user, selectedCharacter]);
+
   const filteredClasses = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("ru");
     return query
@@ -125,9 +181,7 @@ export function BuildPortal() {
 
   const user = auth.user;
   const isMain = character === "main";
-  const selectedCharacter = isMain
-    ? profile.mainCharacter
-    : profile.mirrorCharacter;
+  const canManageSkills = canManageBuildSkills(user.role);
 
   function openCharacterPicker(slot: BuildCharacterSlot) {
     setCharacter(slot);
@@ -155,6 +209,56 @@ export function BuildPortal() {
       );
     } finally {
       setSavingSlot(null);
+    }
+  }
+
+  async function createSkill(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedCharacter || !skillIcon) {
+      setSkillError("Заполните название, описание и добавьте иконку умения.");
+      return;
+    }
+
+    setIsCreatingSkill(true);
+    setSkillError("");
+    try {
+      const formData = new FormData();
+      formData.set("character", selectedCharacter);
+      formData.set("name", skillName);
+      formData.set("descriptionHtml", skillDescription);
+      formData.set("icon", skillIcon);
+      const created = await skillGateway.create(formData);
+      setSkills((current) => [...current, created]);
+      setSkillName("");
+      setSkillDescription("");
+      setSkillIcon(null);
+      setEditorKey((current) => current + 1);
+      event.currentTarget.reset();
+    } catch (caught) {
+      setSkillError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось добавить умение.",
+      );
+    } finally {
+      setIsCreatingSkill(false);
+    }
+  }
+
+  async function deleteSkill(id: string) {
+    setDeletingSkillId(id);
+    setSkillError("");
+    try {
+      await skillGateway.delete(id);
+      setSkills((current) => current.filter((skill) => skill.id !== id));
+    } catch (caught) {
+      setSkillError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось удалить умение.",
+      );
+    } finally {
+      setDeletingSkillId(null);
     }
   }
 
@@ -305,6 +409,173 @@ export function BuildPortal() {
             ) : null}
           </aside>
         </section>
+
+        {selectedCharacter ? (
+          <section
+            className="build-skills-section"
+            aria-labelledby="build-skills-title"
+          >
+            <header className="build-skills-heading">
+              <div>
+                <span className="section-kicker">
+                  <BookOpen size={15} /> Библиотека класса
+                </span>
+                <h2 id="build-skills-title">Умения: {selectedCharacter}</h2>
+                <p>
+                  Общие умения видны всем участникам гильдии, выбравшим этого
+                  героя.
+                </p>
+              </div>
+              <span>{skills.length} умений</span>
+            </header>
+
+            {canManageSkills ? (
+              <form
+                className="build-skill-editor"
+                onSubmit={(event) => void createSkill(event)}
+              >
+                <div className="build-skill-editor__heading">
+                  <span>
+                    <Sparkles size={17} />
+                  </span>
+                  <div>
+                    <small>Только для администраторов</small>
+                    <h3>Редактор умений</h3>
+                  </div>
+                </div>
+
+                <div className="build-skill-editor__fields">
+                  <label className="build-skill-name-field">
+                    <span>Название умения</span>
+                    <input
+                      type="text"
+                      value={skillName}
+                      maxLength={80}
+                      required
+                      disabled={isCreatingSkill}
+                      placeholder="Например: Ур. 13 Волна тьмы"
+                      onChange={(event) => setSkillName(event.target.value)}
+                    />
+                  </label>
+
+                  <label className="build-skill-icon-field">
+                    <span className="build-skill-icon-field__mark">
+                      <ImagePlus size={19} />
+                    </span>
+                    <span>
+                      <strong>
+                        {skillIcon ? skillIcon.name : "Добавить иконку умения"}
+                      </strong>
+                      <small>PNG, JPG или WEBP · до 2 МБ</small>
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      required
+                      disabled={isCreatingSkill}
+                      onChange={(event) =>
+                        setSkillIcon(event.target.files?.[0] ?? null)
+                      }
+                    />
+                  </label>
+                </div>
+
+                <div className="build-skill-description-field">
+                  <span>Описание умения</span>
+                  <SkillDescriptionEditor
+                    key={editorKey}
+                    value={skillDescription}
+                    disabled={isCreatingSkill}
+                    onChange={setSkillDescription}
+                  />
+                </div>
+
+                <footer>
+                  <p>
+                    Выделите нужный участок текста, затем выберите цвет или
+                    формат. Списки создаются отдельными кнопками.
+                  </p>
+                  <button
+                    type="submit"
+                    disabled={
+                      isCreatingSkill ||
+                      !skillIcon ||
+                      !skillName.trim() ||
+                      !skillDescription.trim()
+                    }
+                  >
+                    <Plus size={16} />
+                    {isCreatingSkill ? "Сохраняем…" : "Добавить для всех"}
+                  </button>
+                </footer>
+              </form>
+            ) : null}
+
+            {skillError ? (
+              <p className="build-page-error" role="alert">
+                {skillError}
+              </p>
+            ) : null}
+
+            <div
+              className="build-skill-catalog"
+              aria-live="polite"
+              aria-busy={isLoadingSkills}
+            >
+              {isLoadingSkills ? (
+                <div className="build-skill-empty">
+                  <span className="boot-screen__spinner" />
+                  <p>Загружаем умения класса…</p>
+                </div>
+              ) : skills.length === 0 ? (
+                <div className="build-skill-empty">
+                  <BookOpen size={28} />
+                  <h3>Умения пока не добавлены</h3>
+                  <p>
+                    {canManageSkills
+                      ? "Создайте первое умение в редакторе выше."
+                      : "Администратор скоро заполнит библиотеку этого класса."}
+                  </p>
+                </div>
+              ) : (
+                skills.map((skill) => (
+                  <article className="build-skill-card" key={skill.id}>
+                    <Image
+                      className="build-skill-card__icon"
+                      src={skill.iconUrl}
+                      alt=""
+                      width={72}
+                      height={72}
+                      unoptimized
+                    />
+                    <div className="build-skill-card__content">
+                      <header>
+                        <h3>{skill.name}</h3>
+                        {canManageSkills ? (
+                          <button
+                            type="button"
+                            title="Удалить умение"
+                            aria-label={`Удалить умение ${skill.name}`}
+                            disabled={deletingSkillId !== null}
+                            onClick={() => void deleteSkill(skill.id)}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        ) : null}
+                      </header>
+                      <div
+                        className="build-skill-card__description"
+                        dangerouslySetInnerHTML={{
+                          __html: skill.descriptionHtml,
+                        }}
+                      />
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+        ) : null}
       </main>
 
       {selectingSlot ? (

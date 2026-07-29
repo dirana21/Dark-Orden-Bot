@@ -35,6 +35,13 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /api\/planner/);
   assert.match(contents, /href:`\/build`/);
   assert.match(contents, /api\/build/);
+  assert.match(contents, /api\/build\/skills/);
+  assert.match(contents, /api\/build\/skill-icon/);
+  assert.match(contents, /Редактор умений/);
+  assert.match(contents, /Цвет текста/);
+  assert.match(contents, /Маркированный список/);
+  assert.match(contents, /Добавить для всех/);
+  assert.match(contents, /build_skills/);
   assert.match(contents, /Основной герой/);
   assert.match(contents, /Зеркало/);
   assert.match(contents, /Мертвый Глаз/);

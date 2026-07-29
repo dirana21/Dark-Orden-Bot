@@ -196,3 +196,30 @@ export const userBuildProfiles = sqliteTable("user_build_profiles", {
   mirrorCharacter: text("mirror_character"),
   updatedAt: integer("updated_at").notNull(),
 });
+
+export const buildSkills = sqliteTable(
+  "build_skills",
+  {
+    id: text("id").primaryKey(),
+    guildId: text("guild_id")
+      .notNull()
+      .references(() => guilds.id, { onDelete: "cascade" }),
+    character: text("character").notNull(),
+    name: text("name").notNull(),
+    descriptionHtml: text("description_html").notNull(),
+    iconKey: text("icon_key").notNull(),
+    iconContentType: text("icon_content_type").notNull(),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("build_skills_guild_character_idx").on(
+      table.guildId,
+      table.character,
+      table.createdAt,
+    ),
+  ],
+);

@@ -28,9 +28,12 @@ export function expiredSessionCookie(request: Request): string {
   return sessionCookie(request, "", 0);
 }
 
-export function validateMutationRequest(request: Request): Response | null {
+export function validateMutationRequest(
+  request: Request,
+  maxBytes = 8_192,
+): Response | null {
   const contentLength = Number(request.headers.get("content-length") ?? "0");
-  if (contentLength > 8_192) {
+  if (contentLength > maxBytes) {
     return Response.json(
       { error: "Запрос слишком большой." },
       { status: 413, headers: { "Cache-Control": "no-store" } },

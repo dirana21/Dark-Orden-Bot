@@ -39,3 +39,13 @@ export interface BuildProfile {
   mirrorCharacter: BuildCharacterClass | null;
   updatedAt: number | null;
 }
+
+export interface BuildSkill {
+  id: string;
+  character: BuildCharacterClass;
+  name: string;
+  descriptionHtml: string;
+  iconUrl: string;
+  createdAt: number;
+  updatedAt: number;
+}

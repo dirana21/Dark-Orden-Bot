@@ -85,6 +85,13 @@
       "when": 1785321271893,
       "tag": "0011_stale_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1785322287780,
+      "tag": "0012_clammy_boomerang",
+      "breakpoints": true
     }
   ]
 }
