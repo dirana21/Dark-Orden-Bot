@@ -95,7 +95,6 @@ export class D1BuildSkillRepository {
     character: BuildCharacterClass,
   ): Promise<BuildSkill[]> {
     const db = getD1();
-    await ensureBuildSkillsSchema(db);
 
     const rows = await db
       .prepare(
@@ -120,7 +119,6 @@ export class D1BuildSkillRepository {
 
   async get(guildId: string, id: string): Promise<StoredBuildSkill | null> {
     const db = getD1();
-    await ensureBuildSkillsSchema(db);
 
     const row = await db
       .prepare(
@@ -145,7 +143,6 @@ export class D1BuildSkillRepository {
     slotIndex: number,
   ): Promise<StoredBuildSkill | null> {
     const db = getD1();
-    await ensureBuildSkillsSchema(db);
 
     const row = await db
       .prepare(
@@ -310,7 +307,6 @@ export class D1BuildSkillRepository {
     id: string,
   ): Promise<StoredBuildSkill | null> {
     const db = getD1();
-    await ensureBuildSkillsSchema(db);
     const row = await db
       .prepare(
         `SELECT skills.id, skills.character, skills.slot_type,

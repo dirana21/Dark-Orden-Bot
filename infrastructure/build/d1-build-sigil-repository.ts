@@ -50,7 +50,6 @@ function publicSigil(sigil: StoredBuildSigil): BuildSigil {
 export class D1BuildSigilRepository {
   async list(guildId: string): Promise<BuildSigil[]> {
     const db = getD1();
-    await ensureBuildSigilsSchema(db);
     const rows = await db
       .prepare(
         `SELECT id, name, category, description, icon_key,
@@ -70,7 +69,6 @@ export class D1BuildSigilRepository {
     id: string,
   ): Promise<StoredBuildSigil | null> {
     const db = getD1();
-    await ensureBuildSigilsSchema(db);
     const row = await db
       .prepare(
         `SELECT id, name, category, description, icon_key,

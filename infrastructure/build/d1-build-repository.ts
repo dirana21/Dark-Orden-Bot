@@ -23,7 +23,6 @@ function mapProfile(row: BuildProfileRow | null): BuildProfile {
 export class D1BuildRepository {
   async get(userId: string): Promise<BuildProfile> {
     const db = getD1();
-    await ensureBuildSchema(db);
 
     const row = await db
       .prepare(
