@@ -84,6 +84,7 @@ export function GuildDashboard({
           <a href="#planner">Мой план</a>
           <a href="#members">Состав</a>
           <a href="#events">События</a>
+          <Link href="/build">Билд</Link>
         </nav>
         <div className="dashboard-header__actions">
           <div
