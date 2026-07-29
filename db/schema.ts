@@ -187,3 +187,12 @@ export const guildPlannerTaskCompletions = sqliteTable(
     ),
   ],
 );
+
+export const userBuildProfiles = sqliteTable("user_build_profiles", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  mainCharacter: text("main_character"),
+  mirrorCharacter: text("mirror_character"),
+  updatedAt: integer("updated_at").notNull(),
+});
