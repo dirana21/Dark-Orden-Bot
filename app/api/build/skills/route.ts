@@ -4,6 +4,7 @@ import { canManageBuildSkills } from "@/domain/build/permissions";
 import {
   sanitizeBuildSkillDescription,
   validateBuildCharacter,
+  validateBuildSkillComboAvailable,
   validateBuildSkillIcon,
   validateBuildSkillName,
 } from "@/domain/build/validation";
@@ -69,7 +70,7 @@ export async function GET(request: Request) {
       new URL(request.url).searchParams.get("character"),
     );
     return Response.json(
-      { skills: await skills.list(user.guildId, character) },
+      { skills: await skills.list(user.guildId, user.id, character) },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
@@ -94,6 +95,9 @@ export async function POST(request: Request) {
     const descriptionHtml = sanitizeBuildSkillDescription(
       form.get("descriptionHtml"),
     );
+    const comboAvailable = validateBuildSkillComboAvailable(
+      form.get("comboAvailable"),
+    );
     const icon = validateBuildSkillIcon(form.get("icon"));
     const id = ids.generate();
     const extension = iconExtension(icon.type);
@@ -115,6 +119,7 @@ export async function POST(request: Request) {
       descriptionHtml,
       iconKey: uploadedKey,
       iconContentType: icon.type,
+      comboAvailable,
       createdByUserId: user.id,
       now: clock.now(),
     });
@@ -161,6 +166,9 @@ export async function PATCH(request: Request) {
     const descriptionHtml = sanitizeBuildSkillDescription(
       form.get("descriptionHtml"),
     );
+    const comboAvailable = validateBuildSkillComboAvailable(
+      form.get("comboAvailable"),
+    );
     const iconEntry = form.get("icon");
     const icon =
       iconEntry instanceof File && iconEntry.size > 0
@@ -183,8 +191,10 @@ export async function PATCH(request: Request) {
       id,
       name,
       descriptionHtml,
+      comboAvailable,
       iconKey: uploadedKey ?? undefined,
       iconContentType: icon?.type,
+      viewerUserId: user.id,
       now: clock.now(),
     });
     if (!updated) {

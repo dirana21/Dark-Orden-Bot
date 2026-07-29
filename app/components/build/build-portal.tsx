@@ -68,9 +68,11 @@ export function BuildPortal() {
   const [skillName, setSkillName] = useState("");
   const [skillDescription, setSkillDescription] = useState("");
   const [skillIcon, setSkillIcon] = useState<File | null>(null);
+  const [comboAvailable, setComboAvailable] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
   const [isCreatingSkill, setIsCreatingSkill] = useState(false);
   const [deletingSkillId, setDeletingSkillId] = useState<string | null>(null);
+  const [savingComboId, setSavingComboId] = useState<string | null>(null);
   const [editingSkill, setEditingSkill] = useState<BuildSkill | null>(null);
   const skillFormRef = useRef<HTMLFormElement>(null);
   const selectedCharacter =
@@ -226,6 +228,7 @@ export function BuildPortal() {
     setSkillName("");
     setSkillDescription("");
     setSkillIcon(null);
+    setComboAvailable(false);
     setEditorKey((current) => current + 1);
   }
 
@@ -235,6 +238,7 @@ export function BuildPortal() {
     setSkillName(skill.name);
     setSkillDescription(skill.descriptionHtml);
     setSkillIcon(null);
+    setComboAvailable(skill.comboAvailable);
     setSkillError("");
     setEditorKey((current) => current + 1);
     requestAnimationFrame(() => {
@@ -263,6 +267,7 @@ export function BuildPortal() {
       formData.set("character", selectedCharacter);
       formData.set("name", skillName);
       formData.set("descriptionHtml", skillDescription);
+      formData.set("comboAvailable", String(comboAvailable));
       if (skillIcon) {
         formData.set("icon", skillIcon);
       }
@@ -309,6 +314,28 @@ export function BuildPortal() {
       );
     } finally {
       setDeletingSkillId(null);
+    }
+  }
+
+  async function toggleSkillCombo(skill: BuildSkill) {
+    setSavingComboId(skill.id);
+    setSkillError("");
+    try {
+      const updated = await skillGateway.setCombo(
+        skill.id,
+        !skill.comboEnabled,
+      );
+      setSkills((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch (caught) {
+      setSkillError(
+        caught instanceof Error
+          ? caught.message
+          : "Не удалось изменить состояние комбо.",
+      );
+    } finally {
+      setSavingComboId(null);
     }
   }
 
@@ -550,6 +577,34 @@ export function BuildPortal() {
                   />
                 </div>
 
+                <fieldset className="build-skill-combo-choice">
+                  <legend>Комбо для этого умения</legend>
+                  <p>
+                    Сначала укажите, должен ли игрок видеть переключатель
+                    комбо.
+                  </p>
+                  <div>
+                    <button
+                      className={comboAvailable ? "is-selected" : ""}
+                      type="button"
+                      aria-pressed={comboAvailable}
+                      disabled={isCreatingSkill}
+                      onClick={() => setComboAvailable(true)}
+                    >
+                      Есть комбо
+                    </button>
+                    <button
+                      className={!comboAvailable ? "is-selected" : ""}
+                      type="button"
+                      aria-pressed={!comboAvailable}
+                      disabled={isCreatingSkill}
+                      onClick={() => setComboAvailable(false)}
+                    >
+                      Без комбо
+                    </button>
+                  </div>
+                </fieldset>
+
                 <footer>
                   <p>
                     Выделите нужный участок текста, затем выберите цвет или
@@ -620,7 +675,17 @@ export function BuildPortal() {
                 </div>
               ) : (
                 skills.map((skill) => (
-                  <article className="build-skill-card" key={skill.id}>
+                  <article
+                    className={[
+                      "build-skill-card",
+                      skill.comboAvailable
+                        ? "build-skill-card--with-combo"
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    key={skill.id}
+                  >
                     <Image
                       className="build-skill-card__icon"
                       src={skill.iconUrl}
@@ -667,6 +732,39 @@ export function BuildPortal() {
                         }}
                       />
                     </div>
+                    {skill.comboAvailable ? (
+                      <button
+                        className={[
+                          "build-skill-combo-toggle",
+                          skill.comboEnabled ? "is-enabled" : "is-disabled",
+                        ].join(" ")}
+                        type="button"
+                        aria-pressed={skill.comboEnabled}
+                        aria-label={`${skill.comboEnabled ? "Выключить" : "Включить"} комбо для умения ${skill.name}`}
+                        title={`Комбо: ${skill.comboEnabled ? "Вкл" : "Выкл"}`}
+                        disabled={savingComboId !== null}
+                        onClick={() => void toggleSkillCombo(skill)}
+                      >
+                        <Image
+                          src={
+                            skill.comboEnabled
+                              ? "/combo-on.png"
+                              : "/combo-off.png"
+                          }
+                          alt=""
+                          width={93}
+                          height={121}
+                          unoptimized
+                        />
+                        <span>
+                          {savingComboId === skill.id
+                            ? "Сохраняем…"
+                            : skill.comboEnabled
+                              ? "Вкл"
+                              : "Выкл"}
+                        </span>
+                      </button>
+                    ) : null}
                   </article>
                 ))
               )}

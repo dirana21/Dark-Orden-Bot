@@ -3057,6 +3057,66 @@ input:focus-visible {
   margin-top: 13px;
 }
 
+.build-skill-combo-choice {
+  display: grid;
+  gap: 8px;
+  margin: 13px 0 0;
+  padding: 13px 14px;
+  border: 1px solid rgba(215, 180, 106, 0.12);
+  background: rgba(215, 180, 106, 0.025);
+}
+
+.build-skill-combo-choice legend {
+  padding: 0 6px;
+  color: #a59472;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.build-skill-combo-choice p {
+  margin: 0;
+  color: #666a64;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.build-skill-combo-choice > div {
+  display: grid;
+  max-width: 360px;
+  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.build-skill-combo-choice button {
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.02);
+  color: #747873;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.build-skill-combo-choice button:hover:not(:disabled) {
+  border-color: rgba(215, 180, 106, 0.22);
+  color: #c0b391;
+}
+
+.build-skill-combo-choice button.is-selected {
+  border-color: rgba(215, 180, 106, 0.34);
+  background: rgba(215, 180, 106, 0.1);
+  color: var(--gold-soft);
+}
+
+.build-skill-combo-choice button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
 .skill-rich-editor {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.075);
@@ -3261,6 +3321,10 @@ input:focus-visible {
     #101318;
 }
 
+.build-skill-card--with-combo {
+  grid-template-columns: 72px minmax(0, 1fr) 104px;
+}
+
 .build-skill-card__icon {
   display: block;
   width: 72px;
@@ -3358,6 +3422,72 @@ input:focus-visible {
 
 .build-skill-card__description li + li {
   margin-top: 3px;
+}
+
+.build-skill-combo-toggle {
+  position: relative;
+  display: grid;
+  width: 94px;
+  min-height: 126px;
+  align-self: center;
+  justify-self: end;
+  place-items: center;
+  align-content: center;
+  padding: 0 0 6px;
+  overflow: hidden;
+  border: 1px solid rgba(119, 139, 170, 0.12);
+  background: #0b0f16;
+  color: #7f8999;
+  cursor: pointer;
+}
+
+.build-skill-combo-toggle::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  content: "";
+  pointer-events: none;
+}
+
+.build-skill-combo-toggle.is-enabled {
+  border-color: rgba(222, 177, 101, 0.25);
+  color: #e7c487;
+  box-shadow: 0 0 18px rgba(212, 160, 80, 0.08);
+}
+
+.build-skill-combo-toggle.is-enabled::after {
+  border-color: rgba(224, 185, 114, 0.08);
+  box-shadow: inset 0 0 22px rgba(215, 168, 89, 0.08);
+}
+
+.build-skill-combo-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.build-skill-combo-toggle:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.build-skill-combo-toggle img {
+  display: block;
+  width: 78px;
+  height: auto;
+  margin: -2px auto -12px;
+  object-fit: contain;
+}
+
+.build-skill-combo-toggle > span {
+  position: relative;
+  z-index: 1;
+  padding: 3px 7px;
+  border: 1px solid currentColor;
+  background: rgba(6, 9, 14, 0.9);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
 }
 
 .build-skill-empty {
@@ -3521,6 +3651,10 @@ input:focus-visible {
     grid-template-columns: 54px minmax(0, 1fr);
   }
 
+  .build-skill-card--with-combo {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
   .build-skill-card__icon {
     width: 54px;
     height: 54px;
@@ -3528,6 +3662,16 @@ input:focus-visible {
 
   .build-skill-card__content h3 {
     font-size: 16px;
+  }
+
+  .build-skill-combo-toggle {
+    width: 84px;
+    min-height: 105px;
+    grid-column: 1 / -1;
+  }
+
+  .build-skill-combo-toggle img {
+    width: 68px;
   }
 }
 

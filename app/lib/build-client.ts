@@ -108,6 +108,22 @@ export class HttpBuildSkillGateway {
     return payload.skill;
   }
 
+  async setCombo(id: string, enabled: boolean): Promise<BuildSkill> {
+    const response = await fetch("/api/build/skill-combo", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skillId: id, enabled }),
+    });
+    const payload = (await response.json()) as BuildSkillsResponse;
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Не удалось изменить состояние комбо.");
+    }
+    if (!payload.skill) {
+      throw new Error("Сервер не вернул состояние комбо.");
+    }
+    return payload.skill;
+  }
+
   async delete(id: string): Promise<void> {
     const response = await fetch(
       `/api/build/skills?id=${encodeURIComponent(id)}`,

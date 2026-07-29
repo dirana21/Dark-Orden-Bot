@@ -46,6 +46,8 @@ export interface BuildSkill {
   name: string;
   descriptionHtml: string;
   iconUrl: string;
+  comboAvailable: boolean;
+  comboEnabled: boolean;
   createdAt: number;
   updatedAt: number;
 }

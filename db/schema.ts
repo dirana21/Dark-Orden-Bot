@@ -209,6 +209,9 @@ export const buildSkills = sqliteTable(
     descriptionHtml: text("description_html").notNull(),
     iconKey: text("icon_key").notNull(),
     iconContentType: text("icon_content_type").notNull(),
+    comboAvailable: integer("combo_available", { mode: "boolean" })
+      .notNull()
+      .default(false),
     createdByUserId: text("created_by_user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -221,5 +224,25 @@ export const buildSkills = sqliteTable(
       table.character,
       table.createdAt,
     ),
+  ],
+);
+
+export const userBuildSkillSettings = sqliteTable(
+  "user_build_skill_settings",
+  {
+    skillId: text("skill_id")
+      .notNull()
+      .references(() => buildSkills.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    comboEnabled: integer("combo_enabled", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.skillId, table.userId] }),
+    index("user_build_skill_settings_user_idx").on(table.userId),
   ],
 );

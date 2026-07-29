@@ -120,3 +120,22 @@ export function validateBuildSkillIcon(file: unknown): File {
 
   return file;
 }
+
+export function validateBuildSkillComboAvailable(value: unknown): boolean {
+  if (value === true || value === "true") {
+    return true;
+  }
+  if (value === false || value === "false" || value === null) {
+    return false;
+  }
+
+  throw new BuildError("Укажите, доступно ли комбо для этого умения.");
+}
+
+export function validateBuildSkillComboEnabled(value: unknown): boolean {
+  if (value === true || value === false) {
+    return value;
+  }
+
+  throw new BuildError("Не удалось определить состояние комбо.");
+}

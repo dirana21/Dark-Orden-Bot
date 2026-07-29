@@ -5,6 +5,8 @@ import {
   sanitizeBuildSkillDescription,
   validateBuildCharacter,
   validateBuildCharacterSlot,
+  validateBuildSkillComboAvailable,
+  validateBuildSkillComboEnabled,
   validateBuildSkillName,
 } from "../domain/build/validation.ts";
 
@@ -50,4 +52,14 @@ test("removes unsafe markup from skill descriptions", () => {
   assert.doesNotMatch(description, /script|onclick|img|onerror/i);
   assert.throws(() => validateBuildSkillName("x"));
   assert.throws(() => sanitizeBuildSkillDescription("<br>"));
+});
+
+test("validates combo availability and personal state", () => {
+  assert.equal(validateBuildSkillComboAvailable("true"), true);
+  assert.equal(validateBuildSkillComboAvailable("false"), false);
+  assert.equal(validateBuildSkillComboAvailable(null), false);
+  assert.equal(validateBuildSkillComboEnabled(true), true);
+  assert.equal(validateBuildSkillComboEnabled(false), false);
+  assert.throws(() => validateBuildSkillComboAvailable("yes"));
+  assert.throws(() => validateBuildSkillComboEnabled("true"));
 });
