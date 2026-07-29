@@ -2,6 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildCharacterClasses } from "../domain/build/model.ts";
 import { canManageBuildSkills } from "../domain/build/permissions.ts";
+import { buildSigilCategories } from "../domain/build/sigil-model.ts";
+import {
+  validateBuildSigilCategory,
+  validateBuildSigilDescription,
+  validateBuildSigilName,
+} from "../domain/build/sigil-validation.ts";
 import {
   sanitizeBuildSkillDescription,
   validateBuildCharacter,
@@ -84,4 +90,27 @@ test("allows guild officers to edit the shared skill catalog", () => {
   assert.equal(canManageBuildSkills("owner"), true);
   assert.equal(canManageBuildSkills("officer"), true);
   assert.equal(canManageBuildSkills("member"), false);
+});
+
+test("validates the six configured sigil categories and text fields", () => {
+  assert.equal(buildSigilCategories.length, 6);
+  assert.equal(
+    validateBuildSigilCategory("Безупречное"),
+    "Безупречное",
+  );
+  assert.equal(
+    validateBuildSigilCategory("Тусклое"),
+    "Тусклое",
+  );
+  assert.equal(
+    validateBuildSigilName("  Тайное   учение  "),
+    "Тайное учение",
+  );
+  assert.equal(
+    validateBuildSigilDescription("  Усиливает навык  "),
+    "Усиливает навык",
+  );
+  assert.throws(() => validateBuildSigilCategory("Неизвестное"));
+  assert.throws(() => validateBuildSigilName("x"));
+  assert.throws(() => validateBuildSigilDescription(""));
 });

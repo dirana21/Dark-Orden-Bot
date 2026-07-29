@@ -2512,9 +2512,20 @@ input:focus-visible {
 }
 
 .build-main {
-  width: min(1180px, calc(100% - 40px));
+  width: min(1500px, calc(100% - 40px));
   margin: 0 auto;
   padding: 34px 0 52px;
+}
+
+.build-library-layout {
+  display: grid;
+  align-items: start;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.build-library-layout__skills {
+  min-width: 0;
 }
 
 .build-hero {
@@ -3785,6 +3796,362 @@ input:focus-visible {
   color: #656963;
   font-size: 10px;
   line-height: 1.5;
+}
+
+.build-sigil-panel {
+  position: sticky;
+  top: 72px;
+  display: grid;
+  max-height: calc(100svh - 88px);
+  gap: 12px;
+  margin-top: 16px;
+  padding: 17px;
+  overflow-y: auto;
+  border: 1px solid rgba(91, 112, 170, 0.2);
+  background:
+    linear-gradient(135deg, rgba(56, 72, 124, 0.1), transparent 42%),
+    #0d1016;
+  scrollbar-color: rgba(81, 101, 159, 0.55) transparent;
+  scrollbar-width: thin;
+}
+
+.build-sigil-panel__heading {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  border-bottom: 1px solid rgba(106, 129, 190, 0.16);
+}
+
+.build-sigil-panel__heading > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(88, 111, 184, 0.3);
+  background: rgba(47, 57, 113, 0.14);
+  color: #6e82d6;
+  box-shadow: 0 0 18px rgba(64, 85, 183, 0.12);
+}
+
+.build-sigil-panel__heading small,
+.build-sigil-panel__heading h2 {
+  display: block;
+  margin: 0;
+}
+
+.build-sigil-panel__heading small {
+  color: #68718b;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.build-sigil-panel__heading h2 {
+  margin-top: 2px;
+  color: #c7ccdc;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 400;
+}
+
+.build-sigil-panel__heading > strong {
+  min-width: 28px;
+  padding: 5px 7px;
+  border: 1px solid rgba(83, 103, 173, 0.23);
+  color: #7586c8;
+  font-size: 10px;
+  text-align: center;
+}
+
+.build-sigil-form {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid rgba(78, 95, 151, 0.18);
+  background: rgba(20, 24, 35, 0.66);
+}
+
+.build-sigil-form > label {
+  display: grid;
+  gap: 5px;
+}
+
+.build-sigil-form > label > span:first-child {
+  color: #747b8d;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.build-sigil-form input[type="text"],
+.build-sigil-form select,
+.build-sigil-form textarea {
+  width: 100%;
+  border: 1px solid rgba(108, 121, 158, 0.2);
+  border-radius: 0;
+  outline: none;
+  background: #0b0e14;
+  color: #c5c9d3;
+  font: inherit;
+  font-size: 11px;
+}
+
+.build-sigil-form input[type="text"],
+.build-sigil-form select {
+  height: 34px;
+  padding: 0 10px;
+}
+
+.build-sigil-form textarea {
+  min-height: 76px;
+  padding: 9px 10px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.build-sigil-form input:focus,
+.build-sigil-form select:focus,
+.build-sigil-form textarea:focus {
+  border-color: rgba(89, 111, 190, 0.5);
+  box-shadow: 0 0 0 2px rgba(55, 70, 157, 0.08);
+}
+
+.build-sigil-upload {
+  display: grid !important;
+  min-height: 49px;
+  align-items: center;
+  gap: 9px !important;
+  padding: 8px 10px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  border: 1px dashed rgba(96, 111, 163, 0.27);
+  color: #6577bd;
+  cursor: pointer;
+}
+
+.build-sigil-upload > span {
+  min-width: 0;
+}
+
+.build-sigil-upload strong,
+.build-sigil-upload small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.build-sigil-upload strong {
+  color: #9da6c3;
+  font-size: 10px;
+}
+
+.build-sigil-upload small {
+  margin-top: 2px;
+  color: #535b70;
+  font-size: 8px;
+}
+
+.build-sigil-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.build-sigil-form > button {
+  display: inline-flex;
+  min-height: 35px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(75, 93, 177, 0.35);
+  background: rgba(50, 54, 164, 0.22);
+  color: #aab4ef;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.build-sigil-form > button:hover:not(:disabled) {
+  border-color: rgba(104, 124, 218, 0.55);
+  background: rgba(50, 54, 164, 0.34);
+  color: #d2d8ff;
+}
+
+.build-sigil-form > button:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.build-sigil-panel__error {
+  margin: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(186, 69, 69, 0.25);
+  background: rgba(111, 38, 38, 0.1);
+  color: #c98484;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.build-sigil-list {
+  display: grid;
+  gap: 9px;
+}
+
+.build-sigil-empty {
+  display: grid;
+  min-height: 120px;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 18px;
+  border: 1px dashed rgba(90, 107, 154, 0.18);
+  color: #596580;
+  text-align: center;
+}
+
+.build-sigil-empty strong,
+.build-sigil-empty p {
+  margin: 0;
+}
+
+.build-sigil-empty strong {
+  color: #858da3;
+  font-size: 12px;
+}
+
+.build-sigil-empty p {
+  color: #555d70;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.build-sigil-card {
+  border: 1px solid rgba(103, 125, 181, 0.34);
+  background:
+    linear-gradient(120deg, rgba(62, 83, 133, 0.13), transparent 60%),
+    #111722;
+  box-shadow: inset 0 0 22px rgba(42, 59, 106, 0.1);
+}
+
+.build-sigil-card__title {
+  display: grid;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  border-bottom: 1px solid rgba(100, 124, 183, 0.27);
+  background: rgba(60, 76, 114, 0.19);
+}
+
+.build-sigil-card__title > span {
+  width: 7px;
+  height: 7px;
+  background: rgb(50, 54, 164);
+  box-shadow:
+    0 0 7px rgba(83, 109, 255, 0.8),
+    0 0 13px rgba(54, 71, 190, 0.55);
+  transform: rotate(45deg);
+}
+
+.build-sigil-card__title h3 {
+  margin: 0;
+  color: rgb(50, 54, 164);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-shadow:
+    0 0 4px rgba(91, 116, 255, 0.95),
+    0 0 10px rgba(57, 78, 213, 0.75);
+}
+
+.build-sigil-card__title button {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid rgba(180, 74, 84, 0.19);
+  background: rgba(133, 43, 52, 0.08);
+  color: #8d6268;
+  cursor: pointer;
+}
+
+.build-sigil-card__title button:hover:not(:disabled) {
+  border-color: rgba(213, 93, 104, 0.36);
+  color: #d18a92;
+}
+
+.build-sigil-card__title button:disabled {
+  cursor: wait;
+  opacity: 0.4;
+}
+
+.build-sigil-card__body {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  grid-template-columns: 68px minmax(0, 1fr);
+}
+
+.build-sigil-card__icon-frame {
+  position: relative;
+  display: grid;
+  width: 68px;
+  height: 68px;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #253150 0 44%, #0b0e15 46% 58%, #3039a1 60% 64%, #080a0e 66%);
+  box-shadow:
+    0 0 0 1px rgba(111, 127, 184, 0.4),
+    0 0 18px rgba(49, 57, 158, 0.22);
+}
+
+.build-sigil-card__icon-frame img {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.build-sigil-card__body small {
+  display: inline-block;
+  margin-bottom: 5px;
+  padding: 3px 6px;
+  border: 1px solid rgba(82, 100, 171, 0.23);
+  color: #7583ba;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.build-sigil-card__body p {
+  margin: 0;
+  color: #a9afbd;
+  font-size: 10px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1180px) {
+  .build-main {
+    width: min(100% - 32px, 1000px);
+  }
+
+  .build-library-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .build-sigil-panel {
+    position: static;
+    max-height: none;
+  }
 }
 
 @media (max-width: 800px) {

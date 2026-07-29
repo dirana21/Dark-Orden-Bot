@@ -235,6 +235,33 @@ export const buildSkills = sqliteTable(
   ],
 );
 
+export const buildSigils = sqliteTable(
+  "build_sigils",
+  {
+    id: text("id").primaryKey(),
+    guildId: text("guild_id")
+      .notNull()
+      .references(() => guilds.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    category: text("category").notNull(),
+    description: text("description").notNull(),
+    iconKey: text("icon_key").notNull(),
+    iconContentType: text("icon_content_type").notNull(),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("build_sigils_guild_category_idx").on(
+      table.guildId,
+      table.category,
+      table.createdAt,
+    ),
+  ],
+);
+
 export const userBuildSkillSettings = sqliteTable(
   "user_build_skill_settings",
   {

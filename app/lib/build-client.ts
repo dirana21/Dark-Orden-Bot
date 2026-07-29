@@ -4,6 +4,7 @@ import type {
   BuildProfile,
   BuildSkill,
 } from "@/domain/build/model";
+import type { BuildSigil } from "@/domain/build/sigil-model";
 
 interface BuildResponse {
   profile?: BuildProfile;
@@ -13,6 +14,12 @@ interface BuildResponse {
 interface BuildSkillsResponse {
   skills?: BuildSkill[];
   skill?: BuildSkill;
+  error?: string;
+}
+
+interface BuildSigilsResponse {
+  sigils?: BuildSigil[];
+  sigil?: BuildSigil;
   error?: string;
 }
 
@@ -132,6 +139,46 @@ export class HttpBuildSkillGateway {
     const payload = (await response.json()) as BuildSkillsResponse;
     if (!response.ok) {
       throw new Error(payload.error ?? "Не удалось удалить умение.");
+    }
+  }
+}
+
+export class HttpBuildSigilGateway {
+  async list(signal?: AbortSignal): Promise<BuildSigil[]> {
+    const response = await fetch("/api/build/sigils", {
+      cache: "no-store",
+      signal,
+    });
+    const payload = (await response.json()) as BuildSigilsResponse;
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Не удалось загрузить сигилы.");
+    }
+    return payload.sigils ?? [];
+  }
+
+  async create(formData: FormData): Promise<BuildSigil> {
+    const response = await fetch("/api/build/sigils", {
+      method: "POST",
+      body: formData,
+    });
+    const payload = (await response.json()) as BuildSigilsResponse;
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Не удалось добавить сигил.");
+    }
+    if (!payload.sigil) {
+      throw new Error("Сервер не вернул добавленный сигил.");
+    }
+    return payload.sigil;
+  }
+
+  async delete(id: string): Promise<void> {
+    const response = await fetch(
+      `/api/build/sigils?id=${encodeURIComponent(id)}`,
+      { method: "DELETE" },
+    );
+    const payload = (await response.json()) as BuildSigilsResponse;
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Не удалось удалить сигил.");
     }
   }
 }

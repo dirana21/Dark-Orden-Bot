@@ -43,6 +43,7 @@ import {
 import { canManageBuildSkills } from "@/domain/build/permissions";
 import { BrandMark } from "../brand-mark";
 import { SkillDescriptionEditor } from "./skill-description-editor";
+import { SigilPanel } from "./sigil-panel";
 
 const gateway = new HttpBuildGateway();
 const skillGateway = new HttpBuildSkillGateway();
@@ -770,7 +771,9 @@ export function BuildPortal() {
           </aside>
         </section>
 
-        {selectedCharacter ? (
+        <div className="build-library-layout">
+          <div className="build-library-layout__skills">
+            {selectedCharacter ? (
           <section
             className="build-skills-section"
             aria-labelledby="build-skills-title"
@@ -1103,9 +1106,9 @@ export function BuildPortal() {
               )}
             </div>
           </section>
-        ) : null}
+            ) : null}
 
-        {!selectedCharacter && canManageSkills ? (
+            {!selectedCharacter && canManageSkills ? (
           <section
             className="build-skills-section build-skills-section--unassigned"
             aria-labelledby="build-empty-slots-title"
@@ -1131,7 +1134,11 @@ export function BuildPortal() {
               {renderFixedSkillGroups()}
             </div>
           </section>
-        ) : null}
+            ) : null}
+          </div>
+
+          <SigilPanel canManage={canManageSkills} />
+        </div>
       </main>
 
       {selectingSlot ? (
