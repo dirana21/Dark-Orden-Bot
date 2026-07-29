@@ -6,6 +6,7 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+import { playerBuildSetupTypes } from "../domain/build/player-build-model";
 
 export const guilds = sqliteTable("guilds", {
   id: text("id").primaryKey(),
@@ -204,11 +205,18 @@ export const userBuildLoadouts = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     character: text("character").notNull(),
+    setupType: text("setup_type", {
+      enum: playerBuildSetupTypes,
+    })
+      .notNull()
+      .default("pvp"),
     slotsJson: text("slots_json").notNull().default("[]"),
     updatedAt: integer("updated_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.userId, table.character] }),
+    primaryKey({
+      columns: [table.userId, table.character, table.setupType],
+    }),
     index("user_build_loadouts_user_idx").on(table.userId),
   ],
 );

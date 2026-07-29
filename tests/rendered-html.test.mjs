@@ -39,6 +39,7 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /api\/build\/skill-icon/);
   assert.match(contents, /api\/build\/skill-combo/);
   assert.match(contents, /api\/build\/loadout/);
+  assert.match(contents, /api\/build\/community/);
   assert.match(contents, /combo-on\.webp/);
   assert.match(contents, /combo-off\.webp/);
   assert.match(contents, /Добавить выбор комбо/);
@@ -53,9 +54,13 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /Сохранить изменения/);
   assert.match(contents, /build_skills/);
   assert.match(contents, /user_build_loadouts/);
-  assert.match(contents, /Мой билд/);
+  assert.match(contents, /Мои билды/);
   assert.match(contents, /10 слотов навыков/);
   assert.match(contents, /Сохранить билд/);
+  assert.match(contents, /Массовое PvP/);
+  assert.match(contents, /Билды игроков/);
+  assert.match(contents, /Выберите любого персонажа/);
+  assert.match(contents, /Профиль игрока/);
   assert.match(contents, /Основной герой/);
   assert.match(contents, /Зеркало/);
   assert.match(contents, /Мертвый Глаз/);

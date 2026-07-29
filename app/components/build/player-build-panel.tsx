@@ -4,11 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Check,
+  Crown,
   Gem,
   GripVertical,
   Plus,
   Save,
+  Sprout,
+  Swords,
   Trash2,
+  UsersRound,
 } from "lucide-react";
 import { HttpPlayerBuildGateway } from "@/app/lib/build-client";
 import type {
@@ -17,6 +21,9 @@ import type {
 } from "@/domain/build/model";
 import {
   PLAYER_BUILD_SLOT_LIMIT,
+  playerBuildSetupLabels,
+  playerBuildSetupTypes,
+  type PlayerBuildSetupType,
   type PlayerBuildSlot,
 } from "@/domain/build/player-build-model";
 import type { BuildSigil } from "@/domain/build/sigil-model";
@@ -24,6 +31,12 @@ import { SigilSocketIcon } from "./sigil-socket-icon";
 
 const gateway = new HttpPlayerBuildGateway();
 const dragType = "application/x-dark-orden-build";
+const setupIcons = {
+  "mass-pvp": UsersRound,
+  pvp: Swords,
+  pve: Sprout,
+  bosses: Crown,
+} satisfies Record<PlayerBuildSetupType, typeof Swords>;
 
 type DragPayload =
   | { kind: "skill"; skillId: string }
@@ -86,6 +99,8 @@ export function PlayerBuildPanel({
   isSkillsLoading,
 }: PlayerBuildPanelProps) {
   const [slots, setSlots] = useState<PlayerBuildSlot[]>([]);
+  const [setupType, setSetupType] =
+    useState<PlayerBuildSetupType>("mass-pvp");
   const [savedSnapshot, setSavedSnapshot] = useState("[]");
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [activeSlotIndex, setActiveSlotIndex] =
@@ -108,7 +123,7 @@ export function PlayerBuildPanel({
         setError("");
         setActiveSlotIndex(null);
         setActiveSocketIndex(0);
-        return gateway.get(character, controller.signal);
+        return gateway.get(character, setupType, controller.signal);
       })
       .then((loadout) => {
         if (!loadout) {
@@ -137,7 +152,7 @@ export function PlayerBuildPanel({
       });
 
     return () => controller.abort();
-  }, [character]);
+  }, [character, setupType]);
 
   const skillsById = useMemo(
     () => new Map(skills.map((skill) => [skill.id, skill])),
@@ -284,7 +299,11 @@ export function PlayerBuildPanel({
           }),
         };
       });
-      const saved = await gateway.save(character, normalizedSlots);
+      const saved = await gateway.save(
+        character,
+        setupType,
+        normalizedSlots,
+      );
       setSlots(saved.slots);
       setSavedSnapshot(serializeSlots(saved.slots));
       setUpdatedAt(saved.updatedAt);
@@ -301,10 +320,33 @@ export function PlayerBuildPanel({
 
   return (
     <section className="player-build-panel" aria-labelledby="player-build-title">
+      <nav className="player-build-setup-tabs" aria-label="Сетапы навыков">
+        {playerBuildSetupTypes.map((item) => {
+          const Icon = setupIcons[item];
+          return (
+            <button
+              className={setupType === item ? "is-active" : ""}
+              type="button"
+              aria-pressed={setupType === item}
+              key={item}
+              onClick={() => setSetupType(item)}
+            >
+              <span>
+                <Icon size={19} />
+              </span>
+              <small>Сетап</small>
+              <strong>{playerBuildSetupLabels[item]}</strong>
+            </button>
+          );
+        })}
+      </nav>
+
       <header className="player-build-heading">
         <div>
           <span>Персональная сборка · {displayName}</span>
-          <h2 id="player-build-title">Мой билд: {character}</h2>
+          <h2 id="player-build-title">
+            {playerBuildSetupLabels[setupType]} · {character}
+          </h2>
           <p>
             Перетащите до 10 навыков в слоты, расставьте их по порядку и
             установите подходящие сигилы.

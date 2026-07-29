@@ -7,7 +7,9 @@ import type {
 } from "@/domain/build/model";
 import type { BuildSigil } from "@/domain/build/sigil-model";
 import type {
+  CommunityBuildAuthor,
   PlayerBuildLoadout,
+  PlayerBuildSetupType,
   PlayerBuildSlot,
 } from "@/domain/build/player-build-model";
 
@@ -46,6 +48,11 @@ interface BuildSigilsResponse {
 
 interface PlayerBuildResponse {
   loadout?: PlayerBuildLoadout;
+  error?: string;
+}
+
+interface CommunityBuildsResponse {
+  authors?: CommunityBuildAuthor[];
   error?: string;
 }
 
@@ -293,10 +300,15 @@ export class HttpBuildSigilGateway {
 export class HttpPlayerBuildGateway {
   async get(
     character: BuildCharacterClass,
+    setupType: PlayerBuildSetupType,
     signal?: AbortSignal,
   ): Promise<PlayerBuildLoadout> {
+    const params = new URLSearchParams({
+      character,
+      setup: setupType,
+    });
     const response = await fetch(
-      `/api/build/loadout?character=${encodeURIComponent(character)}`,
+      `/api/build/loadout?${params}`,
       { cache: "no-store", signal },
     );
     const payload = (await response.json()) as PlayerBuildResponse;
@@ -313,12 +325,13 @@ export class HttpPlayerBuildGateway {
 
   async save(
     character: BuildCharacterClass,
+    setupType: PlayerBuildSetupType,
     slots: PlayerBuildSlot[],
   ): Promise<PlayerBuildLoadout> {
     const response = await fetch("/api/build/loadout", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ character, slots }),
+      body: JSON.stringify({ character, setupType, slots }),
     });
     const payload = (await response.json()) as PlayerBuildResponse;
     if (!response.ok) {
@@ -330,5 +343,21 @@ export class HttpPlayerBuildGateway {
       throw new Error("Сервер не вернул сохранённый билд.");
     }
     return payload.loadout;
+  }
+
+  async listCommunity(
+    signal?: AbortSignal,
+  ): Promise<CommunityBuildAuthor[]> {
+    const response = await fetch("/api/build/community", {
+      cache: "no-store",
+      signal,
+    });
+    const payload = (await response.json()) as CommunityBuildsResponse;
+    if (!response.ok) {
+      throw new Error(
+        payload.error ?? "Не удалось загрузить билды игроков.",
+      );
+    }
+    return payload.authors ?? [];
   }
 }

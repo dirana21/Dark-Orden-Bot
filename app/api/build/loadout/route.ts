@@ -1,7 +1,10 @@
 import { AuthError } from "@/domain/auth/errors";
 import { BuildError } from "@/domain/build/errors";
 import { validateBuildCharacter } from "@/domain/build/validation";
-import { validatePlayerBuildSlots } from "@/domain/build/player-build-validation";
+import {
+  validatePlayerBuildSetupType,
+  validatePlayerBuildSlots,
+} from "@/domain/build/player-build-validation";
 import { D1BuildCharacterRepository } from "@/infrastructure/build/d1-build-character-repository";
 import { D1PlayerBuildRepository } from "@/infrastructure/build/d1-player-build-repository";
 import { D1BuildSigilRepository } from "@/infrastructure/build/d1-build-sigil-repository";
@@ -57,12 +60,22 @@ async function requireCatalogCharacter(
 export async function GET(request: Request) {
   try {
     const user = await requireSessionUser(request);
+    const url = new URL(request.url);
     const character = await requireCatalogCharacter(
       user.guildId,
-      new URL(request.url).searchParams.get("character"),
+      url.searchParams.get("character"),
+    );
+    const setupType = validatePlayerBuildSetupType(
+      url.searchParams.get("setup"),
     );
     return Response.json(
-      { loadout: await loadouts.get(user.id, character) },
+      {
+        loadout: await loadouts.get(
+          user.id,
+          character,
+          setupType,
+        ),
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
@@ -80,6 +93,7 @@ export async function PUT(request: Request) {
     const user = await requireSessionUser(request);
     const input = (await request.json()) as {
       character?: unknown;
+      setupType?: unknown;
       slots?: unknown;
     };
     const character = await requireCatalogCharacter(
@@ -87,6 +101,7 @@ export async function PUT(request: Request) {
       input.character,
     );
     const requestedSlots = validatePlayerBuildSlots(input.slots);
+    const setupType = validatePlayerBuildSetupType(input.setupType);
     const [skillCatalog, sigilCatalog] = await Promise.all([
       skills.list(user.guildId, user.id, character),
       sigils.list(user.guildId),
@@ -138,6 +153,7 @@ export async function PUT(request: Request) {
         loadout: await loadouts.save({
           userId: user.id,
           character,
+          setupType,
           slots,
           now: clock.now(),
         }),

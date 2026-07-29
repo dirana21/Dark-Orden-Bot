@@ -7,8 +7,14 @@ import {
   normalizeBuildSkillConfigurableSocketTypes,
 } from "../domain/build/model.ts";
 import { canManageBuildSkills } from "../domain/build/permissions.ts";
-import { PLAYER_BUILD_SLOT_LIMIT } from "../domain/build/player-build-model.ts";
-import { validatePlayerBuildSlots } from "../domain/build/player-build-validation.ts";
+import {
+  PLAYER_BUILD_SLOT_LIMIT,
+  playerBuildSetupTypes,
+} from "../domain/build/player-build-model.ts";
+import {
+  validatePlayerBuildSetupType,
+  validatePlayerBuildSlots,
+} from "../domain/build/player-build-validation.ts";
 import { buildSigilCategories } from "../domain/build/sigil-model.ts";
 import {
   validateBuildSigilCategory,
@@ -214,4 +220,21 @@ test("validates ten unique skills and up to four sigils in a personal build", ()
       { skillId: "skill-11", sigilIds: [] },
     ]),
   );
+});
+
+test("supports the four personal build setup types", () => {
+  assert.deepEqual(playerBuildSetupTypes, [
+    "mass-pvp",
+    "pvp",
+    "pve",
+    "bosses",
+  ]);
+  assert.equal(
+    validatePlayerBuildSetupType("mass-pvp"),
+    "mass-pvp",
+  );
+  assert.equal(validatePlayerBuildSetupType("pvp"), "pvp");
+  assert.equal(validatePlayerBuildSetupType("pve"), "pve");
+  assert.equal(validatePlayerBuildSetupType("bosses"), "bosses");
+  assert.throws(() => validatePlayerBuildSetupType("arena"));
 });

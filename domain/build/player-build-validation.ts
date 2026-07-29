@@ -1,6 +1,8 @@
 import { BuildError } from "./errors";
 import {
   PLAYER_BUILD_SLOT_LIMIT,
+  playerBuildSetupTypes,
+  type PlayerBuildSetupType,
   type PlayerBuildSlot,
 } from "./player-build-model";
 
@@ -57,4 +59,16 @@ export function validatePlayerBuildSlots(
     );
   }
   return slots;
+}
+
+export function validatePlayerBuildSetupType(
+  value: unknown,
+): PlayerBuildSetupType {
+  if (
+    typeof value !== "string" ||
+    !playerBuildSetupTypes.includes(value as PlayerBuildSetupType)
+  ) {
+    throw new BuildError("Выберите один из четырёх сетапов билда.");
+  }
+  return value as PlayerBuildSetupType;
 }

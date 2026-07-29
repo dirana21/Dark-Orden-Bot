@@ -24,6 +24,7 @@ import {
   Sparkles,
   Trash2,
   UserRound,
+  UsersRound,
   X,
 } from "lucide-react";
 import { useAuthController } from "@/app/hooks/use-auth-controller";
@@ -59,9 +60,14 @@ const SkillDescriptionEditor = dynamic(() =>
     (module) => module.SkillDescriptionEditor,
   ),
 );
-const PlayerBuildPanel = dynamic(() =>
-  import("./player-build-panel").then(
-    (module) => module.PlayerBuildPanel,
+const PersonalBuildWorkspace = dynamic(() =>
+  import("./personal-build-workspace").then(
+    (module) => module.PersonalBuildWorkspace,
+  ),
+);
+const CommunityBuildsPanel = dynamic(() =>
+  import("./community-builds-panel").then(
+    (module) => module.CommunityBuildsPanel,
   ),
 );
 
@@ -81,7 +87,7 @@ export function BuildPortal() {
   const auth = useAuthController();
   const [character, setCharacter] = useState<BuildCharacterSlot>("main");
   const [activeBuildView, setActiveBuildView] =
-    useState<"catalog" | "loadout">("catalog");
+    useState<"catalog" | "loadout" | "community">("catalog");
   const [profile, setProfile] = useState<BuildProfile>(emptyProfile);
   const [characters, setCharacters] = useState<BuildCharacter[]>([]);
   const [initialSigils, setInitialSigils] =
@@ -971,7 +977,17 @@ export function BuildPortal() {
             onClick={() => setActiveBuildView("loadout")}
           >
             <Sparkles size={16} />
-            Мой билд
+            Мои билды
+          </button>
+          <button
+            className={activeBuildView === "community" ? "is-active" : ""}
+            type="button"
+            role="tab"
+            aria-selected={activeBuildView === "community"}
+            onClick={() => setActiveBuildView("community")}
+          >
+            <UsersRound size={16} />
+            Билды игроков
           </button>
         </div>
 
@@ -1425,31 +1441,18 @@ export function BuildPortal() {
             onSigilsChange={setInitialSigils}
           />
         </div>
-        ) : selectedCharacter ? (
-          <PlayerBuildPanel
-            key={selectedCharacter}
-            character={selectedCharacter}
+        ) : activeBuildView === "loadout" ? (
+          <PersonalBuildWorkspace
+            characters={characters}
+            initialCharacter={selectedCharacter}
             displayName={user.displayName}
-            skills={skills}
             sigils={initialSigils ?? []}
-            isSkillsLoading={isLoadingSkills}
           />
         ) : (
-          <section className="player-build-no-character">
-            <Sparkles size={30} />
-            <h2>Сначала выберите персонажа</h2>
-            <p>
-              Личный билд сохраняется отдельно для основного героя и
-              зеркала.
-            </p>
-            <button
-              type="button"
-              onClick={() => openCharacterPicker(character)}
-            >
-              <Plus size={16} />
-              Выбрать героя
-            </button>
-          </section>
+          <CommunityBuildsPanel
+            characters={characters}
+            sigils={initialSigils ?? []}
+          />
         )}
       </main>
 
