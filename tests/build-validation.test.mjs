@@ -32,6 +32,12 @@ test("validates skill names and preserves safe rich formatting", () => {
   assert.match(description, /<strong>Лимит:<\/strong>/);
   assert.match(description, /color:#55d8bd/);
   assert.match(description, /<ul><li>/);
+
+  const legacyColor = sanitizeBuildSkillDescription(
+    '<div><font color="#00ffe1">Голубой текст</font></div>',
+  );
+  assert.match(legacyColor, /<div><span style="color:#00ffe1">/);
+  assert.doesNotMatch(legacyColor, /<font/i);
 });
 
 test("removes unsafe markup from skill descriptions", () => {

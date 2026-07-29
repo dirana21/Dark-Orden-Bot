@@ -10,6 +10,15 @@ import {
   Palette,
 } from "lucide-react";
 
+const textColorPresets = [
+  { name: "Голубой", color: "#00ffe1", rgb: "0, 255, 225" },
+  { name: "Жёлтый", color: "#ffea00", rgb: "255, 234, 0" },
+  { name: "Оранжевый", color: "#ff9600", rgb: "255, 150, 0" },
+  { name: "Красный", color: "#ff0000", rgb: "255, 0, 0" },
+  { name: "Красно-оранжевый", color: "#c2450f", rgb: "194, 69, 15" },
+  { name: "Синий", color: "#0734e9", rgb: "7, 52, 233" },
+] as const;
+
 interface SkillDescriptionEditorProps {
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -45,6 +54,9 @@ export function SkillDescriptionEditor({
 
   function applyCommand(command: string, argument?: string) {
     restoreSelection();
+    if (command === "foreColor") {
+      document.execCommand("styleWithCSS", false, "true");
+    }
     document.execCommand(command, false, argument);
     rememberSelection();
     onChange(editorRef.current?.innerHTML ?? "");
@@ -118,6 +130,27 @@ export function SkillDescriptionEditor({
         >
           <Eraser size={15} />
         </button>
+        <span
+          className="skill-rich-editor__palette"
+          role="group"
+          aria-label="Готовые цвета текста"
+        >
+          {textColorPresets.map((preset) => (
+            <button
+              className="skill-rich-editor__swatch"
+              type="button"
+              key={preset.color}
+              title={`${preset.name} — RGB ${preset.rgb}`}
+              aria-label={`${preset.name}, RGB ${preset.rgb}`}
+              disabled={disabled}
+              style={{ "--skill-text-color": preset.color } as React.CSSProperties}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => applyCommand("foreColor", preset.color)}
+            >
+              <span aria-hidden="true" />
+            </button>
+          ))}
+        </span>
       </div>
       <div
         ref={editorRef}

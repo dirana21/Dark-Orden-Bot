@@ -214,6 +214,7 @@ export function BuildPortal() {
 
   async function createSkill(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     if (!selectedCharacter || !skillIcon) {
       setSkillError("Заполните название, описание и добавьте иконку умения.");
       return;
@@ -233,7 +234,7 @@ export function BuildPortal() {
       setSkillDescription("");
       setSkillIcon(null);
       setEditorKey((current) => current + 1);
-      event.currentTarget.reset();
+      form.reset();
     } catch (caught) {
       setSkillError(
         caught instanceof Error

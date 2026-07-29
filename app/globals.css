@@ -3125,6 +3125,28 @@ input:focus-visible {
   opacity: 0;
 }
 
+.skill-rich-editor__palette {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 3px;
+}
+
+.skill-rich-editor__toolbar .skill-rich-editor__swatch {
+  width: 25px;
+  min-width: 25px;
+  padding: 0;
+}
+
+.skill-rich-editor__swatch > span {
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: var(--skill-text-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--skill-text-color) 38%, transparent);
+}
+
 .skill-rich-editor__surface {
   min-height: 170px;
   padding: 15px 16px;
@@ -3148,6 +3170,16 @@ input:focus-visible {
 .skill-rich-editor__surface ol {
   margin: 8px 0;
   padding-left: 24px;
+}
+
+.skill-rich-editor__surface ul,
+.build-skill-card__description ul {
+  list-style: disc;
+}
+
+.skill-rich-editor__surface ol,
+.build-skill-card__description ol {
+  list-style: decimal;
 }
 
 .build-skill-editor > footer {

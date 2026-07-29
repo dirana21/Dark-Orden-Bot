@@ -66,6 +66,7 @@ export function sanitizeBuildSkillDescription(value: unknown): string {
       "em",
       "i",
       "span",
+      "div",
     ],
     allowedAttributes: {
       span: ["style"],
@@ -77,6 +78,14 @@ export function sanitizeBuildSkillDescription(value: unknown): string {
           /^rgb\(\s*(?:\d{1,3}\s*,\s*){2}\d{1,3}\s*\)$/i,
         ],
       },
+    },
+    transformTags: {
+      font: (_tagName, attributes) => ({
+        tagName: "span",
+        attribs: attributes.color
+          ? { style: `color: ${attributes.color}` }
+          : {},
+      }),
     },
     disallowedTagsMode: "discard",
   }).trim();
