@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildCharacterClasses } from "../domain/build/model.ts";
+import { canManageBuildSkills } from "../domain/build/permissions.ts";
 import {
   sanitizeBuildSkillDescription,
   validateBuildCharacter,
@@ -76,4 +77,11 @@ test("limits build skill slots to four Rabams and thirteen normal skills", () =>
   assert.throws(() => validateBuildSkillSlotIndex("rabam", "5"));
   assert.throws(() => validateBuildSkillSlotIndex("normal", "14"));
   assert.throws(() => validateBuildSkillSlotIndex("normal", "1.5"));
+});
+
+test("allows guild officers to edit the shared skill catalog", () => {
+  assert.equal(canManageBuildSkills("superadmin"), true);
+  assert.equal(canManageBuildSkills("owner"), true);
+  assert.equal(canManageBuildSkills("officer"), true);
+  assert.equal(canManageBuildSkills("member"), false);
 });

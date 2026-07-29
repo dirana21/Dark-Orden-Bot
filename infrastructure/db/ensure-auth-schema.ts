@@ -8,7 +8,7 @@ interface AdminSeed {
   username: string;
   displayName: string;
   passwordHash: string;
-  role: "superadmin" | "owner";
+  role: "superadmin" | "owner" | "officer";
   isHidden: boolean;
 }
 
@@ -18,10 +18,12 @@ async function getAdminSeeds(): Promise<AdminSeed[]> {
     BOOTSTRAP_DRIGAN21_PASSWORD_HASH?: string;
     BOOTSTRAP_SAKURKA_PASSWORD_HASH?: string;
     BOOTSTRAP_DEVILFLAME_PASSWORD_HASH?: string;
+    BOOTSTRAP_DZENDZEN_PASSWORD_HASH?: string;
     BOOTSTRAP_SKYWALKER_PASSWORD?: string;
     BOOTSTRAP_DRIGAN21_PASSWORD?: string;
     BOOTSTRAP_SAKURKA_PASSWORD?: string;
     BOOTSTRAP_DEVILFLAME_PASSWORD?: string;
+    BOOTSTRAP_DZENDZEN_PASSWORD?: string;
   };
   const passwords = new WebCryptoPasswordHasher();
 
@@ -62,6 +64,16 @@ async function getAdminSeeds(): Promise<AdminSeed[]> {
         runtimeEnv.BOOTSTRAP_DEVILFLAME_PASSWORD_HASH ?? "",
       role: "superadmin",
       isHidden: true,
+    },
+    {
+      id: "officer-dzendzen",
+      username: "dzendzen",
+      displayName: "Dzendzen",
+      password: runtimeEnv.BOOTSTRAP_DZENDZEN_PASSWORD ?? "",
+      existingHash:
+        runtimeEnv.BOOTSTRAP_DZENDZEN_PASSWORD_HASH ?? "",
+      role: "officer",
+      isHidden: false,
     },
   ] as const;
 
