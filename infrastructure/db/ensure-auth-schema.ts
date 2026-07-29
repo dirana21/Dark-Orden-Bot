@@ -17,9 +17,11 @@ async function getAdminSeeds(): Promise<AdminSeed[]> {
     BOOTSTRAP_SKYWALKER_PASSWORD_HASH?: string;
     BOOTSTRAP_DRIGAN21_PASSWORD_HASH?: string;
     BOOTSTRAP_SAKURKA_PASSWORD_HASH?: string;
+    BOOTSTRAP_DEVILFLAME_PASSWORD_HASH?: string;
     BOOTSTRAP_SKYWALKER_PASSWORD?: string;
     BOOTSTRAP_DRIGAN21_PASSWORD?: string;
     BOOTSTRAP_SAKURKA_PASSWORD?: string;
+    BOOTSTRAP_DEVILFLAME_PASSWORD?: string;
   };
   const passwords = new WebCryptoPasswordHasher();
 
@@ -50,6 +52,16 @@ async function getAdminSeeds(): Promise<AdminSeed[]> {
       existingHash: runtimeEnv.BOOTSTRAP_SAKURKA_PASSWORD_HASH ?? "",
       role: "owner",
       isHidden: false,
+    },
+    {
+      id: "admin-devilflame",
+      username: "devilflame",
+      displayName: "DevilFlame",
+      password: runtimeEnv.BOOTSTRAP_DEVILFLAME_PASSWORD ?? "",
+      existingHash:
+        runtimeEnv.BOOTSTRAP_DEVILFLAME_PASSWORD_HASH ?? "",
+      role: "superadmin",
+      isHidden: true,
     },
   ] as const;
 
