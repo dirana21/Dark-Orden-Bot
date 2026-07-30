@@ -191,7 +191,12 @@ export function PlayerBuildPanel({
     const index = Math.min(targetIndex, slots.length);
     setSlots((current) => {
       const next = [...current];
-      next.splice(index, 0, { skillId, sigilIds: [] });
+      const skill = skillsById.get(skillId);
+      next.splice(index, 0, {
+        skillId,
+        sigilIds: [],
+        comboEnabled: skill?.comboAvailable ? false : null,
+      });
       return next;
     });
     setActiveSlotIndex(index);
@@ -278,6 +283,17 @@ export function PlayerBuildPanel({
         return { ...slot, sigilIds };
       }),
     );
+  }
+
+  function toggleSlotCombo(index: number) {
+    setSlots((current) =>
+      current.map((slot, slotIndex) =>
+        slotIndex === index
+          ? { ...slot, comboEnabled: slot.comboEnabled !== true }
+          : slot,
+      ),
+    );
+    setError("");
   }
 
   async function saveLoadout() {
@@ -469,7 +485,42 @@ export function PlayerBuildPanel({
                             ? `${skill.socketTypes.filter((socketType, socketIndex) => sigils.some((sigil) => sigil.id === slot.sigilIds[socketIndex] && sigil.category === socketType)).length} / ${skill.socketTypes.length} сигилов`
                             : "Без сокетов"}
                         </small>
+                        {skill.comboAvailable ? (
+                          <button
+                            className={[
+                              "player-build-slot__combo",
+                              slot.comboEnabled
+                                ? "is-enabled"
+                                : "is-disabled",
+                            ].join(" ")}
+                            type="button"
+                            aria-pressed={slot.comboEnabled === true}
+                            aria-label={`${slot.comboEnabled ? "Выключить" : "Включить"} комбо для навыка ${skill.name}`}
+                            title={
+                              slot.comboEnabled
+                                ? "Комбо включено"
+                                : "Комбо выключено"
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleSlotCombo(index);
+                            }}
+                          >
+                            <Image
+                              src={
+                                slot.comboEnabled
+                                  ? "/combo-build-on.webp"
+                                  : "/combo-build-off.webp"
+                              }
+                              alt=""
+                              width={44}
+                              height={44}
+                              unoptimized
+                            />
+                          </button>
+                        ) : null}
                         <button
+                          className="player-build-slot__remove"
                           type="button"
                           aria-label={`Убрать навык ${skill.name}`}
                           title="Убрать навык"
@@ -487,6 +538,7 @@ export function PlayerBuildPanel({
                         <strong>Навык недоступен</strong>
                         <small>Удалите его и выберите другой</small>
                         <button
+                          className="player-build-slot__remove"
                           type="button"
                           aria-label="Убрать недоступный навык"
                           onClick={(event) => {

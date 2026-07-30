@@ -33,6 +33,7 @@ export function validatePlayerBuildSlots(
     const candidate = item as {
       skillId?: unknown;
       sigilIds?: unknown;
+      comboEnabled?: unknown;
     };
     if (
       !Array.isArray(candidate.sigilIds) ||
@@ -40,6 +41,15 @@ export function validatePlayerBuildSlots(
     ) {
       throw new BuildError(
         "Для навыка доступно не больше четырёх сигилов.",
+      );
+    }
+    if (
+      candidate.comboEnabled !== undefined &&
+      candidate.comboEnabled !== null &&
+      typeof candidate.comboEnabled !== "boolean"
+    ) {
+      throw new BuildError(
+        "Состояние комбо в личном билде указано неверно.",
       );
     }
 
@@ -50,6 +60,10 @@ export function validatePlayerBuildSlots(
           ? null
           : validateId(sigilId, "сигил"),
       ),
+      comboEnabled:
+        typeof candidate.comboEnabled === "boolean"
+          ? candidate.comboEnabled
+          : null,
     };
   });
 

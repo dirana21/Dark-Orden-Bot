@@ -197,13 +197,14 @@ test("validates ten unique skills and up to four sigils in a personal build", ()
   const slots = Array.from({ length: PLAYER_BUILD_SLOT_LIMIT }, (_, index) => ({
     skillId: `skill-${index + 1}`,
     sigilIds: [null, `sigil-${index + 1}`],
+    comboEnabled: index % 2 === 0,
   }));
 
   assert.deepEqual(validatePlayerBuildSlots(slots), slots);
   assert.throws(() =>
     validatePlayerBuildSlots([
       { skillId: "skill-1", sigilIds: [] },
-      { skillId: "skill-1", sigilIds: [] },
+      { skillId: "skill-1", sigilIds: [], comboEnabled: null },
     ]),
   );
   assert.throws(() =>
@@ -218,6 +219,15 @@ test("validates ten unique skills and up to four sigils in a personal build", ()
     validatePlayerBuildSlots([
       ...slots,
       { skillId: "skill-11", sigilIds: [] },
+    ]),
+  );
+  assert.throws(() =>
+    validatePlayerBuildSlots([
+      {
+        skillId: "skill-1",
+        sigilIds: [],
+        comboEnabled: "true",
+      },
     ]),
   );
 });

@@ -61,6 +61,10 @@ test("build contains the Dark Orden application and protected routes", async () 
   assert.match(contents, /Билды игроков/);
   assert.match(contents, /Выберите любого персонажа/);
   assert.match(contents, /Профиль игрока/);
+  assert.match(contents, /combo-build-on\.webp/);
+  assert.match(contents, /combo-build-off\.webp/);
+  assert.match(contents, /Описание навыка/);
+  assert.match(contents, /Комбо включено/);
   assert.match(contents, /Основной герой/);
   assert.match(contents, /Зеркало/);
   assert.match(contents, /Мертвый Глаз/);

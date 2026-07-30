@@ -32,7 +32,11 @@ function parseSlots(value: string): PlayerBuildSlot[] {
     }
     return parsed
       .filter(
-        (slot): slot is { skillId: string; sigilIds: unknown[] } =>
+        (slot): slot is {
+          skillId: string;
+          sigilIds: unknown[];
+          comboEnabled?: unknown;
+        } =>
           Boolean(
             slot &&
               typeof slot === "object" &&
@@ -49,6 +53,10 @@ function parseSlots(value: string): PlayerBuildSlot[] {
         sigilIds: slot.sigilIds.slice(0, 4).map((sigilId) =>
           typeof sigilId === "string" ? sigilId : null,
         ),
+        comboEnabled:
+          typeof slot.comboEnabled === "boolean"
+            ? slot.comboEnabled
+            : null,
       }));
   } catch {
     return [];

@@ -11,6 +11,7 @@ import {
   Swords,
   UserRound,
   UsersRound,
+  X,
 } from "lucide-react";
 import {
   HttpBuildSkillGateway,
@@ -65,6 +66,10 @@ export function CommunityBuildsPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingSkills, setIsLoadingSkills] = useState(false);
   const [error, setError] = useState("");
+  const [inspectedSkill, setInspectedSkill] = useState<{
+    skill: BuildSkill;
+    comboEnabled: boolean | null;
+  } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -136,6 +141,19 @@ export function CommunityBuildsPanel({
 
     return () => controller.abort();
   }, [selectedCharacter]);
+
+  useEffect(() => {
+    if (!inspectedSkill) {
+      return;
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setInspectedSkill(null);
+      }
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [inspectedSkill]);
 
   const filteredAuthors = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("ru");
@@ -242,7 +260,8 @@ export function CommunityBuildsPanel({
   }
 
   return (
-    <section className="community-builds-panel">
+    <>
+      <section className="community-builds-panel">
       <header className="community-builds-heading">
         <div>
           <span>Опыт участников гильдии</span>
@@ -436,8 +455,35 @@ export function CommunityBuildsPanel({
                           : null;
                         return (
                           <article
-                            className={skill ? "is-filled" : "is-empty"}
+                            className={
+                              skill
+                                ? "is-filled is-clickable"
+                                : "is-empty"
+                            }
                             key={index}
+                            role={skill ? "button" : undefined}
+                            tabIndex={skill ? 0 : undefined}
+                            onClick={() => {
+                              if (skill) {
+                                setInspectedSkill({
+                                  skill,
+                                  comboEnabled: slot.comboEnabled,
+                                });
+                              }
+                            }}
+                            onKeyDown={(event) => {
+                              if (
+                                skill &&
+                                (event.key === "Enter" ||
+                                  event.key === " ")
+                              ) {
+                                event.preventDefault();
+                                setInspectedSkill({
+                                  skill,
+                                  comboEnabled: slot.comboEnabled,
+                                });
+                              }
+                            }}
                           >
                             <span className="community-build-slot__number">
                               {index + 1}
@@ -454,6 +500,29 @@ export function CommunityBuildsPanel({
                                 <strong title={skill.name}>
                                   {skill.name}
                                 </strong>
+                                {skill.comboAvailable ? (
+                                  <Image
+                                    className="community-build-slot__combo"
+                                    src={
+                                      slot.comboEnabled
+                                        ? "/combo-build-on.webp"
+                                        : "/combo-build-off.webp"
+                                    }
+                                    alt={
+                                      slot.comboEnabled
+                                        ? "Комбо включено"
+                                        : "Комбо выключено"
+                                    }
+                                    title={
+                                      slot.comboEnabled
+                                        ? "Комбо включено"
+                                        : "Комбо выключено"
+                                    }
+                                    width={34}
+                                    height={34}
+                                    unoptimized
+                                  />
+                                ) : null}
                                 <div>
                                   {skill.socketTypes.map(
                                     (socketType, socketIndex) => {
@@ -501,6 +570,75 @@ export function CommunityBuildsPanel({
           </div>
         ) : null}
       </div>
-    </section>
+      </section>
+
+      {inspectedSkill ? (
+        <div
+          className="community-skill-modal"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setInspectedSkill(null);
+            }
+          }}
+        >
+          <section
+            className="community-skill-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="community-skill-title"
+          >
+            <header>
+              <Image
+                src={inspectedSkill.skill.iconUrl}
+                alt=""
+                width={72}
+                height={72}
+                unoptimized
+              />
+              <div>
+                <small>Описание навыка</small>
+                <h2 id="community-skill-title">
+                  {inspectedSkill.skill.name}
+                </h2>
+              </div>
+              {inspectedSkill.skill.comboAvailable ? (
+                <span className="community-skill-dialog__combo">
+                  <Image
+                    src={
+                      inspectedSkill.comboEnabled
+                        ? "/combo-build-on.webp"
+                        : "/combo-build-off.webp"
+                    }
+                    alt=""
+                    width={54}
+                    height={54}
+                    unoptimized
+                  />
+                  <small>
+                    {inspectedSkill.comboEnabled
+                      ? "Комбо включено"
+                      : "Комбо выключено"}
+                  </small>
+                </span>
+              ) : null}
+              <button
+                type="button"
+                aria-label="Закрыть описание"
+                onClick={() => setInspectedSkill(null)}
+              >
+                <X size={18} />
+              </button>
+            </header>
+            <div
+              className="community-skill-dialog__description build-skill-card__description"
+              dangerouslySetInnerHTML={{
+                __html: inspectedSkill.skill.descriptionHtml,
+              }}
+            />
+          </section>
+        </div>
+      ) : null}
+    </>
   );
 }

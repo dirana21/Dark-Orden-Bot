@@ -132,6 +132,9 @@ export async function PUT(request: Request) {
 
       return {
         skillId: skill.id,
+        comboEnabled: skill.comboAvailable
+          ? slot.comboEnabled === true
+          : null,
         sigilIds: skill.socketTypes.map((socketType, index) => {
           const sigilId = slot.sigilIds[index] ?? null;
           if (!sigilId) {

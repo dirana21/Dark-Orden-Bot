@@ -25,6 +25,7 @@ export const playerBuildSetupLabels: Record<
 export interface PlayerBuildSlot {
   skillId: string;
   sigilIds: Array<string | null>;
+  comboEnabled: boolean | null;
 }
 
 export interface PlayerBuildLoadout {
