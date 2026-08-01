@@ -13,6 +13,7 @@ import {
   validateBuildSkillName,
 } from "@/domain/build/validation";
 import { D1BuildSkillRepository } from "@/infrastructure/build/d1-build-skill-repository";
+import { D1BuildSkillSlotIconRepository } from "@/infrastructure/build/d1-build-skill-slot-icon-repository";
 import { D1BuildCharacterRepository } from "@/infrastructure/build/d1-build-character-repository";
 import { getSkillIconsBucket } from "@/infrastructure/db/d1";
 import {
@@ -27,6 +28,7 @@ import {
 } from "../../auth/_shared/http";
 
 const skills = new D1BuildSkillRepository();
+const slotIcons = new D1BuildSkillSlotIconRepository();
 const characters = new D1BuildCharacterRepository();
 const ids = new CryptoIdGenerator();
 const clock = new SystemClock();
@@ -130,18 +132,28 @@ export async function POST(request: Request) {
     const comboAvailable = validateBuildSkillComboAvailable(
       form.get("comboAvailable"),
     );
-    const icon = validateBuildSkillIcon(form.get("icon"));
+    const iconEntry = form.get("icon");
+    const icon = iconEntry instanceof File && iconEntry.size > 0
+      ? validateBuildSkillIcon(iconEntry)
+      : null;
+    const stagedIcon = icon ? null : await slotIcons.get(
+      user.guildId,
+      character,
+      slotType,
+      slotIndex,
+    );
+    if (!icon && !stagedIcon) {
+      throw new BuildError("Добавьте иконку умения.");
+    }
     const id = ids.generate();
-    const extension = iconExtension(icon.type);
-    uploadedKey = `guilds/${user.guildId}/build-skills/${id}.${extension}`;
-
-    await getSkillIconsBucket().put(uploadedKey, icon.stream(), {
-      httpMetadata: { contentType: icon.type },
-      customMetadata: {
-        guildId: user.guildId,
-        createdByUserId: user.id,
-      },
-    });
+    if (icon) {
+      const extension = iconExtension(icon.type);
+      uploadedKey = `guilds/${user.guildId}/build-skills/${id}.${extension}`;
+      await getSkillIconsBucket().put(uploadedKey, icon.stream(), {
+        httpMetadata: { contentType: icon.type },
+        customMetadata: { guildId: user.guildId, createdByUserId: user.id },
+      });
+    }
 
     const skill = await skills.create({
       id,
@@ -152,12 +164,15 @@ export async function POST(request: Request) {
       socketTypes,
       name,
       descriptionHtml,
-      iconKey: uploadedKey,
-      iconContentType: icon.type,
+      iconKey: uploadedKey ?? stagedIcon!.iconKey,
+      iconContentType: icon?.type ?? stagedIcon!.iconContentType,
       comboAvailable,
       createdByUserId: user.id,
       now: clock.now(),
     });
+    if (stagedIcon) {
+      await slotIcons.delete(user.guildId, character, slotType, slotIndex);
+    }
 
     return Response.json(
       { skill },

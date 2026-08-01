@@ -31,6 +31,7 @@ import { useAuthController } from "@/app/hooks/use-auth-controller";
 import {
   HttpBuildGateway,
   HttpBuildSkillGateway,
+  HttpBuildSkillSlotIconGateway,
 } from "@/app/lib/build-client";
 import { optimizeImageUpload } from "@/app/lib/image-upload";
 import { guildRoleLabels } from "@/app/lib/role-labels";
@@ -42,6 +43,7 @@ import {
   type BuildCharacterSlot,
   type BuildProfile,
   type BuildSkill,
+  type BuildSkillSlotIcon,
   type BuildSkillSlotType,
 } from "@/domain/build/model";
 import { canManageBuildSkills } from "@/domain/build/permissions";
@@ -73,6 +75,7 @@ const CommunityBuildsPanel = dynamic(() =>
 
 const gateway = new HttpBuildGateway();
 const skillGateway = new HttpBuildSkillGateway();
+const slotIconGateway = new HttpBuildSkillSlotIconGateway();
 const configurableBuildSigilCategories = buildSigilCategories.filter(
   (category) => category !== "Категория",
 );
@@ -100,6 +103,7 @@ export function BuildPortal() {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [skills, setSkills] = useState<BuildSkill[]>([]);
+  const [slotIcons, setSlotIcons] = useState<BuildSkillSlotIcon[]>([]);
   const [skillsCharacter, setSkillsCharacter] =
     useState<BuildCharacterClass | null>(null);
   const [isLoadingSkills, setIsLoadingSkills] = useState(false);
@@ -153,6 +157,7 @@ export function BuildPortal() {
         setProfile(bootstrap.profile);
         setCharacters(bootstrap.characters);
         setSkills(bootstrap.skills);
+        setSlotIcons(bootstrap.slotIcons);
         setSkillsCharacter(bootstrap.profile.mainCharacter);
         setInitialSigils(bootstrap.sigils);
         setError("");
@@ -209,10 +214,13 @@ export function BuildPortal() {
         setSkillError("");
       }
     });
-    skillGateway
-      .list(selectedCharacter, controller.signal)
-      .then((nextSkills) => {
+    Promise.all([
+      skillGateway.list(selectedCharacter, controller.signal),
+      slotIconGateway.list(selectedCharacter, controller.signal),
+    ])
+      .then(([nextSkills, nextSlotIcons]) => {
         setSkills(nextSkills);
+        setSlotIcons(nextSlotIcons);
         setSkillsCharacter(selectedCharacter);
       })
       .catch((caught: unknown) => {
@@ -447,7 +455,10 @@ export function BuildPortal() {
     if (
       !selectedCharacter ||
       !editingSlot ||
-      (!editingSkill && !skillIcon)
+      (!editingSkill && !skillIcon && !slotIcons.some((slotIcon) =>
+        slotIcon.slotType === editingSlot.type &&
+        slotIcon.slotIndex === editingSlot.index
+      ))
     ) {
       setSkillError(
         editingSkill
@@ -492,6 +503,10 @@ export function BuildPortal() {
       } else {
         const created = await skillGateway.create(formData);
         setSkills((current) => [...current, created]);
+        setSlotIcons((current) => current.filter((slotIcon) =>
+          slotIcon.slotType !== created.slotType ||
+          slotIcon.slotIndex !== created.slotIndex
+        ));
       }
       resetSkillEditor(form);
     } catch (caught) {
@@ -557,6 +572,9 @@ export function BuildPortal() {
       (item) =>
         item.slotType === slotType && item.slotIndex === slotIndex,
     );
+    const slotIcon = slotIcons.find(
+      (item) => item.slotType === slotType && item.slotIndex === slotIndex,
+    );
     const isRabam = slotType === "rabam";
     const slotLabel = isRabam
       ? `Рабам ${slotIndex}`
@@ -581,14 +599,27 @@ export function BuildPortal() {
               .join(" ")}
             aria-hidden="true"
           >
-            <Sparkles size={25} />
+            {slotIcon ? (
+              <Image
+                className="build-skill-card__icon"
+                src={slotIcon.iconUrl}
+                alt=""
+                width={72}
+                height={72}
+                unoptimized
+              />
+            ) : (
+              <Sparkles size={25} />
+            )}
           </div>
           <div className="build-skill-card__empty-content">
             <small>{slotLabel}</small>
             <strong>Пустой слот</strong>
             <p>
               {canManageSkills
-                ? "Нажмите и заполните название, иконку и описание."
+                ? slotIcon
+                  ? "Иконка готова. Нажмите и добавьте название и описание."
+                  : "Нажмите и заполните название, иконку и описание."
                 : "Администратор пока не добавил умение."}
             </p>
           </div>
@@ -1070,7 +1101,13 @@ export function BuildPortal() {
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
-                      required={!editingSkill}
+                      required={
+                        !editingSkill &&
+                        !slotIcons.some((slotIcon) =>
+                          slotIcon.slotType === editingSlot.type &&
+                          slotIcon.slotIndex === editingSlot.index
+                        )
+                      }
                       disabled={isCreatingSkill}
                       onChange={(event) =>
                         setSkillIcon(event.target.files?.[0] ?? null)
@@ -1214,7 +1251,10 @@ export function BuildPortal() {
                       type="submit"
                       disabled={
                         isCreatingSkill ||
-                        (!editingSkill && !skillIcon) ||
+                        (!editingSkill && !skillIcon && !slotIcons.some((slotIcon) =>
+                          slotIcon.slotType === editingSlot.type &&
+                          slotIcon.slotIndex === editingSlot.index
+                        )) ||
                         !skillName.trim() ||
                         !skillDescription.trim()
                       }

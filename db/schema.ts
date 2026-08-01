@@ -289,6 +289,34 @@ export const buildSkills = sqliteTable(
   ],
 );
 
+export const buildSkillSlotIcons = sqliteTable(
+  "build_skill_slot_icons",
+  {
+    guildId: text("guild_id")
+      .notNull()
+      .references(() => guilds.id, { onDelete: "cascade" }),
+    character: text("character").notNull(),
+    slotType: text("slot_type").notNull(),
+    slotIndex: integer("slot_index").notNull(),
+    iconKey: text("icon_key").notNull(),
+    iconContentType: text("icon_content_type").notNull(),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [
+        table.guildId,
+        table.character,
+        table.slotType,
+        table.slotIndex,
+      ],
+    }),
+  ],
+);
+
 export const buildSigils = sqliteTable(
   "build_sigils",
   {

@@ -4,6 +4,7 @@ import type {
   BuildCharacterSlot,
   BuildProfile,
   BuildSkill,
+  BuildSkillSlotIcon,
 } from "@/domain/build/model";
 import type { BuildSigil } from "@/domain/build/sigil-model";
 import type {
@@ -17,6 +18,7 @@ interface BuildResponse {
   profile?: BuildProfile;
   characters?: BuildCharacter[];
   skills?: BuildSkill[];
+  slotIcons?: BuildSkillSlotIcon[];
   sigils?: BuildSigil[];
   error?: string;
 }
@@ -25,12 +27,18 @@ export interface BuildBootstrap {
   profile: BuildProfile;
   characters: BuildCharacter[];
   skills: BuildSkill[];
+  slotIcons: BuildSkillSlotIcon[];
   sigils: BuildSigil[];
 }
 
 interface BuildSkillsResponse {
   skills?: BuildSkill[];
   skill?: BuildSkill;
+  error?: string;
+}
+
+interface BuildSkillSlotIconsResponse {
+  slotIcons?: BuildSkillSlotIcon[];
   error?: string;
 }
 
@@ -81,6 +89,7 @@ async function parseBootstrap(
     profile: payload.profile,
     characters: payload.characters ?? [],
     skills: payload.skills ?? [],
+    slotIcons: payload.slotIcons ?? [],
     sigils: payload.sigils ?? [],
   };
 }
@@ -254,6 +263,15 @@ export class HttpBuildSkillGateway {
     if (!response.ok) {
       throw new Error(payload.error ?? "Не удалось удалить умение.");
     }
+  }
+}
+
+export class HttpBuildSkillSlotIconGateway {
+  async list(character: BuildCharacterClass, signal?: AbortSignal): Promise<BuildSkillSlotIcon[]> {
+    const response = await fetch(`/api/build/skill-slot-icons?character=${encodeURIComponent(character)}`, { cache: "no-store", signal });
+    const payload = (await response.json()) as BuildSkillSlotIconsResponse;
+    if (!response.ok) throw new Error(payload.error ?? "Не удалось загрузить иконки слотов.");
+    return payload.slotIcons ?? [];
   }
 }
 

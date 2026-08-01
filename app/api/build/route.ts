@@ -8,6 +8,7 @@ import { D1BuildRepository } from "@/infrastructure/build/d1-build-repository";
 import { D1BuildCharacterRepository } from "@/infrastructure/build/d1-build-character-repository";
 import { D1BuildSigilRepository } from "@/infrastructure/build/d1-build-sigil-repository";
 import { D1BuildSkillRepository } from "@/infrastructure/build/d1-build-skill-repository";
+import { D1BuildSkillSlotIconRepository } from "@/infrastructure/build/d1-build-skill-slot-icon-repository";
 import { SystemClock } from "@/infrastructure/system/system-services";
 import { authUseCases } from "../auth/_shared/dependencies";
 import {
@@ -20,6 +21,7 @@ const builds = new D1BuildRepository();
 const characters = new D1BuildCharacterRepository();
 const sigils = new D1BuildSigilRepository();
 const skills = new D1BuildSkillRepository();
+const slotIcons = new D1BuildSkillSlotIconRepository();
 const clock = new SystemClock();
 
 async function requireSessionUser(request: Request) {
@@ -48,7 +50,7 @@ export async function GET(request: Request) {
   try {
     const user = await requireSessionUser(request);
     const profile = await builds.get(user.id);
-    const [characterCatalog, sigilCatalog, skillCatalog] =
+    const [characterCatalog, sigilCatalog, skillCatalog, slotIconCatalog] =
       await Promise.all([
         characters.list(user.guildId),
         sigils.list(user.guildId),
@@ -59,6 +61,9 @@ export async function GET(request: Request) {
               profile.mainCharacter,
             )
           : Promise.resolve([]),
+        profile.mainCharacter
+          ? slotIcons.list(user.guildId, profile.mainCharacter)
+          : Promise.resolve([]),
       ]);
     return Response.json(
       {
@@ -66,6 +71,7 @@ export async function GET(request: Request) {
         characters: characterCatalog,
         sigils: sigilCatalog,
         skills: skillCatalog,
+        slotIcons: slotIconCatalog,
       },
       { headers: { "Cache-Control": "no-store" } },
     );

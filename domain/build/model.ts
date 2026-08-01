@@ -113,3 +113,11 @@ export interface BuildSkill {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface BuildSkillSlotIcon {
+  character: BuildCharacterClass;
+  slotType: BuildSkillSlotType;
+  slotIndex: number;
+  iconUrl: string;
+  updatedAt: number;
+}

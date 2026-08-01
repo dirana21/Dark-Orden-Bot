@@ -51,6 +51,18 @@ const settingsTableSql = `CREATE TABLE IF NOT EXISTS user_build_skill_settings (
 const settingsIndexSql = `CREATE INDEX IF NOT EXISTS user_build_skill_settings_user_idx
   ON user_build_skill_settings (user_id)`;
 
+const slotIconsTableSql = `CREATE TABLE IF NOT EXISTS build_skill_slot_icons (
+  guild_id TEXT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
+  character TEXT NOT NULL,
+  slot_type TEXT NOT NULL,
+  slot_index INTEGER NOT NULL,
+  icon_key TEXT NOT NULL,
+  icon_content_type TEXT NOT NULL,
+  created_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id, character, slot_type, slot_index)
+)`;
+
 interface TableColumnRow {
   name: string;
 }
@@ -72,6 +84,7 @@ export async function ensureBuildSkillsSchema(
           db.prepare(indexSql),
           db.prepare(settingsTableSql),
           db.prepare(settingsIndexSql),
+          db.prepare(slotIconsTableSql),
         ];
         if (!columns.results.some((column) => column.name === "combo_available")) {
           statements.unshift(
