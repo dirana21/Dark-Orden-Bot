@@ -12,12 +12,16 @@ interface SlotIconRow {
   slot_index: number;
   icon_key: string;
   icon_content_type: string;
+  alternate_icon_key: string | null;
+  alternate_icon_content_type: string | null;
   updated_at: number;
 }
 
 export interface StoredBuildSkillSlotIcon extends BuildSkillSlotIcon {
   iconKey: string;
   iconContentType: string;
+  alternateIconKey: string | null;
+  alternateIconContentType: string | null;
 }
 
 function mapIcon(row: SlotIconRow): StoredBuildSkillSlotIcon {
@@ -26,8 +30,13 @@ function mapIcon(row: SlotIconRow): StoredBuildSkillSlotIcon {
     slotType: row.slot_type,
     slotIndex: row.slot_index,
     iconUrl: `/api/build/skill-slot-icon?character=${encodeURIComponent(row.character)}&slotType=${row.slot_type}&slotIndex=${row.slot_index}&v=${row.updated_at}`,
+    alternateIconUrl: row.alternate_icon_key
+      ? `/api/build/skill-slot-icon?character=${encodeURIComponent(row.character)}&slotType=${row.slot_type}&slotIndex=${row.slot_index}&variant=alternate&v=${row.updated_at}`
+      : null,
     iconKey: row.icon_key,
     iconContentType: row.icon_content_type,
+    alternateIconKey: row.alternate_icon_key,
+    alternateIconContentType: row.alternate_icon_content_type,
     updatedAt: row.updated_at,
   };
 }
@@ -37,7 +46,8 @@ export class D1BuildSkillSlotIconRepository {
     const db = getD1();
     await ensureBuildSkillsSchema(db);
     const rows = await db.prepare(
-      `SELECT character, slot_type, slot_index, icon_key, icon_content_type, updated_at
+      `SELECT character, slot_type, slot_index, icon_key, icon_content_type,
+              alternate_icon_key, alternate_icon_content_type, updated_at
        FROM build_skill_slot_icons
        WHERE guild_id = ? AND character = ?
        ORDER BY CASE slot_type WHEN 'rabam' THEN 0 ELSE 1 END, slot_index`,
@@ -49,7 +59,8 @@ export class D1BuildSkillSlotIconRepository {
     const db = getD1();
     await ensureBuildSkillsSchema(db);
     const row = await db.prepare(
-      `SELECT character, slot_type, slot_index, icon_key, icon_content_type, updated_at
+      `SELECT character, slot_type, slot_index, icon_key, icon_content_type,
+              alternate_icon_key, alternate_icon_content_type, updated_at
        FROM build_skill_slot_icons
        WHERE guild_id = ? AND character = ? AND slot_type = ? AND slot_index = ? LIMIT 1`,
     ).bind(guildId, character, slotType, slotIndex).first<SlotIconRow>();
@@ -75,8 +86,23 @@ export class D1BuildSkillSlotIconRepository {
       slotType: saved.slotType,
       slotIndex: saved.slotIndex,
       iconUrl: saved.iconUrl,
+      alternateIconUrl: saved.alternateIconUrl,
       updatedAt: saved.updatedAt,
     };
+  }
+
+  async setAlternate(input: { guildId: string; character: BuildCharacterClass; slotType: BuildSkillSlotType; slotIndex: number; iconKey: string; iconContentType: string; now: number }): Promise<BuildSkillSlotIcon> {
+    const db = getD1();
+    await ensureBuildSkillsSchema(db);
+    const result = await db.prepare(
+      `UPDATE build_skill_slot_icons
+       SET alternate_icon_key = ?, alternate_icon_content_type = ?, updated_at = ?
+       WHERE guild_id = ? AND character = ? AND slot_type = ? AND slot_index = ?`,
+    ).bind(input.iconKey, input.iconContentType, input.now, input.guildId, input.character, input.slotType, input.slotIndex).run();
+    if (!result.meta.changes) throw new Error("Primary slot icon must be uploaded first.");
+    const saved = await this.get(input.guildId, input.character, input.slotType, input.slotIndex);
+    if (!saved) throw new Error("Saved alternate slot icon could not be loaded.");
+    return { character: saved.character, slotType: saved.slotType, slotIndex: saved.slotIndex, iconUrl: saved.iconUrl, alternateIconUrl: saved.alternateIconUrl, updatedAt: saved.updatedAt };
   }
 
   async delete(guildId: string, character: BuildCharacterClass, slotType: BuildSkillSlotType, slotIndex: number): Promise<StoredBuildSkillSlotIcon | null> {

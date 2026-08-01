@@ -135,6 +135,9 @@ export async function PUT(request: Request) {
         comboEnabled: skill.comboAvailable
           ? slot.comboEnabled === true
           : null,
+        alternateEnabled: Boolean(
+          skill.alternateIconUrl && slot.alternateEnabled,
+        ),
         sigilIds: skill.socketTypes.map((socketType, index) => {
           const sigilId = slot.sigilIds[index] ?? null;
           if (!sigilId) {

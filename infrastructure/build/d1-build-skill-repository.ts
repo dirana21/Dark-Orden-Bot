@@ -21,6 +21,10 @@ interface BuildSkillRow {
   description_html: string;
   icon_key: string;
   icon_content_type: string;
+  alternate_name: string | null;
+  alternate_description_html: string | null;
+  alternate_icon_key: string | null;
+  alternate_icon_content_type: string | null;
   combo_available: number;
   combo_enabled: number;
   created_at: number;
@@ -30,6 +34,8 @@ interface BuildSkillRow {
 export interface StoredBuildSkill extends BuildSkill {
   iconKey: string;
   iconContentType: string;
+  alternateIconKey: string | null;
+  alternateIconContentType: string | null;
 }
 
 function mapSkill(row: BuildSkillRow): StoredBuildSkill {
@@ -64,6 +70,13 @@ function mapSkill(row: BuildSkillRow): StoredBuildSkill {
     iconUrl: `/api/build/skill-icon?id=${encodeURIComponent(row.id)}&v=${row.updated_at}`,
     iconKey: row.icon_key,
     iconContentType: row.icon_content_type,
+    alternateName: row.alternate_name,
+    alternateDescriptionHtml: row.alternate_description_html,
+    alternateIconUrl: row.alternate_icon_key
+      ? `/api/build/skill-icon?id=${encodeURIComponent(row.id)}&variant=alternate&v=${row.updated_at}`
+      : null,
+    alternateIconKey: row.alternate_icon_key,
+    alternateIconContentType: row.alternate_icon_content_type,
     comboAvailable: Boolean(row.combo_available),
     comboEnabled: Boolean(row.combo_enabled),
     createdAt: row.created_at,
@@ -81,6 +94,9 @@ function publicSkill(skill: StoredBuildSkill): BuildSkill {
     name: skill.name,
     descriptionHtml: skill.descriptionHtml,
     iconUrl: skill.iconUrl,
+    alternateName: skill.alternateName,
+    alternateDescriptionHtml: skill.alternateDescriptionHtml,
+    alternateIconUrl: skill.alternateIconUrl,
     comboAvailable: skill.comboAvailable,
     comboEnabled: skill.comboEnabled,
     createdAt: skill.createdAt,
@@ -101,7 +117,9 @@ export class D1BuildSkillRepository {
         `SELECT skills.id, skills.character, skills.slot_type,
                 skills.slot_index, skills.socket_types, skills.name,
                 skills.description_html, skills.icon_key,
-                skills.icon_content_type, skills.combo_available,
+                skills.icon_content_type, skills.alternate_name,
+                skills.alternate_description_html, skills.alternate_icon_key,
+                skills.alternate_icon_content_type, skills.combo_available,
                 COALESCE(settings.combo_enabled, 0) AS combo_enabled,
                 skills.created_at, skills.updated_at
          FROM build_skills AS skills
@@ -123,8 +141,10 @@ export class D1BuildSkillRepository {
     const row = await db
       .prepare(
         `SELECT id, character, slot_type, slot_index, socket_types, name,
-                description_html, icon_key,
-                icon_content_type, combo_available, 0 AS combo_enabled,
+                description_html, icon_key, icon_content_type,
+                alternate_name, alternate_description_html,
+                alternate_icon_key, alternate_icon_content_type,
+                combo_available, 0 AS combo_enabled,
                 created_at, updated_at
          FROM build_skills
          WHERE guild_id = ? AND id = ?
@@ -148,6 +168,8 @@ export class D1BuildSkillRepository {
       .prepare(
         `SELECT id, character, slot_type, slot_index, socket_types, name,
                 description_html, icon_key, icon_content_type,
+                alternate_name, alternate_description_html,
+                alternate_icon_key, alternate_icon_content_type,
                 combo_available, 0 AS combo_enabled, created_at, updated_at
          FROM build_skills
          WHERE guild_id = ? AND character = ?
@@ -171,6 +193,10 @@ export class D1BuildSkillRepository {
     descriptionHtml: string;
     iconKey: string;
     iconContentType: string;
+    alternateName?: string;
+    alternateDescriptionHtml?: string;
+    alternateIconKey?: string;
+    alternateIconContentType?: string;
     comboAvailable: boolean;
     createdByUserId: string;
     now: number;
@@ -183,9 +209,10 @@ export class D1BuildSkillRepository {
         `INSERT INTO build_skills (
           id, guild_id, character, slot_type, slot_index, socket_types, name,
           description_html, icon_key,
-          icon_content_type, combo_available, created_by_user_id,
-          created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          icon_content_type, alternate_name, alternate_description_html,
+          alternate_icon_key, alternate_icon_content_type, combo_available,
+          created_by_user_id, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.id,
@@ -198,6 +225,10 @@ export class D1BuildSkillRepository {
         input.descriptionHtml,
         input.iconKey,
         input.iconContentType,
+        input.alternateName ?? null,
+        input.alternateDescriptionHtml ?? null,
+        input.alternateIconKey ?? null,
+        input.alternateIconContentType ?? null,
         input.comboAvailable ? 1 : 0,
         input.createdByUserId,
         input.now,
@@ -221,6 +252,10 @@ export class D1BuildSkillRepository {
     socketTypes: BuildSigilCategory[];
     iconKey?: string;
     iconContentType?: string;
+    alternateName?: string | null;
+    alternateDescriptionHtml?: string | null;
+    alternateIconKey?: string;
+    alternateIconContentType?: string;
     viewerUserId: string;
     now: number;
   }): Promise<BuildSkill | null> {
@@ -235,6 +270,10 @@ export class D1BuildSkillRepository {
              socket_types = ?,
              icon_key = COALESCE(?, icon_key),
              icon_content_type = COALESCE(?, icon_content_type),
+             alternate_name = ?,
+             alternate_description_html = ?,
+             alternate_icon_key = COALESCE(?, alternate_icon_key),
+             alternate_icon_content_type = COALESCE(?, alternate_icon_content_type),
              combo_available = ?,
              updated_at = ?
          WHERE guild_id = ? AND id = ?`,
@@ -245,6 +284,10 @@ export class D1BuildSkillRepository {
         JSON.stringify(input.socketTypes),
         input.iconKey ?? null,
         input.iconContentType ?? null,
+        input.alternateName ?? null,
+        input.alternateDescriptionHtml ?? null,
+        input.alternateIconKey ?? null,
+        input.alternateIconContentType ?? null,
         input.comboAvailable ? 1 : 0,
         input.now,
         input.guildId,
@@ -312,7 +355,9 @@ export class D1BuildSkillRepository {
         `SELECT skills.id, skills.character, skills.slot_type,
                 skills.slot_index, skills.socket_types, skills.name,
                 skills.description_html, skills.icon_key,
-                skills.icon_content_type, skills.combo_available,
+                skills.icon_content_type, skills.alternate_name,
+                skills.alternate_description_html, skills.alternate_icon_key,
+                skills.alternate_icon_content_type, skills.combo_available,
                 COALESCE(settings.combo_enabled, 0) AS combo_enabled,
                 skills.created_at, skills.updated_at
          FROM build_skills AS skills

@@ -96,6 +96,7 @@ export async function POST(request: Request) {
   }
 
   let uploadedKey: string | null = null;
+  let alternateUploadedKey: string | null = null;
   try {
     const user = await requireSessionUser(request);
     requireAdmin(user.role);
@@ -129,6 +130,13 @@ export async function POST(request: Request) {
     const descriptionHtml = sanitizeBuildSkillDescription(
       form.get("descriptionHtml"),
     );
+    const hasAlternate = character === "Сераф";
+    const alternateName = hasAlternate
+      ? validateBuildSkillName(form.get("alternateName"))
+      : undefined;
+    const alternateDescriptionHtml = hasAlternate
+      ? sanitizeBuildSkillDescription(form.get("alternateDescriptionHtml"))
+      : undefined;
     const comboAvailable = validateBuildSkillComboAvailable(
       form.get("comboAvailable"),
     );
@@ -136,7 +144,7 @@ export async function POST(request: Request) {
     const icon = iconEntry instanceof File && iconEntry.size > 0
       ? validateBuildSkillIcon(iconEntry)
       : null;
-    const stagedIcon = icon ? null : await slotIcons.get(
+    const stagedIcon = await slotIcons.get(
       user.guildId,
       character,
       slotType,
@@ -145,12 +153,26 @@ export async function POST(request: Request) {
     if (!icon && !stagedIcon) {
       throw new BuildError("Добавьте иконку умения.");
     }
+    const alternateIconEntry = form.get("alternateIcon");
+    const alternateIcon = alternateIconEntry instanceof File && alternateIconEntry.size > 0
+      ? validateBuildSkillIcon(alternateIconEntry)
+      : null;
+    if (hasAlternate && !alternateIcon && !stagedIcon?.alternateIconKey) {
+      throw new BuildError("Добавьте иконку второй стойки Серафа.");
+    }
     const id = ids.generate();
     if (icon) {
       const extension = iconExtension(icon.type);
       uploadedKey = `guilds/${user.guildId}/build-skills/${id}.${extension}`;
       await getSkillIconsBucket().put(uploadedKey, icon.stream(), {
         httpMetadata: { contentType: icon.type },
+        customMetadata: { guildId: user.guildId, createdByUserId: user.id },
+      });
+    }
+    if (alternateIcon) {
+      alternateUploadedKey = `guilds/${user.guildId}/build-skills/${id}-alternate.${iconExtension(alternateIcon.type)}`;
+      await getSkillIconsBucket().put(alternateUploadedKey, alternateIcon.stream(), {
+        httpMetadata: { contentType: alternateIcon.type },
         customMetadata: { guildId: user.guildId, createdByUserId: user.id },
       });
     }
@@ -166,6 +188,10 @@ export async function POST(request: Request) {
       descriptionHtml,
       iconKey: uploadedKey ?? stagedIcon!.iconKey,
       iconContentType: icon?.type ?? stagedIcon!.iconContentType,
+      alternateName,
+      alternateDescriptionHtml,
+      alternateIconKey: alternateUploadedKey ?? stagedIcon?.alternateIconKey ?? undefined,
+      alternateIconContentType: alternateIcon?.type ?? stagedIcon?.alternateIconContentType ?? undefined,
       comboAvailable,
       createdByUserId: user.id,
       now: clock.now(),
@@ -186,6 +212,13 @@ export async function POST(request: Request) {
         // The metadata write did not complete; best-effort cleanup only.
       }
     }
+    if (alternateUploadedKey) {
+      try {
+        await getSkillIconsBucket().delete(alternateUploadedKey);
+      } catch {
+        // Best-effort cleanup only.
+      }
+    }
     return skillErrorResponse(error);
   }
 }
@@ -197,6 +230,7 @@ export async function PATCH(request: Request) {
   }
 
   let uploadedKey: string | null = null;
+  let alternateUploadedKey: string | null = null;
   let updateCommitted = false;
   try {
     const user = await requireSessionUser(request);
@@ -216,6 +250,13 @@ export async function PATCH(request: Request) {
     const descriptionHtml = sanitizeBuildSkillDescription(
       form.get("descriptionHtml"),
     );
+    const hasAlternate = current.character === "Сераф";
+    const alternateName = hasAlternate
+      ? validateBuildSkillName(form.get("alternateName"))
+      : null;
+    const alternateDescriptionHtml = hasAlternate
+      ? sanitizeBuildSkillDescription(form.get("alternateDescriptionHtml"))
+      : null;
     const comboAvailable = validateBuildSkillComboAvailable(
       form.get("comboAvailable"),
     );
@@ -229,6 +270,14 @@ export async function PATCH(request: Request) {
       iconEntry instanceof File && iconEntry.size > 0
         ? validateBuildSkillIcon(iconEntry)
         : null;
+    const alternateIconEntry = form.get("alternateIcon");
+    const alternateIcon =
+      alternateIconEntry instanceof File && alternateIconEntry.size > 0
+        ? validateBuildSkillIcon(alternateIconEntry)
+        : null;
+    if (hasAlternate && !alternateIcon && !current.alternateIconKey) {
+      throw new BuildError("Добавьте иконку второй стойки Серафа.");
+    }
 
     if (icon) {
       uploadedKey = `guilds/${user.guildId}/build-skills/${id}-${ids.generate()}.${iconExtension(icon.type)}`;
@@ -238,6 +287,13 @@ export async function PATCH(request: Request) {
           guildId: user.guildId,
           createdByUserId: user.id,
         },
+      });
+    }
+    if (alternateIcon) {
+      alternateUploadedKey = `guilds/${user.guildId}/build-skills/${id}-${ids.generate()}-alternate.${iconExtension(alternateIcon.type)}`;
+      await getSkillIconsBucket().put(alternateUploadedKey, alternateIcon.stream(), {
+        httpMetadata: { contentType: alternateIcon.type },
+        customMetadata: { guildId: user.guildId, createdByUserId: user.id },
       });
     }
 
@@ -250,6 +306,10 @@ export async function PATCH(request: Request) {
       socketTypes,
       iconKey: uploadedKey ?? undefined,
       iconContentType: icon?.type,
+      alternateName,
+      alternateDescriptionHtml,
+      alternateIconKey: alternateUploadedKey ?? undefined,
+      alternateIconContentType: alternateIcon?.type,
       viewerUserId: user.id,
       now: clock.now(),
     });
@@ -265,6 +325,13 @@ export async function PATCH(request: Request) {
         // The new icon is active; stale bytes can be cleaned up later.
       }
     }
+    if (alternateUploadedKey && current.alternateIconKey && current.alternateIconKey !== alternateUploadedKey) {
+      try {
+        await getSkillIconsBucket().delete(current.alternateIconKey);
+      } catch {
+        // The new alternate icon is active; stale bytes are harmless.
+      }
+    }
 
     return Response.json(
       { skill: updated },
@@ -276,6 +343,13 @@ export async function PATCH(request: Request) {
         await getSkillIconsBucket().delete(uploadedKey);
       } catch {
         // Best-effort cleanup when the metadata update did not complete.
+      }
+    }
+    if (alternateUploadedKey && !updateCommitted) {
+      try {
+        await getSkillIconsBucket().delete(alternateUploadedKey);
+      } catch {
+        // Best-effort cleanup when the update failed.
       }
     }
     return skillErrorResponse(error);

@@ -27,14 +27,18 @@ export async function GET(request: Request) {
       return new Response("Not found", { status: 404 });
     }
 
-    const object = await getSkillIconsBucket().get(skill.iconKey);
+    const isAlternate = new URL(request.url).searchParams.get("variant") === "alternate";
+    const iconKey = isAlternate ? skill.alternateIconKey : skill.iconKey;
+    const contentType = isAlternate ? skill.alternateIconContentType : skill.iconContentType;
+    if (!iconKey || !contentType) return new Response("Not found", { status: 404 });
+    const object = await getSkillIconsBucket().get(iconKey);
     if (!object) {
       return new Response("Not found", { status: 404 });
     }
 
     return new Response(object.body, {
       headers: {
-        "Content-Type": skill.iconContentType,
+        "Content-Type": contentType,
         "Cache-Control": "private, max-age=31536000, immutable",
         "Content-Length": String(object.size),
         "X-Content-Type-Options": "nosniff",

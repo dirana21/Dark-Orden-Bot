@@ -17,9 +17,13 @@ export async function GET(request: Request) {
     const slotIndex = validateBuildSkillSlotIndex(slotType, params.get("slotIndex"));
     const slotIcon = await slotIcons.get(user.guildId, character, slotType, slotIndex);
     if (!slotIcon) return new Response("Not found", { status: 404 });
-    const object = await getSkillIconsBucket().get(slotIcon.iconKey);
+    const isAlternate = params.get("variant") === "alternate";
+    const iconKey = isAlternate ? slotIcon.alternateIconKey : slotIcon.iconKey;
+    const contentType = isAlternate ? slotIcon.alternateIconContentType : slotIcon.iconContentType;
+    if (!iconKey || !contentType) return new Response("Not found", { status: 404 });
+    const object = await getSkillIconsBucket().get(iconKey);
     if (!object) return new Response("Not found", { status: 404 });
-    return new Response(object.body, { headers: { "Content-Type": slotIcon.iconContentType, "Content-Length": String(object.size), "Cache-Control": "private, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" } });
+    return new Response(object.body, { headers: { "Content-Type": contentType, "Content-Length": String(object.size), "Cache-Control": "private, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" } });
   } catch (error) {
     return authErrorResponse(error);
   }

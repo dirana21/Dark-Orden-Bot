@@ -3488,6 +3488,14 @@ input:focus-visible {
   box-shadow:
     0 0 0 4px rgba(42, 49, 65, 0.86),
     0 0 20px rgba(66, 80, 116, 0.25);
+  padding: 0;
+}
+
+.player-build-slot__icon:disabled { opacity: 1; }
+.player-build-slot__icon.can-flip { cursor: pointer; }
+.player-build-slot__icon.can-flip:hover { filter: brightness(1.14); }
+.player-build-slot__icon.can-flip.is-flipped img {
+  animation: build-skill-coin-flip 420ms ease;
 }
 
 .player-build-slot.is-active .player-build-slot__icon {
@@ -5177,6 +5185,31 @@ input:focus-visible {
   background: rgba(215, 180, 106, 0.025);
 }
 
+.build-skill-alternate-editor {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgba(91, 143, 211, 0.28);
+  background: linear-gradient(135deg, rgba(41, 80, 132, 0.12), rgba(12, 16, 23, 0.7));
+}
+
+.build-skill-alternate-editor legend {
+  padding: 0 8px;
+  color: #a9c9ed;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.build-skill-alternate-editor > p {
+  margin: 0;
+  color: #7f8b9a;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .build-skill-combo-choice legend {
   padding: 0 6px;
   color: #a59472;
@@ -5730,6 +5763,56 @@ input:focus-visible {
   height: 72px;
   place-items: center;
   color: #4d535c;
+}
+
+.build-skill-card__icon-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.build-skill-card__icon-button:disabled {
+  opacity: 1;
+}
+
+.build-skill-card__stance-toggle {
+  cursor: pointer;
+  perspective: 420px;
+}
+
+.build-skill-card__stance-toggle .build-skill-card__icon {
+  transition: filter 160ms ease;
+}
+
+.build-skill-card__stance-toggle:hover .build-skill-card__icon,
+.build-skill-card__stance-toggle:focus-visible .build-skill-card__icon {
+  filter: brightness(1.16);
+}
+
+.build-skill-card__stance-toggle.is-flipped .build-skill-card__icon {
+  animation: build-skill-coin-flip 420ms ease;
+}
+
+.build-skill-card__stance-hint {
+  position: absolute;
+  z-index: 4;
+  right: -5px;
+  bottom: -7px;
+  padding: 3px 5px;
+  border: 1px solid rgba(100, 159, 225, 0.34);
+  background: rgba(7, 12, 21, 0.94);
+  color: #9fc7ef;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+@keyframes build-skill-coin-flip {
+  0% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(90deg) scale(0.9); }
+  100% { transform: rotateY(0deg) scale(1); }
 }
 
 .build-skill-card__icon-frame.is-rabam::before,

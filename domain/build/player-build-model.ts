@@ -26,6 +26,7 @@ export interface PlayerBuildSlot {
   skillId: string;
   sigilIds: Array<string | null>;
   comboEnabled: boolean | null;
+  alternateEnabled: boolean;
 }
 
 export interface PlayerBuildLoadout {

@@ -13,6 +13,10 @@ const tableSql = `CREATE TABLE IF NOT EXISTS build_skills (
   description_html TEXT NOT NULL,
   icon_key TEXT NOT NULL,
   icon_content_type TEXT NOT NULL,
+  alternate_name TEXT,
+  alternate_description_html TEXT,
+  alternate_icon_key TEXT,
+  alternate_icon_content_type TEXT,
   combo_available INTEGER NOT NULL DEFAULT 0,
   created_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at INTEGER NOT NULL,
@@ -58,6 +62,8 @@ const slotIconsTableSql = `CREATE TABLE IF NOT EXISTS build_skill_slot_icons (
   slot_index INTEGER NOT NULL,
   icon_key TEXT NOT NULL,
   icon_content_type TEXT NOT NULL,
+  alternate_icon_key TEXT,
+  alternate_icon_content_type TEXT,
   created_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (guild_id, character, slot_type, slot_index)
@@ -114,7 +120,32 @@ export async function ensureBuildSkillsSchema(
             ),
           );
         }
+        if (!columns.results.some((column) => column.name === "alternate_name")) {
+          statements.unshift(db.prepare("ALTER TABLE build_skills ADD COLUMN alternate_name TEXT"));
+        }
+        if (!columns.results.some((column) => column.name === "alternate_description_html")) {
+          statements.unshift(db.prepare("ALTER TABLE build_skills ADD COLUMN alternate_description_html TEXT"));
+        }
+        if (!columns.results.some((column) => column.name === "alternate_icon_key")) {
+          statements.unshift(db.prepare("ALTER TABLE build_skills ADD COLUMN alternate_icon_key TEXT"));
+        }
+        if (!columns.results.some((column) => column.name === "alternate_icon_content_type")) {
+          statements.unshift(db.prepare("ALTER TABLE build_skills ADD COLUMN alternate_icon_content_type TEXT"));
+        }
         await db.batch(statements);
+        const slotIconColumns = await db
+          .prepare("PRAGMA table_info(build_skill_slot_icons)")
+          .all<TableColumnRow>();
+        const slotIconStatements = [];
+        if (!slotIconColumns.results.some((column) => column.name === "alternate_icon_key")) {
+          slotIconStatements.push(db.prepare("ALTER TABLE build_skill_slot_icons ADD COLUMN alternate_icon_key TEXT"));
+        }
+        if (!slotIconColumns.results.some((column) => column.name === "alternate_icon_content_type")) {
+          slotIconStatements.push(db.prepare("ALTER TABLE build_skill_slot_icons ADD COLUMN alternate_icon_content_type TEXT"));
+        }
+        if (slotIconStatements.length) {
+          await db.batch(slotIconStatements);
+        }
         await db.prepare(backfillSlotsSql).run();
         await db.prepare(slotIndexSql).run();
       })

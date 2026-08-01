@@ -36,6 +36,7 @@ function parseSlots(value: string): PlayerBuildSlot[] {
           skillId: string;
           sigilIds: unknown[];
           comboEnabled?: unknown;
+          alternateEnabled?: unknown;
         } =>
           Boolean(
             slot &&
@@ -57,6 +58,7 @@ function parseSlots(value: string): PlayerBuildSlot[] {
           typeof slot.comboEnabled === "boolean"
             ? slot.comboEnabled
             : null,
+        alternateEnabled: slot.alternateEnabled === true,
       }));
   } catch {
     return [];

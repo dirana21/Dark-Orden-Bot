@@ -265,6 +265,10 @@ export const buildSkills = sqliteTable(
     descriptionHtml: text("description_html").notNull(),
     iconKey: text("icon_key").notNull(),
     iconContentType: text("icon_content_type").notNull(),
+    alternateName: text("alternate_name"),
+    alternateDescriptionHtml: text("alternate_description_html"),
+    alternateIconKey: text("alternate_icon_key"),
+    alternateIconContentType: text("alternate_icon_content_type"),
     comboAvailable: integer("combo_available", { mode: "boolean" })
       .notNull()
       .default(false),
@@ -300,6 +304,8 @@ export const buildSkillSlotIcons = sqliteTable(
     slotIndex: integer("slot_index").notNull(),
     iconKey: text("icon_key").notNull(),
     iconContentType: text("icon_content_type").notNull(),
+    alternateIconKey: text("alternate_icon_key"),
+    alternateIconContentType: text("alternate_icon_content_type"),
     createdByUserId: text("created_by_user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),

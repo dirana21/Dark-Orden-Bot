@@ -66,16 +66,23 @@ export async function PUT(request: Request) {
       throw new BuildError("В этом слоте уже есть готовое умение.");
     }
     const icon = validateBuildSkillIcon(form.get("icon"));
+    const variant = form.get("variant") === "alternate" ? "alternate" : "primary";
+    if (variant === "alternate" && character !== "Сераф") {
+      throw new BuildError("Вторая стойка доступна только для Серафа.");
+    }
     const previous = await slotIcons.get(user.guildId, character, slotType, slotIndex);
     uploadedKey = `guilds/${user.guildId}/build-skill-slots/${ids.generate()}.${extension(icon.type)}`;
     await getSkillIconsBucket().put(uploadedKey, icon.stream(), {
       httpMetadata: { contentType: icon.type },
       customMetadata: { guildId: user.guildId, createdByUserId: user.id },
     });
-    const slotIcon = await slotIcons.upsert({ guildId: user.guildId, character, slotType, slotIndex, iconKey: uploadedKey, iconContentType: icon.type, createdByUserId: user.id, now: clock.now() });
+    const slotIcon = variant === "alternate"
+      ? await slotIcons.setAlternate({ guildId: user.guildId, character, slotType, slotIndex, iconKey: uploadedKey, iconContentType: icon.type, now: clock.now() })
+      : await slotIcons.upsert({ guildId: user.guildId, character, slotType, slotIndex, iconKey: uploadedKey, iconContentType: icon.type, createdByUserId: user.id, now: clock.now() });
     saved = true;
-    if (previous?.iconKey && previous.iconKey !== uploadedKey) {
-      try { await getSkillIconsBucket().delete(previous.iconKey); } catch { /* stale bytes are harmless */ }
+    const previousKey = variant === "alternate" ? previous?.alternateIconKey : previous?.iconKey;
+    if (previousKey && previousKey !== uploadedKey) {
+      try { await getSkillIconsBucket().delete(previousKey); } catch { /* stale bytes are harmless */ }
     }
     return Response.json({ slotIcon }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

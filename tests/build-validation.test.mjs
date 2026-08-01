@@ -198,6 +198,7 @@ test("validates ten unique skills and up to four sigils in a personal build", ()
     skillId: `skill-${index + 1}`,
     sigilIds: [null, `sigil-${index + 1}`],
     comboEnabled: index % 2 === 0,
+    alternateEnabled: index % 3 === 0,
   }));
 
   assert.deepEqual(validatePlayerBuildSlots(slots), slots);
@@ -227,6 +228,15 @@ test("validates ten unique skills and up to four sigils in a personal build", ()
         skillId: "skill-1",
         sigilIds: [],
         comboEnabled: "true",
+      },
+    ]),
+  );
+  assert.throws(() =>
+    validatePlayerBuildSlots([
+      {
+        skillId: "skill-1",
+        sigilIds: [],
+        alternateEnabled: "true",
       },
     ]),
   );

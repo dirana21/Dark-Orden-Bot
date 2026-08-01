@@ -69,6 +69,7 @@ export function CommunityBuildsPanel({
   const [inspectedSkill, setInspectedSkill] = useState<{
     skill: BuildSkill;
     comboEnabled: boolean | null;
+    alternateEnabled: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -453,6 +454,15 @@ export function CommunityBuildsPanel({
                         const skill = slot
                           ? skillsById.get(slot.skillId)
                           : null;
+                        const useAlternate = Boolean(
+                          slot?.alternateEnabled && skill?.alternateIconUrl,
+                        );
+                        const visibleIcon = useAlternate
+                          ? skill?.alternateIconUrl ?? skill?.iconUrl
+                          : skill?.iconUrl;
+                        const visibleName = useAlternate
+                          ? skill?.alternateName ?? skill?.name
+                          : skill?.name;
                         return (
                           <article
                             className={
@@ -468,6 +478,7 @@ export function CommunityBuildsPanel({
                                 setInspectedSkill({
                                   skill,
                                   comboEnabled: slot.comboEnabled,
+                                  alternateEnabled: useAlternate,
                                 });
                               }
                             }}
@@ -481,6 +492,7 @@ export function CommunityBuildsPanel({
                                 setInspectedSkill({
                                   skill,
                                   comboEnabled: slot.comboEnabled,
+                                  alternateEnabled: useAlternate,
                                 });
                               }
                             }}
@@ -491,14 +503,14 @@ export function CommunityBuildsPanel({
                             {skill ? (
                               <>
                                 <Image
-                                  src={skill.iconUrl}
+                                  src={visibleIcon ?? skill.iconUrl}
                                   alt=""
                                   width={72}
                                   height={72}
                                   unoptimized
                                 />
-                                <strong title={skill.name}>
-                                  {skill.name}
+                                <strong title={visibleName}>
+                                  {visibleName}
                                 </strong>
                                 {skill.comboAvailable ? (
                                   <Image
@@ -590,7 +602,11 @@ export function CommunityBuildsPanel({
           >
             <header>
               <Image
-                src={inspectedSkill.skill.iconUrl}
+                src={
+                  inspectedSkill.alternateEnabled
+                    ? inspectedSkill.skill.alternateIconUrl ?? inspectedSkill.skill.iconUrl
+                    : inspectedSkill.skill.iconUrl
+                }
                 alt=""
                 width={72}
                 height={72}
@@ -599,7 +615,9 @@ export function CommunityBuildsPanel({
               <div>
                 <small>Описание навыка</small>
                 <h2 id="community-skill-title">
-                  {inspectedSkill.skill.name}
+                  {inspectedSkill.alternateEnabled
+                    ? inspectedSkill.skill.alternateName ?? inspectedSkill.skill.name
+                    : inspectedSkill.skill.name}
                 </h2>
               </div>
               {inspectedSkill.skill.comboAvailable ? (
@@ -633,7 +651,9 @@ export function CommunityBuildsPanel({
             <div
               className="community-skill-dialog__description build-skill-card__description"
               dangerouslySetInnerHTML={{
-                __html: inspectedSkill.skill.descriptionHtml,
+                __html: inspectedSkill.alternateEnabled
+                  ? inspectedSkill.skill.alternateDescriptionHtml ?? inspectedSkill.skill.descriptionHtml
+                  : inspectedSkill.skill.descriptionHtml,
               }}
             />
           </section>

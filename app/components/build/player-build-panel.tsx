@@ -196,6 +196,7 @@ export function PlayerBuildPanel({
         skillId,
         sigilIds: [],
         comboEnabled: skill?.comboAvailable ? false : null,
+        alternateEnabled: false,
       });
       return next;
     });
@@ -293,6 +294,15 @@ export function PlayerBuildPanel({
           : slot,
       ),
     );
+    setError("");
+  }
+
+  function toggleSlotStance(index: number) {
+    setSlots((current) => current.map((slot, slotIndex) =>
+      slotIndex === index
+        ? { ...slot, alternateEnabled: !slot.alternateEnabled }
+        : slot
+    ));
     setError("");
   }
 
@@ -426,6 +436,15 @@ export function PlayerBuildPanel({
                 const skill = slot
                   ? skillsById.get(slot.skillId) ?? null
                   : null;
+                const useAlternate = Boolean(
+                  slot?.alternateEnabled && skill?.alternateIconUrl,
+                );
+                const visibleIcon = useAlternate
+                  ? skill?.alternateIconUrl ?? skill?.iconUrl
+                  : skill?.iconUrl;
+                const visibleName = useAlternate
+                  ? skill?.alternateName ?? skill?.name
+                  : skill?.name;
                 return (
                   <article
                     className={[
@@ -470,16 +489,31 @@ export function PlayerBuildPanel({
                         <span className="player-build-slot__drag" aria-hidden="true">
                           <GripVertical size={14} />
                         </span>
-                        <span className="player-build-slot__icon">
+                        <button
+                          className={[
+                            "player-build-slot__icon",
+                            skill.alternateIconUrl ? "can-flip" : "",
+                            useAlternate ? "is-flipped" : "",
+                          ].filter(Boolean).join(" ")}
+                          type="button"
+                          disabled={!skill.alternateIconUrl}
+                          aria-pressed={useAlternate}
+                          aria-label={skill.alternateIconUrl ? `Сменить стойку навыка ${visibleName}` : undefined}
+                          title={skill.alternateIconUrl ? "Сменить стойку" : undefined}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            toggleSlotStance(index);
+                          }}
+                        >
                           <Image
-                            src={skill.iconUrl}
+                            src={visibleIcon ?? skill.iconUrl}
                             alt=""
                             width={82}
                             height={82}
                             unoptimized
                           />
-                        </span>
-                        <strong title={skill.name}>{skill.name}</strong>
+                        </button>
+                        <strong title={visibleName}>{visibleName}</strong>
                         <small>
                           {skill.socketTypes.length
                             ? `${skill.socketTypes.filter((socketType, socketIndex) => sigils.some((sigil) => sigil.id === slot.sigilIds[socketIndex] && sigil.category === socketType)).length} / ${skill.socketTypes.length} сигилов`

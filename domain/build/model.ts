@@ -108,6 +108,9 @@ export interface BuildSkill {
   name: string;
   descriptionHtml: string;
   iconUrl: string;
+  alternateName: string | null;
+  alternateDescriptionHtml: string | null;
+  alternateIconUrl: string | null;
   comboAvailable: boolean;
   comboEnabled: boolean;
   createdAt: number;
@@ -119,5 +122,6 @@ export interface BuildSkillSlotIcon {
   slotType: BuildSkillSlotType;
   slotIndex: number;
   iconUrl: string;
+  alternateIconUrl: string | null;
   updatedAt: number;
 }

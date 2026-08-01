@@ -111,6 +111,10 @@ export function BuildPortal() {
   const [skillName, setSkillName] = useState("");
   const [skillDescription, setSkillDescription] = useState("");
   const [skillIcon, setSkillIcon] = useState<File | null>(null);
+  const [alternateSkillName, setAlternateSkillName] = useState("");
+  const [alternateSkillDescription, setAlternateSkillDescription] = useState("");
+  const [alternateSkillIcon, setAlternateSkillIcon] = useState<File | null>(null);
+  const [flippedSkillIds, setFlippedSkillIds] = useState<Set<string>>(() => new Set());
   const [comboAvailable, setComboAvailable] = useState(false);
   const [skillSocketTypes, setSkillSocketTypes] = useState<
     Array<BuildSigilCategory | "">
@@ -386,6 +390,9 @@ export function BuildPortal() {
     setSkillName("");
     setSkillDescription("");
     setSkillIcon(null);
+    setAlternateSkillName("");
+    setAlternateSkillDescription("");
+    setAlternateSkillIcon(null);
     setComboAvailable(false);
     setSkillSocketTypes(["", "", ""]);
     setEditorKey((current) => current + 1);
@@ -403,6 +410,9 @@ export function BuildPortal() {
     setSkillName(skill.name);
     setSkillDescription(skill.descriptionHtml);
     setSkillIcon(null);
+    setAlternateSkillName(skill.alternateName ?? "");
+    setAlternateSkillDescription(skill.alternateDescriptionHtml ?? "");
+    setAlternateSkillIcon(null);
     setComboAvailable(skill.comboAvailable);
     setSkillSocketTypes([
       skill.socketTypes[1] ?? "",
@@ -438,6 +448,9 @@ export function BuildPortal() {
     setSkillName("");
     setSkillDescription("");
     setSkillIcon(null);
+    setAlternateSkillName("");
+    setAlternateSkillDescription("");
+    setAlternateSkillIcon(null);
     setComboAvailable(false);
     setSkillSocketTypes(["", "", ""]);
     setSkillError("");
@@ -458,6 +471,15 @@ export function BuildPortal() {
       (!editingSkill && !skillIcon && !slotIcons.some((slotIcon) =>
         slotIcon.slotType === editingSlot.type &&
         slotIcon.slotIndex === editingSlot.index
+      )) ||
+      (selectedCharacter === "Сераф" && (
+        !alternateSkillName.trim() ||
+        !alternateSkillDescription.trim() ||
+        (!editingSkill && !alternateSkillIcon && !slotIcons.some((slotIcon) =>
+          slotIcon.slotType === editingSlot.type &&
+          slotIcon.slotIndex === editingSlot.index &&
+          Boolean(slotIcon.alternateIconUrl)
+        ))
       ))
     ) {
       setSkillError(
@@ -477,6 +499,10 @@ export function BuildPortal() {
       formData.set("slotIndex", String(editingSlot.index));
       formData.set("name", skillName);
       formData.set("descriptionHtml", skillDescription);
+      if (selectedCharacter === "Сераф") {
+        formData.set("alternateName", alternateSkillName);
+        formData.set("alternateDescriptionHtml", alternateSkillDescription);
+      }
       formData.set("comboAvailable", String(comboAvailable));
       formData.set(
         "socketTypes",
@@ -486,6 +512,16 @@ export function BuildPortal() {
         formData.set(
           "icon",
           await optimizeImageUpload(skillIcon, {
+            maxWidth: 256,
+            maxHeight: 256,
+            quality: 0.9,
+          }),
+        );
+      }
+      if (alternateSkillIcon) {
+        formData.set(
+          "alternateIcon",
+          await optimizeImageUpload(alternateSkillIcon, {
             maxWidth: 256,
             maxHeight: 256,
             quality: 0.9,
@@ -658,6 +694,13 @@ export function BuildPortal() {
       );
     }
 
+    const showingAlternate = flippedSkillIds.has(skill.id) && Boolean(skill.alternateIconUrl);
+    const visibleName = showingAlternate ? skill.alternateName ?? skill.name : skill.name;
+    const visibleDescription = showingAlternate
+      ? skill.alternateDescriptionHtml ?? skill.descriptionHtml
+      : skill.descriptionHtml;
+    const visibleIcon = showingAlternate ? skill.alternateIconUrl ?? skill.iconUrl : skill.iconUrl;
+
     return (
       <article
         className={[
@@ -669,30 +712,45 @@ export function BuildPortal() {
           .join(" ")}
         key={skill.id}
       >
-        <div
+        <button
           className={[
             "build-skill-card__icon-frame",
+            "build-skill-card__icon-button",
+            skill.alternateIconUrl ? "build-skill-card__stance-toggle" : "",
+            showingAlternate ? "is-flipped" : "",
             isRabam ? "is-rabam" : "",
           ]
             .filter(Boolean)
             .join(" ")}
+          type="button"
+          disabled={!skill.alternateIconUrl}
+          aria-pressed={showingAlternate}
+          aria-label={skill.alternateIconUrl ? `Сменить стойку умения ${visibleName}` : undefined}
+          title={skill.alternateIconUrl ? "Сменить стойку" : undefined}
+          onClick={() => setFlippedSkillIds((current) => {
+            const next = new Set(current);
+            if (next.has(skill.id)) next.delete(skill.id);
+            else next.add(skill.id);
+            return next;
+          })}
         >
           <Image
             className="build-skill-card__icon"
-            src={skill.iconUrl}
+            src={visibleIcon}
             alt=""
             width={72}
             height={72}
             unoptimized
           />
-        </div>
+          {skill.alternateIconUrl ? <span className="build-skill-card__stance-hint">Сменить стойку</span> : null}
+        </button>
         <div className="build-skill-card__content">
           <header>
             <div>
               <small className="build-skill-card__slot-label">
                 {slotLabel}
               </small>
-              <h3>{skill.name}</h3>
+              <h3>{visibleName}</h3>
               {skill.socketTypes.length > 0 ? (
                 <div
                   className="build-skill-card__sockets"
@@ -749,7 +807,7 @@ export function BuildPortal() {
           <div
             className="build-skill-card__description"
             dangerouslySetInnerHTML={{
-              __html: skill.descriptionHtml,
+              __html: visibleDescription,
             }}
           />
         </div>
@@ -1126,6 +1184,65 @@ export function BuildPortal() {
                   />
                 </div>
 
+                {selectedCharacter === "Сераф" ? (
+                  <fieldset className="build-skill-alternate-editor">
+                    <legend>Вторая стойка Серафа</legend>
+                    <p>
+                      Игрок сможет нажать на иконку и перевернуть карточку на эту стойку.
+                    </p>
+                    <div className="build-skill-editor__fields">
+                      <label className="build-skill-name-field">
+                        <span>Название во второй стойке</span>
+                        <input
+                          type="text"
+                          value={alternateSkillName}
+                          maxLength={80}
+                          required
+                          disabled={isCreatingSkill}
+                          placeholder="Название навыка после смены стойки"
+                          onChange={(event) => setAlternateSkillName(event.target.value)}
+                        />
+                      </label>
+                      <label className="build-skill-icon-field">
+                        <span className="build-skill-icon-field__mark"><ImagePlus size={19} /></span>
+                        <span>
+                          <strong>
+                            {alternateSkillIcon
+                              ? alternateSkillIcon.name
+                              : editingSkill?.alternateIconUrl
+                                ? "Заменить вторую иконку (необязательно)"
+                                : "Иконка второй стойки"}
+                          </strong>
+                          <small>PNG, JPG или WEBP · до 2 МБ</small>
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          required={
+                            !editingSkill &&
+                            !slotIcons.some((slotIcon) =>
+                              slotIcon.slotType === editingSlot.type &&
+                              slotIcon.slotIndex === editingSlot.index &&
+                              Boolean(slotIcon.alternateIconUrl)
+                            )
+                          }
+                          disabled={isCreatingSkill}
+                          onChange={(event) => setAlternateSkillIcon(event.target.files?.[0] ?? null)}
+                        />
+                      </label>
+                    </div>
+                    <div className="build-skill-description-field">
+                      <span>Описание во второй стойке</span>
+                      <SkillDescriptionEditor
+                        key={`${editorKey}-alternate`}
+                        initialHtml={editingSkill?.alternateDescriptionHtml ?? ""}
+                        disabled={isCreatingSkill}
+                        onChange={setAlternateSkillDescription}
+                      />
+                    </div>
+                  </fieldset>
+                ) : null}
+
                 <fieldset className="build-skill-combo-choice">
                   <legend>Показывать пункт «Комбо»</legend>
                   <p>
@@ -1256,7 +1373,16 @@ export function BuildPortal() {
                           slotIcon.slotIndex === editingSlot.index
                         )) ||
                         !skillName.trim() ||
-                        !skillDescription.trim()
+                        !skillDescription.trim() ||
+                        (selectedCharacter === "Сераф" && (
+                          !alternateSkillName.trim() ||
+                          !alternateSkillDescription.trim() ||
+                          (!editingSkill && !alternateSkillIcon && !slotIcons.some((slotIcon) =>
+                            slotIcon.slotType === editingSlot.type &&
+                            slotIcon.slotIndex === editingSlot.index &&
+                            Boolean(slotIcon.alternateIconUrl)
+                          ))
+                        ))
                       }
                     >
                       {editingSkill ? (
